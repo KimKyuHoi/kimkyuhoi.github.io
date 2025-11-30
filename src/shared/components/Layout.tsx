@@ -150,8 +150,7 @@ const TopBar = styled.header`
   align-items: center;
   gap: 24px;
   height: 64px;
-  background: ${({ theme }) =>
-    theme.mode === 'light' ? 'rgba(255, 255, 255, 0.8)' : 'rgba(25, 31, 40, 0.8)'};
+  background: ${({ theme }) => theme.bg.header};
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   border-bottom: 1px solid ${({ theme }) => theme.border};

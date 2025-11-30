@@ -29,6 +29,7 @@ const lightValues = {
     muted: '#f2f4f6',
     code: '#191f28',
     codeInline: '#f2f4f6',
+    header: 'rgba(255, 255, 255, 0.8)',
   },
   text: {
     primary: '#191f28',
@@ -53,6 +54,7 @@ const darkValues = {
     muted: '#333d4b',
     code: '#101317',
     codeInline: '#333d4b',
+    header: 'rgba(25, 31, 40, 0.8)',
   },
   text: {
     primary: '#f9fafb',
@@ -80,6 +82,7 @@ export const theme: Theme = {
     muted: 'var(--bg-muted)',
     code: 'var(--bg-code)',
     codeInline: 'var(--bg-code-inline)',
+    header: 'var(--bg-header)',
   },
   text: {
     primary: 'var(--text-primary)',
@@ -117,6 +120,7 @@ export const globalStyles = css`
     --bg-muted: ${lightValues.bg.muted};
     --bg-code: ${lightValues.bg.code};
     --bg-code-inline: ${lightValues.bg.codeInline};
+    --bg-header: ${lightValues.bg.header};
     --text-primary: ${lightValues.text.primary};
     --text-muted: ${lightValues.text.muted};
     --text-caption: ${lightValues.text.caption};
@@ -135,6 +139,7 @@ export const globalStyles = css`
     --bg-muted: ${darkValues.bg.muted};
     --bg-code: ${darkValues.bg.code};
     --bg-code-inline: ${darkValues.bg.codeInline};
+    --bg-header: ${darkValues.bg.header};
     --text-primary: ${darkValues.text.primary};
     --text-muted: ${darkValues.text.muted};
     --text-caption: ${darkValues.text.caption};
