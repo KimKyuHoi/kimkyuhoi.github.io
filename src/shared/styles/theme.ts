@@ -1,23 +1,5 @@
 import { css, Theme } from '@emotion/react';
 
-export const palette = {
-  ink: '#0b1021',
-  navy: '#0f172a',
-  ink80: '#1f2937',
-  gray70: '#4b5563',
-  gray50: '#9ca3af',
-  gray30: '#d1d5db',
-  gray20: '#e6ebf2',
-  gray10: '#f7f9fc',
-  white: '#ffffff',
-  blue: '#2f6bff',
-  blueDeep: '#1f54d9',
-  purple: '#6366f1',
-  pink: '#ec4899',
-  success: '#10b981',
-  warning: '#f59e0b',
-};
-
 const baseTheme = {
   radius: {
     xs: '4px',
@@ -39,9 +21,8 @@ const baseTheme = {
   },
 };
 
-export const lightTheme: Theme = {
-  ...baseTheme,
-  mode: 'light',
+// Define the values for light and dark modes
+const lightValues = {
   bg: {
     page: '#ffffff',
     surface: '#ffffff',
@@ -56,16 +37,19 @@ export const lightTheme: Theme = {
     inverse: '#ffffff',
   },
   border: '#e5e8eb',
-  accent: '#3182f6', // Toss Blue
+  accent: '#3182f6',
   accent2: '#6b7684',
+  shadow: {
+    soft: '0 4px 20px rgba(0, 0, 0, 0.05)',
+    card: '0 10px 30px rgba(0, 0, 0, 0.08)',
+    hover: '0 20px 40px rgba(0, 0, 0, 0.12)',
+  },
 };
 
-export const darkTheme: Theme = {
-  ...baseTheme,
-  mode: 'dark',
+const darkValues = {
   bg: {
     page: '#191f28',
-    surface: '#191f28', // Match page for flat look
+    surface: '#191f28',
     muted: '#333d4b',
     code: '#101317',
     codeInline: '#333d4b',
@@ -86,10 +70,83 @@ export const darkTheme: Theme = {
   },
 };
 
-export const globalStyles = (theme: Theme) => css`
+// The theme object that uses CSS variables
+export const theme: Theme = {
+  ...baseTheme,
+  mode: 'light', // This is just a placeholder type, actual mode is handled by CSS
+  bg: {
+    page: 'var(--bg-page)',
+    surface: 'var(--bg-surface)',
+    muted: 'var(--bg-muted)',
+    code: 'var(--bg-code)',
+    codeInline: 'var(--bg-code-inline)',
+  },
+  text: {
+    primary: 'var(--text-primary)',
+    muted: 'var(--text-muted)',
+    caption: 'var(--text-caption)',
+    inverse: 'var(--text-inverse)',
+  },
+  border: 'var(--border)',
+  accent: 'var(--accent)',
+  accent2: 'var(--accent2)',
+  shadow: {
+    soft: 'var(--shadow-soft)',
+    card: 'var(--shadow-card)',
+    hover: 'var(--shadow-hover)',
+  },
+};
+
+// Helper to generate CSS variables
+const toVars = (obj: any, prefix = '-'): string => {
+  return Object.entries(obj)
+    .map(([key, value]) => {
+      const varName = `${prefix}-${key.replace(/[A-Z]/g, (m) => '-' + m.toLowerCase())}`;
+      if (typeof value === 'object') {
+        return toVars(value, varName);
+      }
+      return `${varName}: ${value}`;
+    })
+    .join(';');
+};
+
+export const globalStyles = css`
   :root {
-    color-scheme: ${theme.mode};
+    --bg-page: ${lightValues.bg.page};
+    --bg-surface: ${lightValues.bg.surface};
+    --bg-muted: ${lightValues.bg.muted};
+    --bg-code: ${lightValues.bg.code};
+    --bg-code-inline: ${lightValues.bg.codeInline};
+    --text-primary: ${lightValues.text.primary};
+    --text-muted: ${lightValues.text.muted};
+    --text-caption: ${lightValues.text.caption};
+    --text-inverse: ${lightValues.text.inverse};
+    --border: ${lightValues.border};
+    --accent: ${lightValues.accent};
+    --accent2: ${lightValues.accent2};
+    --shadow-soft: ${lightValues.shadow.soft};
+    --shadow-card: ${lightValues.shadow.card};
+    --shadow-hover: ${lightValues.shadow.hover};
   }
+
+  body.dark {
+    --bg-page: ${darkValues.bg.page};
+    --bg-surface: ${darkValues.bg.surface};
+    --bg-muted: ${darkValues.bg.muted};
+    --bg-code: ${darkValues.bg.code};
+    --bg-code-inline: ${darkValues.bg.codeInline};
+    --text-primary: ${darkValues.text.primary};
+    --text-muted: ${darkValues.text.muted};
+    --text-caption: ${darkValues.text.caption};
+    --text-inverse: ${darkValues.text.inverse};
+    --border: ${darkValues.border};
+    --accent: ${darkValues.accent};
+    --accent2: ${darkValues.accent2};
+    --shadow-soft: ${darkValues.shadow.soft};
+    --shadow-card: ${darkValues.shadow.card};
+    --shadow-hover: ${darkValues.shadow.hover};
+  }
+
   * {
     box-sizing: border-box;
   }
@@ -102,6 +159,9 @@ export const globalStyles = (theme: Theme) => css`
     line-height: 1.8;
     -webkit-font-smoothing: antialiased;
     scroll-behavior: smooth;
+    transition:
+      background 0.3s ease,
+      color 0.3s ease;
   }
   a {
     color: inherit;
@@ -140,3 +200,7 @@ export const globalStyles = (theme: Theme) => css`
     scroll-margin-top: 96px;
   }
 `;
+
+// Export for backward compatibility if needed, but they now point to the same object
+export const lightTheme = theme;
+export const darkTheme = theme;
