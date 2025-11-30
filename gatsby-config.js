@@ -4,6 +4,7 @@
 
 /** @type {import('gatsby').GatsbyConfig} */
 module.exports = {
+  pathPrefix: '/blog',
   graphqlTypegen: true,
   siteMetadata: {
     title: `Andy Tech Blog`,
