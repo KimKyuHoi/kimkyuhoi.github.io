@@ -5,46 +5,46 @@
  * See: https://www.gatsbyjs.com/docs/how-to/querying-data/use-static-query/
  */
 
-import * as React from "react"
-import { useStaticQuery, graphql } from "gatsby"
+import * as React from 'react';
+import { useStaticQuery, graphql } from 'gatsby';
 
 type SeoProps = {
-  title: string
-  description?: string
-  children?: React.ReactNode
-}
+  title: string;
+  description?: string;
+  children?: React.ReactNode;
+};
 
 type SeoQuery = {
   site: {
     siteMetadata: {
-      title?: string
-      description?: string
+      title?: string;
+      description?: string;
+      siteUrl?: string;
       social?: {
-        twitter?: string
-      } | null
-    }
-  }
-}
+        twitter?: string;
+      } | null;
+    };
+  };
+};
 
 const Seo: React.FC<SeoProps> = ({ description, title, children }) => {
-  const { site } = useStaticQuery<SeoQuery>(
-    graphql`
-      query {
-        site {
-          siteMetadata {
-            title
-            description
-            social {
-              twitter
-            }
+  const { site } = useStaticQuery<SeoQuery>(graphql`
+    query {
+      site {
+        siteMetadata {
+          title
+          description
+          siteUrl
+          social {
+            twitter
           }
         }
       }
-    `
-  )
+    }
+  `);
 
-  const metaDescription = description || site.siteMetadata.description
-  const defaultTitle = site.siteMetadata?.title
+  const metaDescription = description || site.siteMetadata.description;
+  const defaultTitle = site.siteMetadata?.title;
 
   return (
     <>
@@ -61,9 +61,19 @@ const Seo: React.FC<SeoProps> = ({ description, title, children }) => {
       />
       <meta key="twitter:title" name="twitter:title" content={title} />
       <meta key="twitter:description" name="twitter:description" content={metaDescription} />
+      <meta
+        key="og:image"
+        property="og:image"
+        content={`${site.siteMetadata?.siteUrl}/og-image.svg`}
+      />
+      <meta
+        key="twitter:image"
+        name="twitter:image"
+        content={`${site.siteMetadata?.siteUrl}/og-image.svg`}
+      />
       {children}
     </>
-  )
-}
+  );
+};
 
-export default Seo
+export default Seo;

@@ -43,39 +43,48 @@ const Layout: React.FC<LayoutProps> = ({ location, children }) => {
           <Brand>
             <Link to="/">
               <svg
-                width={60}
-                height={60}
-                viewBox="0 0 200 200"
+                width={40}
+                height={40}
+                viewBox="0 0 512 512"
                 fill="none"
                 xmlns="http://www.w3.org/2000/svg"
               >
-                <rect width="200" height="200" rx="40" />
-                <path
-                  d="M60 70L40 100L60 130"
-                  stroke={accentColor}
-                  strokeWidth="12"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-                <path
-                  d="M140 70L160 100L140 130"
-                  stroke={accentColor}
-                  strokeWidth="12"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-                <text
-                  x="50%"
-                  y="52%"
-                  dominantBaseline="middle"
-                  textAnchor="middle"
-                  fill={primaryColor}
-                  fontSize="64"
-                  fontFamily="monospace"
-                  fontWeight="800"
-                >
-                  a/
-                </text>
+                <defs>
+                  <filter id="softShadow" x="-50%" y="-50%" width="200%" height="200%">
+                    <feGaussianBlur in="SourceAlpha" stdDeviation="12" />
+                    <feOffset dx="0" dy="8" result="offsetblur" />
+                    <feComponentTransfer>
+                      <feFuncA type="linear" slope="0.2" />
+                    </feComponentTransfer>
+                    <feMerge>
+                      <feMergeNode />
+                      <feMergeNode in="SourceGraphic" />
+                    </feMerge>
+                  </filter>
+                </defs>
+                <g transform="translate(256, 246)" filter="url(#softShadow)">
+                  <path
+                    d="M-80 130 L0 -110"
+                    stroke="#2563eb"
+                    strokeWidth="75"
+                    strokeLinecap="round"
+                    fill="none"
+                  />
+                  <path
+                    d="M0 -110 L80 130"
+                    stroke="#3b82f6"
+                    strokeWidth="75"
+                    strokeLinecap="round"
+                    fill="none"
+                  />
+                  <path
+                    d="M-45 40 L45 40"
+                    stroke="#60a5fa"
+                    strokeWidth="60"
+                    strokeLinecap="round"
+                    fill="none"
+                  />
+                </g>
               </svg>
             </Link>
           </Brand>
@@ -139,8 +148,8 @@ const Shell = styled.div`
 const TopBar = styled.header`
   display: flex;
   align-items: center;
-  gap: 16px;
-  height: 60px;
+  gap: 24px;
+  height: 64px;
   background: ${({ theme }) =>
     theme.mode === 'light' ? 'rgba(255, 255, 255, 0.8)' : 'rgba(25, 31, 40, 0.8)'};
   backdrop-filter: blur(12px);
@@ -155,26 +164,29 @@ const TopBar = styled.header`
 
   @media (max-width: 768px) {
     margin-bottom: 20px;
+    gap: 12px;
   }
 `;
 
 const Brand = styled.div`
   display: flex;
   align-items: center;
-  font-weight: 800;
-  font-size: 20px;
-  color: ${({ theme }) => theme.text.primary};
 
   a {
     display: flex;
     align-items: center;
+    transition: transform 0.2s ease;
+
+    &:hover {
+      transform: scale(1.05);
+    }
   }
 `;
 
 const Nav = styled.nav`
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 4px;
   flex: 1;
   overflow-x: auto;
   overflow-y: hidden;
@@ -189,17 +201,20 @@ const Nav = styled.nav`
 
 const NavItem = styled.span<{ active: boolean }>`
   a {
-    padding: 8px 14px;
-    border-radius: ${({ theme }) => theme.radius.sm};
+    padding: 8px 16px;
+    border-radius: 999px;
     background: ${({ active, theme }) => (active ? theme.bg.muted : 'transparent')};
     color: ${({ active, theme }) => (active ? theme.text.primary : theme.text.muted)};
-    font-weight: 500;
-    font-size: 15px;
+    font-weight: 600;
+    font-size: 14px;
     transition: all 0.2s ease;
     white-space: nowrap;
+    display: flex;
+    align-items: center;
+    height: 100%;
   }
   a:hover {
-    background: ${({ theme }) => theme.bg.muted};
+    background: ${({ theme, active }) => (active ? theme.bg.muted : theme.bg.surface)};
     color: ${({ theme }) => theme.text.primary};
   }
 `;

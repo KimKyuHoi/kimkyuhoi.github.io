@@ -1,0 +1,65 @@
+<svg width="1200" height="630" viewBox="0 0 1200 630" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <!-- Soft shadow for depth -->
+    <filter id="softShadow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="8"/>
+      <feOffset dx="0" dy="8" result="offsetblur"/>
+      <feComponentTransfer>
+        <feFuncA type="linear" slope="0.2"/>
+      </feComponentTransfer>
+      <feMerge>
+        <feMergeNode/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1200" height="630" fill="#ffffff"/>
+  
+  <!-- Subtle Dot Pattern -->
+  <pattern id="dotGrid" x="0" y="0" width="40" height="40" patternUnits="userSpaceOnUse">
+    <circle cx="2" cy="2" r="2" fill="#f1f5f9"/>
+  </pattern>
+  <rect width="1200" height="630" fill="url(#dotGrid)"/>
+
+  <!-- Logo Container -->
+  <g transform="translate(600, 315) scale(2.2)" filter="url(#softShadow)">
+    
+    <!-- 
+      Google Icon Style 'A' 
+      Constructed with rounded geometric segments and material blue palette 
+    -->
+
+    <!-- Left Leg (Darker Blue for depth) -->
+    <!-- Using a path with rounded ends -->
+    <path d="M-50 80 L0 -70" 
+          stroke="#2563eb" 
+          stroke-width="45" 
+          stroke-linecap="round" 
+          fill="none" />
+
+    <!-- Right Leg (Primary Blue) -->
+    <!-- Slightly overlapping the left at the top -->
+    <path d="M0 -70 L50 80" 
+          stroke="#3b82f6" 
+          stroke-width="45" 
+          stroke-linecap="round" 
+          fill="none" />
+
+    <!-- Crossbar (Lighter Blue/Cyan accent) -->
+    <!-- Positioned to look like a bridge -->
+    <path d="M-28 25 L28 25" 
+          stroke="#60a5fa" 
+          stroke-width="35" 
+          stroke-linecap="round" 
+          fill="none" />
+          
+    <!-- Top Joint Highlight (Optional, to smooth the peak) -->
+    <!-- A small circle at the top to blend the join if needed, 
+         but round caps usually handle this well. 
+         Let's add a subtle white gradient or shine if possible, 
+         but flat colors are more "Google Icon".
+    -->
+  </g>
+</svg>
