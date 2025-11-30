@@ -13,7 +13,7 @@ module.exports = {
       summary: `프론트엔드 개발자 Andy의 기록과 실험실`,
     },
     description: `좌충우돌 규회의 개발 기술블로그`,
-    siteUrl: `https://kimkyuhoi.github.io`,
+    siteUrl: `https://kimkyuhoi.github.io/blog`,
     social: {
       twitter: ``,
       github: `KimKyuHoi`,
