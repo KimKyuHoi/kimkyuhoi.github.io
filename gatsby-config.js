@@ -21,7 +21,7 @@ module.exports = {
       velog: `https://velog.io/@k_gu_wae123/posts`,
       email: `kimkyuhoi.dev@gmail.com`,
     },
-    utterancesRepo: `kimkyuhoi/andy-s_blog`,
+    utterancesRepo: `KimKyuHoi/blog`,
     buyMeCoffeeId: `k546khi`,
     featuredCategories: [`전체`, `개발`, `회고록`],
   },
