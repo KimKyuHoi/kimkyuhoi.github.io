@@ -7,13 +7,11 @@ Gatsby를 기반으로 제작되었으며, 개발 경험과 학습한 내용을 
 
 ## ✨ Features
 
-- **🎨 Modern UI/UX**: 깔끔하고 직관적인 디자인
 - **🌓 Dark/Light Mode**: 시스템 설정 및 사용자 선택에 따른 다크 모드 지원
 - **📱 Responsive Design**: 모바일, 태블릿, 데스크탑 등 모든 기기에 최적화
 - **📑 Table of Contents**: 긴 글도 쉽게 읽을 수 있는 목차 기능
 - **💬 Comments**: Utterances를 활용한 GitHub 기반 댓글 시스템
 - **🔍 SEO Optimized**: 검색 엔진 최적화 및 메타 태그 적용
-- **📡 RSS Feed**: 블로그 구독을 위한 RSS 피드 지원
 
 ## 🛠 Tech Stack
 

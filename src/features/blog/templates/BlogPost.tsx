@@ -1,21 +1,21 @@
-import React, { Suspense } from "react"
-import { graphql, Link } from "gatsby"
-import type { PageProps } from "gatsby"
-import styled from "@emotion/styled"
-import Layout from "@/components/Layout"
-import Seo from "@/components/Seo"
-import Toc from "@/features/blog/components/TableOfContents"
-import BuyMeCoffee from "@/features/blog/components/BuyMeCoffee"
-import { Skeleton } from "@/ui/Skeleton"
-import { useMounted } from "@/hooks/useMounted"
+import React, { Suspense } from 'react';
+import { graphql, Link } from 'gatsby';
+import type { PageProps } from 'gatsby';
+import styled from '@emotion/styled';
+import Layout from '@/components/Layout';
+import Seo from '@/components/Seo';
+import Toc from '@/features/blog/components/TableOfContents';
+import BuyMeCoffee from '@/features/blog/components/BuyMeCoffee';
+import { Skeleton } from '@/ui/Skeleton';
+import { useMounted } from '@/hooks/useMounted';
 
-const Utterances = React.lazy(() => import("@/features/blog/components/Utterances"))
+const Utterances = React.lazy(() => import('@/features/blog/components/Utterances'));
 
 const BlogPostTemplate: React.FC<PageProps<Queries.BlogPostBySlugQuery>> = ({ data, location }) => {
-  const post = data.markdownRemark
-  const previous = data.previous
-  const next = data.next
-  const isMounted = useMounted()
+  const post = data.markdownRemark;
+  const previous = data.previous;
+  const next = data.next;
+  const isMounted = useMounted();
 
   return (
     <Layout location={location}>
@@ -23,13 +23,13 @@ const BlogPostTemplate: React.FC<PageProps<Queries.BlogPostBySlugQuery>> = ({ da
         <Main>
           <article itemScope itemType="http://schema.org/Article">
             <header>
-              <Category>{post?.frontmatter?.category || "기타"}</Category>
+              <Category>{post?.frontmatter?.category || '기타'}</Category>
               <Title itemProp="headline">{post?.frontmatter?.title}</Title>
               <Meta>
                 <span>{post?.frontmatter?.date}</span>
                 {post?.frontmatter?.tags?.length ? (
                   <Tags>
-                    {(post.frontmatter.tags as string[]).map(tag => (
+                    {(post.frontmatter.tags as string[]).map((tag) => (
                       <Tag key={tag}>#{tag}</Tag>
                     ))}
                   </Tags>
@@ -39,7 +39,7 @@ const BlogPostTemplate: React.FC<PageProps<Queries.BlogPostBySlugQuery>> = ({ da
             </header>
 
             <PostBody
-              dangerouslySetInnerHTML={{ __html: post?.html || "" }}
+              dangerouslySetInnerHTML={{ __html: post?.html || '' }}
               itemProp="articleBody"
             />
           </article>
@@ -48,15 +48,19 @@ const BlogPostTemplate: React.FC<PageProps<Queries.BlogPostBySlugQuery>> = ({ da
 
           <Nav>
             {previous ? (
-              <Link to={previous.fields?.slug || ""} rel="prev">
+              <Link to={previous.fields?.slug || ''} rel="prev">
                 ← {previous.frontmatter?.title}
               </Link>
-            ) : <span />}
+            ) : (
+              <span />
+            )}
             {next ? (
-              <Link to={next.fields?.slug || ""} rel="next">
+              <Link to={next.fields?.slug || ''} rel="next">
                 {next.frontmatter?.title} →
               </Link>
-            ) : <span />}
+            ) : (
+              <span />
+            )}
           </Nav>
 
           {isMounted ? (
@@ -73,23 +77,24 @@ const BlogPostTemplate: React.FC<PageProps<Queries.BlogPostBySlugQuery>> = ({ da
         </Aside>
       </ArticleWrapper>
     </Layout>
-  )
-}
+  );
+};
 
-export default BlogPostTemplate
+export default BlogPostTemplate;
 
 export const Head: React.FC<PageProps<Queries.BlogPostBySlugQuery>> = ({ data }) => {
-  const post = data.markdownRemark
-  const siteTitle = data.site?.siteMetadata?.title || `Blog`
-  return <Seo title={post?.frontmatter?.title || siteTitle} description={post?.frontmatter?.description || post?.excerpt || undefined} />
-}
+  const post = data.markdownRemark;
+  const siteTitle = data.site?.siteMetadata?.title || `Blog`;
+  return (
+    <Seo
+      title={post?.frontmatter?.title || siteTitle}
+      description={post?.frontmatter?.description || post?.excerpt || undefined}
+    />
+  );
+};
 
 export const pageQuery = graphql`
-  query BlogPostBySlug(
-    $id: String!
-    $previousPostId: String
-    $nextPostId: String
-  ) {
+  query BlogPostBySlug($id: String!, $previousPostId: String, $nextPostId: String) {
     site {
       siteMetadata {
         title
@@ -110,49 +115,57 @@ export const pageQuery = graphql`
       }
     }
     previous: markdownRemark(id: { eq: $previousPostId }) {
-      fields { slug }
-      frontmatter { title }
+      fields {
+        slug
+      }
+      frontmatter {
+        title
+      }
     }
     next: markdownRemark(id: { eq: $nextPostId }) {
-      fields { slug }
-      frontmatter { title }
+      fields {
+        slug
+      }
+      frontmatter {
+        title
+      }
     }
   }
-`
+`;
 
 const ArticleWrapper = styled.div`
   display: grid;
   gap: 40px;
   grid-template-columns: 1fr 240px;
   align-items: start;
-  
+
   @media (max-width: 1024px) {
     grid-template-columns: 1fr;
     gap: 24px;
   }
-`
+`;
 
 const Main = styled.div`
   background: transparent;
   padding: 0;
   max-width: 100%;
-`
+`;
 
 const Aside = styled.div`
   position: sticky;
   top: 100px;
-  
+
   @media (max-width: 1024px) {
     display: none;
   }
-`
+`;
 
 const Category = styled.div`
   color: ${({ theme }) => theme.accent};
   font-weight: 700;
   font-size: 16px;
   margin-bottom: 12px;
-`
+`;
 
 const Title = styled.h1`
   margin: 0 0 24px;
@@ -161,11 +174,11 @@ const Title = styled.h1`
   font-weight: 800;
   color: ${({ theme }) => theme.text.primary};
   word-break: keep-all;
-  
+
   @media (max-width: 768px) {
     font-size: 30px;
   }
-`
+`;
 
 const Meta = styled.div`
   margin-bottom: 32px;
@@ -177,13 +190,13 @@ const Meta = styled.div`
   flex-wrap: wrap;
   padding-bottom: 24px;
   border-bottom: 1px solid ${({ theme }) => theme.border};
-`
+`;
 
 const Tags = styled.div`
   display: flex;
   gap: 8px;
   flex-wrap: wrap;
-`
+`;
 
 const Tag = styled.span`
   padding: 4px 10px;
@@ -192,7 +205,7 @@ const Tag = styled.span`
   font-size: 13px;
   font-weight: 500;
   color: ${({ theme }) => theme.text.muted};
-`
+`;
 
 const Hero = styled.img`
   width: 100%;
@@ -200,18 +213,18 @@ const Hero = styled.img`
   margin: 0 0 40px;
   object-fit: cover;
   max-height: 500px;
-`
+`;
 
 const PostBody = styled.section`
-  font-size: 17px;
-  line-height: 1.75;
+  font-size: 16px;
+  line-height: 1.8;
   color: ${({ theme }) => theme.text.primary};
-  
+
   p {
-    margin-bottom: 24px;
+    margin-bottom: 20px;
     word-break: keep-all;
   }
-  
+
   a {
     color: ${({ theme }) => theme.accent};
     font-weight: 600;
@@ -221,53 +234,54 @@ const PostBody = styled.section`
       color: ${({ theme }) => theme.accent2};
     }
   }
-  
+
   h2 {
-    font-size: 28px;
+    font-size: 24px;
     font-weight: 700;
-    margin: 48px 0 24px;
-    padding-bottom: 12px;
+    margin: 40px 0 20px;
+    padding-bottom: 10px;
     border-bottom: 1px solid ${({ theme }) => theme.border};
   }
-  
+
   h3 {
-    font-size: 22px;
+    font-size: 20px;
     font-weight: 700;
-    margin: 36px 0 16px;
+    margin: 32px 0 14px;
   }
-  
+
   h4 {
-    font-size: 18px;
+    font-size: 17px;
     font-weight: 700;
     margin: 24px 0 12px;
   }
-  
-  ul, ol {
+
+  ul,
+  ol {
     margin-bottom: 24px;
     padding-left: 24px;
     li {
       margin-bottom: 8px;
     }
   }
-  
+
   blockquote {
     margin: 24px 0;
     padding: 16px 24px;
     background: ${({ theme }) => theme.bg.muted};
     border-left: 4px solid ${({ theme }) => theme.accent};
     border-radius: ${({ theme }) => theme.radius.sm};
-    
+
     p {
       margin: 0;
     }
   }
-  
+
   img {
     max-width: 100%;
     border-radius: ${({ theme }) => theme.radius.md};
     margin: 24px 0;
   }
-  
+
   code {
     background: ${({ theme }) => theme.bg.codeInline};
     padding: 2px 6px;
@@ -275,14 +289,14 @@ const PostBody = styled.section`
     font-family: ${({ theme }) => theme.font.mono};
     font-size: 0.9em;
   }
-  
+
   pre {
     background: ${({ theme }) => theme.bg.code};
     padding: 20px;
     border-radius: ${({ theme }) => theme.radius.md};
     overflow-x: auto;
     margin: 24px 0;
-    
+
     code {
       background: transparent;
       padding: 0;
@@ -290,7 +304,7 @@ const PostBody = styled.section`
       font-size: 14px;
     }
   }
-`
+`;
 
 const Nav = styled.nav`
   display: grid;
@@ -299,7 +313,7 @@ const Nav = styled.nav`
   margin: 60px 0 40px;
   padding-top: 40px;
   border-top: 1px solid ${({ theme }) => theme.border};
-  
+
   a {
     display: flex;
     flex-direction: column;
@@ -313,15 +327,15 @@ const Nav = styled.nav`
     font-size: 16px;
     transition: all 0.2s ease;
     text-decoration: none;
-    
+
     &:hover {
       transform: translateY(-2px);
       box-shadow: ${({ theme }) => theme.shadow.soft};
       border-color: ${({ theme }) => theme.accent};
     }
   }
-  
+
   @media (max-width: 768px) {
     grid-template-columns: 1fr;
   }
-`
+`;

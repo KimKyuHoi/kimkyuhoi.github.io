@@ -15,8 +15,8 @@ const baseTheme = {
     hover: '0 20px 40px rgba(0, 0, 0, 0.12)',
   },
   font: {
-    heading: "'D2Coding', 'Pretendard', 'Noto Sans KR', sans-serif",
-    body: "'D2Coding', 'Pretendard', 'Noto Sans KR', sans-serif",
+    heading: "'Pretendard', 'Noto Sans KR', sans-serif",
+    body: "'Pretendard', 'Noto Sans KR', sans-serif",
     mono: "'D2Coding', 'JetBrains Mono', 'Fira Code', monospace",
   },
 };

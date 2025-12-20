@@ -136,7 +136,7 @@ const IndexPage: React.FC<PageProps<Queries.IndexPageQuery>> = ({ data, location
           </Widget>
 
           <Widget>
-            <WidgetTitle>에디터 픽</WidgetTitle>
+            <WidgetTitle>주인장 픽</WidgetTitle>
             <MiniList>
               {popular.map((post) => (
                 <MiniItem key={post.fields?.slug}>
@@ -154,11 +154,6 @@ const IndexPage: React.FC<PageProps<Queries.IndexPageQuery>> = ({ data, location
                 <TagBadge key={tag}>#{tag}</TagBadge>
               ))}
             </TagCloud>
-          </Widget>
-
-          <Widget>
-            <WidgetTitle>최근 업데이트</WidgetTitle>
-            <p>새로운 글과 프로젝트를 곧 공유할 예정입니다.</p>
           </Widget>
         </Sidebar>
       </Grid>
