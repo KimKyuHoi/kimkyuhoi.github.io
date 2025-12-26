@@ -106,8 +106,19 @@ strong {
 code,
 kbd,
 samp {
-  font-family: monospace, monospace; /* 1 */
-  font-size: 1em; /* 2 */
+  font-family: 'D2Coding', monospace !important;
+  font-size: 0.9em !important;
+  color: #eb5757 !important;
+  background-color: rgba(135, 131, 120, 0.15) !important;
+  padding: 0.2rem 0.4rem !important;
+  border-radius: 3px !important;
+  text-shadow: none !important;
+}
+
+pre code {
+  color: inherit !important;
+  background-color: transparent !important;
+  padding: 0 !important;
 }
 
 /**
@@ -599,6 +610,33 @@ p {
   --x-height-multiplier: 0.35;
   margin: var(--spacing-0) var(--spacing-0) var(--spacing-8) var(--spacing-0);
   padding: var(--spacing-0);
+}
+
+/* Images */
+.gatsby-resp-image-wrapper {
+  margin-left: auto !important;
+  margin-right: auto !important;
+  box-shadow: none !important;
+}
+
+span.gatsby-resp-image-wrapper {
+  display: block !important;
+}
+
+.gatsby-resp-image-image {
+  box-shadow:
+    0 4px 6px -1px rgba(0, 0, 0, 0.1),
+    0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  border-radius: 8px;
+}
+
+figcaption,
+.caption {
+  text-align: center;
+  color: var(--color-text-light);
+  font-size: 0.9em;
+  margin-top: var(--spacing-3);
+  font-family: var(--font-heading);
 }
 
 ul,

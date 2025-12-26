@@ -17,8 +17,16 @@ featured: true
 
 처음으로 맡은 프로젝트였습니다. 운이 좋게도 성능 개선 과정에서 고민했던 내용이 [회사 기술 블로그](https://medium.com/pinkfong/next-js-app-router%EC%97%90%EC%84%9C-prefetchquery%EC%99%80-suspense%EB%A1%9C-%EC%9A%B0%EC%95%84%ED%95%98%EA%B2%8C-%EB%8D%B0%EC%9D%B4%ED%84%B0-%EC%8A%A4%ED%8A%B8%EB%A6%AC%EB%B0%8D%ED%95%98%EA%B8%B0-acb3d90cd5bc)에 실리기도 했습니다. 총괄 매니저님의 운영 혼선을 줄이고자 기능들을 추가하면서, 처음으로 "살아 숨 쉬는 코드"가 무엇인지 느끼게 해준 서비스였습니다.
 
-![카페 서비스 화면](./cafe-home.png)
-_핑크퐁 카페 서비스 화면_
+<div style="display: flex; justify-content: center; gap: 10px; margin: 20px 0;">
+  <div style="width: 48%;">
+    <img src="../2025-memoir/cafe-home.png" style="width: 100%; border-radius: 8px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
+    <div class="caption">메인 홈 화면</div>
+  </div>
+  <div style="width: 48%;">
+    <img src="../2025-memoir/cafe-news.png" style="width: 100%; border-radius: 8px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
+    <div class="caption">뉴스 피드 화면</div>
+  </div>
+</div>
 
 ### 2. 파일 저장소 및 플레이어 서비스 (PoC)
 

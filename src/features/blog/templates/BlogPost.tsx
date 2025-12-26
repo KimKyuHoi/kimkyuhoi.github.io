@@ -283,24 +283,6 @@ const PostBody = styled.section`
     display: block;
   }
 
-  .gatsby-resp-image-wrapper {
-    max-width: 300px !important;
-    margin: 24px auto 8px !important;
-  }
-
-  .gatsby-resp-image-wrapper + em,
-  img + em,
-  p > img + br + em,
-  p:has(> img) + p > em:only-child {
-    display: block;
-    text-align: center;
-    font-size: 14px;
-    color: ${({ theme }) => theme.text.muted};
-    margin-top: 0;
-    margin-bottom: 24px;
-    font-style: normal;
-  }
-
   code {
     background: ${({ theme }) => theme.bg.codeInline};
     padding: 2px 6px;
