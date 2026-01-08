@@ -31,7 +31,7 @@ const IndexPage: React.FC<PageProps<Queries.IndexPageQuery>> = ({ data, location
 
   const [activeCat, setActiveCat] = useState<string>('전체');
 
-  const latest = posts.slice(0, 12);
+  const latest = posts.slice(0, 5);
   const filtered = latest.filter(
     (p) => activeCat === '전체' || p.frontmatter?.category === activeCat
   );

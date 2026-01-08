@@ -149,6 +149,7 @@ const Main = styled.div`
   background: transparent;
   padding: 0;
   max-width: 100%;
+  overflow: hidden;
 `;
 
 const Aside = styled.div`
@@ -216,12 +217,13 @@ const Hero = styled.img`
 `;
 
 const PostBody = styled.section`
-  font-size: 16px;
-  line-height: 1.8;
+  font-size: 15px;
+  line-height: 1.75;
   color: ${({ theme }) => theme.text.primary};
+  overflow-x: hidden;
 
   p {
-    margin-bottom: 20px;
+    margin-bottom: 18px;
     word-break: keep-all;
   }
 
@@ -236,17 +238,17 @@ const PostBody = styled.section`
   }
 
   h2 {
-    font-size: 24px;
+    font-size: 22px;
     font-weight: 700;
-    margin: 40px 0 20px;
+    margin: 36px 0 18px;
     padding-bottom: 10px;
     border-bottom: 1px solid ${({ theme }) => theme.border};
   }
 
   h3 {
-    font-size: 20px;
+    font-size: 18px;
     font-weight: 700;
-    margin: 32px 0 14px;
+    margin: 28px 0 12px;
   }
 
   h4 {
@@ -259,20 +261,63 @@ const PostBody = styled.section`
   ol {
     margin-bottom: 24px;
     padding-left: 24px;
+
+    @media (max-width: 768px) {
+      padding-left: 20px;
+    }
+
     li {
       margin-bottom: 8px;
     }
   }
 
   blockquote {
-    margin: 24px 0;
-    padding: 16px 24px;
-    background: ${({ theme }) => theme.bg.muted};
-    border-left: 4px solid ${({ theme }) => theme.accent};
+    margin: 32px 0;
+    padding: 24px 28px;
+    background: #f8fbff;
+    border-left: 5px solid ${({ theme }) => theme.accent};
     border-radius: ${({ theme }) => theme.radius.sm};
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.03);
 
     p {
       margin: 0;
+      font-size: 14.5px;
+      line-height: 1.7;
+    }
+  }
+
+  .table-wrapper {
+    overflow-x: auto;
+    margin: 24px 0;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+    display: block;
+    overflow-x: auto;
+
+    th,
+    td {
+      padding: 12px 16px;
+      text-align: left;
+      border-bottom: 1px solid ${({ theme }) => theme.border};
+      white-space: nowrap;
+    }
+
+    th {
+      font-weight: 700;
+      background: ${({ theme }) => theme.bg.muted};
+      color: ${({ theme }) => theme.text.primary};
+    }
+
+    td {
+      color: ${({ theme }) => theme.text.muted};
+    }
+
+    tr:last-child td {
+      border-bottom: none;
     }
   }
 
@@ -297,12 +342,15 @@ const PostBody = styled.section`
     border-radius: ${({ theme }) => theme.radius.md};
     overflow-x: auto;
     margin: 24px 0;
+    max-width: 100%;
 
     code {
       background: transparent;
       padding: 0;
       color: #f8f9fa;
       font-size: 14px;
+      white-space: pre-wrap;
+      word-wrap: break-word;
     }
   }
 `;
