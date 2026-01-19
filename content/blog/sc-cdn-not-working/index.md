@@ -1,7 +1,7 @@
 ---
-title: 'Server Component는 CDN이 작동하지 않는다는 사실을 알고 계신가요?'
+title: '캐시는 같은 질문에 같은 답을 하고 싶어합니다'
 date: '2026-01-19'
-description: 'SC CDN이 작동하지 않는 문제를 해결하기 위한 방법을 소개합니다.'
+description: 'RSC의 CDN 히트율이 떨어지는 이유와 이에 대한 논의중인 해결책에 대해 소개합니다.'
 tags: ['Next.js', 'Server Component', 'CDN', 'Frontend', 'PPR']
 category: '개발'
 featured: true
