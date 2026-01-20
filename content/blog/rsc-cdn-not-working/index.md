@@ -145,7 +145,7 @@ export const setCacheBustingSearchParam = (url: URL, headers: RequestHeaders): v
 
 ## 결국 CDN 캐시가 깨지는 이유
 
-그런데 이 우회책이 역으로 문제가 됩니다. **라우터 상태 트리가 사용자의 이전 방문 경로에 따라 달라지기 때문이에요:**
+결국 이런 생성 방식이 역으로 문제가 됩니다. **라우터 상태 트리가 사용자의 이전 방문 경로에 따라 달라지기 때문이에요:**
 
 ```
 사용자 A: /ko (홈) → /ko/characters
@@ -214,7 +214,7 @@ return prefetchHeader ? 'prefetch' : 'full';
 | 네트워크 비용   | 적음                   | 많음                      |
 | 서버 연산량     | 적음                   | 많음                      |
 
-결국 해시값을 고정시키게 되면서 Next.js App Router과 Server Component의 조합을 통해 클라이언트가 가지고 있는 레이아웃을 제외하고 변경된 부분만 보내서 대역폭을 절약하는 **부분 프리페칭(Partial Prefetch)**을 포기하고 이 이점을 포기해야하는 상황이 발생합니다.
+결국 해시값을 고정시키게 되면서 Next.js App Router과 Server Component의 조합을 통해 클라이언트가 가지고 있는 레이아웃을 제외하고 변경된 부분만 보내서 대역폭을 절약하는 **부분 프리페칭(Partial Prefetch)** 을 포기하고 이 이점을 포기해야하는 상황이 발생합니다.
 
 다만 댓글 작성자도 몇 가지 주의할 점을 남겼는데요.
 
