@@ -153,7 +153,7 @@ const IndexPage: React.FC<PageProps<Queries.IndexPageQuery>> = ({ data, location
 
 export default IndexPage;
 
-export const Head = () => <Seo title="홈" />;
+export const Head = () => <Seo title="홈" pathname="/" />;
 
 export const pageQuery = graphql`
   query IndexPage {

@@ -59,7 +59,7 @@ const PostsPage: React.FC<PageProps<Queries.PostsPageQuery>> = ({ data, location
 
 export default PostsPage;
 
-export const Head = () => <Seo title="Posts" />;
+export const Head = () => <Seo title="Posts" pathname="/posts" />;
 
 export const pageQuery = graphql`
   query PostsPage {

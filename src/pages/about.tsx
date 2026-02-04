@@ -197,7 +197,7 @@ const AboutPage: React.FC<PageProps> = ({ location }) => {
 
 export default AboutPage;
 
-export const Head = () => <Seo title="About" />;
+export const Head = () => <Seo title="About" pathname="/about" />;
 
 const Container = styled.div`
   max-width: 720px;

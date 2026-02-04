@@ -32,7 +32,7 @@ const GuestbookPage: React.FC<PageProps> = ({ location }) => {
 
 export default GuestbookPage;
 
-export const Head = () => <Seo title="Guestbook" />;
+export const Head = () => <Seo title="Guestbook" pathname="/guestbook" />;
 
 const Header = styled.header`
   margin-bottom: 16px;

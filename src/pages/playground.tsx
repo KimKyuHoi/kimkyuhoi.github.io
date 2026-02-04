@@ -49,7 +49,7 @@ const PlaygroundPage: React.FC<PageProps> = ({ location }) => {
 
 export default PlaygroundPage;
 
-export const Head = () => <Seo title="Playground" />;
+export const Head = () => <Seo title="Playground" pathname="/playground" />;
 
 const Header = styled.header`
   margin-bottom: 16px;

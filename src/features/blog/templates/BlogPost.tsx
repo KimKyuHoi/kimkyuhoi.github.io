@@ -85,10 +85,19 @@ export default BlogPostTemplate;
 export const Head: React.FC<PageProps<Queries.BlogPostBySlugQuery>> = ({ data }) => {
   const post = data.markdownRemark;
   const siteTitle = data.site?.siteMetadata?.title || `Blog`;
+  const slug = post?.fields?.slug || '';
+
   return (
     <Seo
       title={post?.frontmatter?.title || siteTitle}
       description={post?.frontmatter?.description || post?.excerpt || undefined}
+      pathname={slug}
+      image={post?.frontmatter?.hero || undefined}
+      article={{
+        publishedTime: post?.frontmatter?.rawDate || undefined,
+        modifiedTime: post?.frontmatter?.rawDate || undefined,
+        tags: (post?.frontmatter?.tags as string[]) || [],
+      }}
     />
   );
 };
@@ -105,9 +114,13 @@ export const pageQuery = graphql`
       excerpt(pruneLength: 160)
       html
       tableOfContents
+      fields {
+        slug
+      }
       frontmatter {
         title
         date(formatString: "YYYY년 M월 D일")
+        rawDate: date(formatString: "YYYY-MM-DD")
         description
         category
         tags

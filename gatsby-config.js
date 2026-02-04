@@ -9,21 +9,21 @@ module.exports = {
   siteMetadata: {
     title: `Andy Tech Blog`,
     author: {
-      name: `개발자 앤디`,
-      summary: `프론트엔드 개발자 Andy의 기록과 실험실`,
+      name: `앤디`,
+      summary: `프론트엔드 개발자 앤디의 개발 기술블로그`,
     },
-    description: `좌충우돌 규회의 개발 기술블로그`,
+    description: `프론트엔드 개발자 앤디의 개발 기술블로그`,
     siteUrl: `https://kimkyuhoi.github.io/blog`,
     social: {
       twitter: ``,
       github: `KimKyuHoi`,
       linkedin: `https://www.linkedin.com/in/%EA%B7%9C%ED%9A%8C-%EA%B9%80-2ba0a5254/`,
       velog: `https://velog.io/@k_gu_wae123/posts`,
-      email: `kimkyuhoi.dev@gmail.com`,
+      email: `k546kh@gmail.com`,
     },
     utterancesRepo: `KimKyuHoi/blog`,
     buyMeCoffeeId: `k546khi`,
-    featuredCategories: [`전체`, `개발`, `회고록`],
+    featuredCategories: [`전체`, `개발`, `오픈소스`, `회고록`],
   },
   plugins: [
     {
