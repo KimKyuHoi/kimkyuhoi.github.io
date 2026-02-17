@@ -1,6 +1,7 @@
 import React from 'react';
 import styled from '@emotion/styled';
 import type { PageProps } from 'gatsby';
+import { withPrefix } from 'gatsby';
 import Layout from '@/components/Layout';
 import Seo from '@/components/Seo';
 
@@ -25,11 +26,11 @@ const PlaygroundPage: React.FC<PageProps> = ({ location }) => {
         {projects.map((p) => (
           <Card
             key={p.name}
-            href={p.link}
+            href={p.link.startsWith('http') ? p.link : withPrefix(p.link)}
             target={p.link.startsWith('http') ? '_blank' : undefined}
           >
             <Thumbnail>
-              {p.thumbnail ? <img src={p.thumbnail} alt={p.name} /> : <Placeholder />}
+              {p.thumbnail ? <img src={withPrefix(p.thumbnail)} alt={p.name} /> : <Placeholder />}
             </Thumbnail>
             <CardBody>
               <TagWrap>
