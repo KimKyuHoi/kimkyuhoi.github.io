@@ -4,7 +4,6 @@
 
 /** @type {import('gatsby').GatsbyConfig} */
 module.exports = {
-  pathPrefix: '/blog',
   graphqlTypegen: true,
   siteMetadata: {
     title: `Andy Tech Blog`,
@@ -13,7 +12,7 @@ module.exports = {
       summary: `프론트엔드 개발자 앤디의 개발 기술블로그`,
     },
     description: `프론트엔드 개발자 앤디의 개발 기술블로그`,
-    siteUrl: `https://kimkyuhoi.github.io/blog`,
+    siteUrl: `https://kimkyuhoi.github.io`,
     social: {
       twitter: ``,
       github: `KimKyuHoi`,
@@ -139,7 +138,7 @@ module.exports = {
       resolve: `gatsby-plugin-robots-txt`,
       options: {
         host: 'https://kimkyuhoi.github.io',
-        sitemap: 'https://kimkyuhoi.github.io/blog/sitemap-index.xml',
+        sitemap: 'https://kimkyuhoi.github.io/sitemap-index.xml',
         policy: [{ userAgent: '*', allow: '/' }],
       },
     },

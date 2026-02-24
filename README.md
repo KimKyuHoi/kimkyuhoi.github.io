@@ -3,7 +3,7 @@
 안녕하세요! 프론트엔드 개발자 **Andy(김규회)**의 기술 블로그입니다.  
 Gatsby를 기반으로 제작되었으며, 개발 경험과 학습한 내용을 기록하는 공간입니다.
 
-🔗 **Blog URL:** [https://kimkyuhoi.github.io/blog](https://kimkyuhoi.github.io/blog)
+🔗 **Blog URL:** [https://kimkyuhoi.github.io](https://kimkyuhoi.github.io)
 
 ## ✨ Features
 

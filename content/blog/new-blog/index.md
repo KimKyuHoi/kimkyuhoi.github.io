@@ -11,7 +11,7 @@ featured: false
 
 블로그를 새로 만들었습니다. 기존에 사용하던 [Velog](https://velog.io/@k_gu_wae123/posts)에서 Gatsby 기반의 개인 블로그로 이전하게 되었어요.
 
-🔗 **새 블로그 주소**: [kimkyuhoi.github.io/blog](https://kimkyuhoi.github.io/blog)  
+🔗 **새 블로그 주소**: [kimkyuhoi.github.io](https://kimkyuhoi.github.io)  
 📦 **GitHub 저장소**: [KimKyuHoi/blog](https://github.com/KimKyuHoi/blog)
 
 ---

@@ -65,7 +65,7 @@ const Seo: React.FC<SeoProps> = ({ description, title, pathname, image, article,
   const siteUrl = site.siteMetadata?.siteUrl || '';
   const authorName = site.siteMetadata?.author?.name || '앤디';
 
-  // canonical URL - siteUrl에 이미 /blog가 포함되어 있으므로 pathname만 추가
+  // canonical URL - siteUrl과 pathname 조합
   const canonicalUrl = pathname ? `${siteUrl}${pathname}` : siteUrl;
 
   // og:image - 절대 URL로 보장
