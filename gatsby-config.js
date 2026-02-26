@@ -20,7 +20,7 @@ module.exports = {
       velog: `https://velog.io/@k_gu_wae123/posts`,
       email: `k546kh@gmail.com`,
     },
-    utterancesRepo: `KimKyuHoi/blog`,
+    utterancesRepo: `KimKyuHoi/kimkyuhoi.github.io`,
     buyMeCoffeeId: `k546khi`,
     featuredCategories: [`전체`, `개발`, `오픈소스`, `회고록`],
   },
