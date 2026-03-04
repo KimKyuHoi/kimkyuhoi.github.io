@@ -5,8 +5,13 @@ declare module 'stacked-alpha-video' {
   }
 }
 
-declare namespace JSX {
-  interface IntrinsicElements {
-    'stacked-alpha-video': React.DetailedHTMLProps<React.HTMLAttributes<HTMLElement>, HTMLElement>;
+declare module 'react' {
+  namespace JSX {
+    interface IntrinsicElements {
+      'stacked-alpha-video': React.DetailedHTMLProps<
+        React.HTMLAttributes<HTMLElement>,
+        HTMLElement
+      >;
+    }
   }
 }

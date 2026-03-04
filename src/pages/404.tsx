@@ -19,6 +19,17 @@ interface NotFoundPageProps extends PageProps {
 const NotFoundPage: React.FC<NotFoundPageProps> = ({ data, location }) => {
   const siteTitle = data.site.siteMetadata.title;
 
+  React.useEffect(() => {
+    const { pathname, search, hash } = window.location;
+    // 구 블로그 URL (/blog/...) -> 새 URL (/..) 리다이렉트
+    if (pathname.startsWith('/blog/')) {
+      const newPath = pathname.replace(/^\/blog/, '') || '/';
+      window.location.replace(newPath + search + hash);
+    } else if (pathname === '/blog' || pathname === '/blog/') {
+      window.location.replace('/' + search + hash);
+    }
+  }, []);
+
   return (
     <Layout location={location} title={siteTitle}>
       <h1>404: Not Found</h1>
