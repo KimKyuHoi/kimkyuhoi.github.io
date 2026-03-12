@@ -1,9 +1,4 @@
 import React from 'react';
-declare module 'stacked-alpha-video' {
-  export default class StackedAlphaVideo extends HTMLElement {
-    premultipliedAlpha: boolean;
-  }
-}
 
 declare module 'react' {
   namespace JSX {
