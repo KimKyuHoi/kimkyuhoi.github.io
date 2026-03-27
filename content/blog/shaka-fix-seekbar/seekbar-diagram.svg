@@ -1,0 +1,74 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 420" font-family="'Pretendard', -apple-system, sans-serif">
+  <!-- Background -->
+  <rect width="800" height="420" fill="#1a1a2e" rx="12"/>
+
+  <!-- Title -->
+  <text x="400" y="36" text-anchor="middle" fill="#e0e0e0" font-size="18" font-weight="bold">hover와 click이 같은 X 좌표에서 다른 값을 계산하는 이유</text>
+
+  <!-- === Hover calculation (top) === -->
+  <text x="60" y="80" fill="#7ecfff" font-size="14" font-weight="bold">hover 계산: seekbar 전체 너비 기준</text>
+
+  <!-- Seekbar track -->
+  <rect x="60" y="100" width="680" height="8" rx="4" fill="#444" />
+  <!-- Played area -->
+  <rect x="60" y="100" width="340" height="8" rx="4" fill="#7ecfff" />
+
+  <!-- Full width bracket -->
+  <line x1="60" y1="125" x2="60" y2="135" stroke="#888" stroke-width="1.5"/>
+  <line x1="740" y1="125" x2="740" y2="135" stroke="#888" stroke-width="1.5"/>
+  <line x1="60" y1="130" x2="740" y2="130" stroke="#888" stroke-width="1.5"/>
+  <text x="400" y="148" text-anchor="middle" fill="#aaa" font-size="12">rect.width (전체 너비)</text>
+
+  <!-- Mouse position -->
+  <line x1="400" y1="70" x2="400" y2="108" stroke="#7ecfff" stroke-width="1.5" stroke-dasharray="4,3"/>
+  <circle cx="400" cy="104" r="6" fill="#7ecfff"/>
+  <text x="400" y="66" text-anchor="middle" fill="#7ecfff" font-size="11">clientX</text>
+
+  <!-- Formula -->
+  <rect x="60" y="158" width="680" height="30" rx="6" fill="#1e2d3d"/>
+  <text x="400" y="178" text-anchor="middle" fill="#7ecfff" font-size="13" font-family="'SF Mono', 'Fira Code', monospace">value = (clientX - rect.left) / rect.width * (max - min)</text>
+
+  <!-- === Click calculation (bottom) === -->
+  <text x="60" y="228" fill="#ff7eb3" font-size="14" font-weight="bold">click 계산 (브라우저 네이티브): thumb 보정된 너비 기준</text>
+
+  <!-- Seekbar track -->
+  <rect x="60" y="248" width="680" height="8" rx="4" fill="#444" />
+  <!-- Played area -->
+  <rect x="60" y="248" width="340" height="8" rx="4" fill="#ff7eb3" />
+
+  <!-- Thumb -->
+  <circle cx="400" cy="252" r="8" fill="#fff" stroke="#ff7eb3" stroke-width="2"/>
+
+  <!-- Thumb dead zones -->
+  <rect x="60" y="244" width="6" height="16" rx="2" fill="#ff7eb3" opacity="0.25"/>
+  <rect x="734" y="244" width="6" height="16" rx="2" fill="#ff7eb3" opacity="0.25"/>
+
+  <!-- thumbSize/2 labels -->
+  <line x1="60" y1="270" x2="66" y2="270" stroke="#ff7eb3" stroke-width="1.5"/>
+  <line x1="60" y1="266" x2="60" y2="274" stroke="#ff7eb3" stroke-width="1.5"/>
+  <line x1="66" y1="266" x2="66" y2="274" stroke="#ff7eb3" stroke-width="1.5"/>
+  <text x="63" y="286" text-anchor="middle" fill="#ff7eb3" font-size="9">6px</text>
+
+  <line x1="734" y1="270" x2="740" y2="270" stroke="#ff7eb3" stroke-width="1.5"/>
+  <line x1="734" y1="266" x2="734" y2="274" stroke="#ff7eb3" stroke-width="1.5"/>
+  <line x1="740" y1="266" x2="740" y2="274" stroke="#ff7eb3" stroke-width="1.5"/>
+  <text x="737" y="286" text-anchor="middle" fill="#ff7eb3" font-size="9">6px</text>
+
+  <!-- Effective width bracket -->
+  <line x1="66" y1="295" x2="66" y2="305" stroke="#ff7eb3" stroke-width="1.5"/>
+  <line x1="734" y1="295" x2="734" y2="305" stroke="#ff7eb3" stroke-width="1.5"/>
+  <line x1="66" y1="300" x2="734" y2="300" stroke="#ff7eb3" stroke-width="1.5"/>
+  <text x="400" y="318" text-anchor="middle" fill="#ffb0cc" font-size="12">rect.width - thumbSize (실제 계산 영역)</text>
+
+  <!-- Mouse position (same X) -->
+  <line x1="400" y1="222" x2="400" y2="244" stroke="#ff7eb3" stroke-width="1.5" stroke-dasharray="4,3"/>
+  <text x="400" y="218" text-anchor="middle" fill="#ff7eb3" font-size="11">같은 clientX</text>
+
+  <!-- Formula -->
+  <rect x="60" y="328" width="680" height="30" rx="6" fill="#2d1e2a"/>
+  <text x="400" y="348" text-anchor="middle" fill="#ff7eb3" font-size="13" font-family="'SF Mono', 'Fira Code', monospace">value = (clientX - rect.left - thumbSize/2) / (rect.width - thumbSize) * (max - min)</text>
+
+  <!-- Result comparison -->
+  <rect x="60" y="375" width="680" height="34" rx="8" fill="#2a2a1e"/>
+  <text x="400" y="397" text-anchor="middle" fill="#ffd966" font-size="14" font-weight="bold">같은 X 좌표 클릭 → 서로 다른 value → hover 타임스탬프 ≠ seek 위치</text>
+</svg>
