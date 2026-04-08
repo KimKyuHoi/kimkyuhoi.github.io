@@ -16,6 +16,8 @@ Shaka의 ABR이 [dash.js](https://github.com/Dash-Industry-Forum/dash.js)에 비
 
 그래서 ABR이란 무엇일까요? ABR은 Adaptive Bitrate Streaming의 약자로, 쉽게 말하자면 아래 사진처럼 스트리밍 서비스에서 흔히 볼 수 있는 화질 선택 메뉴에서 '자동'을 선택했을 때 동작하는 기술입니다.
 
+![abr](./abr.png '유튜브에 설정에 있는 화질 설정')
+
 네트워크 상태나 기기 성능에 따라 자동으로 최적의 화질을 선택해주는 기술인데요. 아래 그림처럼, 플레이어는 영상을 짧은 세그먼트 단위로 다운로드하면서 네트워크 상태를 지속적으로 모니터링합니다. 네트워크가 빠르면 높은 비트레이트(고화질)의 세그먼트를, 느려지면 낮은 비트레이트(저화질)의 세그먼트를 선택하여 버퍼링 없는 재생을 유지합니다.
 
 ![네트워크 상태에 따른 ABR 화질 적응](./abr_adaptation.png '네트워크 속도가 느려지면 낮은 화질로, 빨라지면 높은 화질로 자동 전환')
@@ -119,11 +121,11 @@ getBandwidthEstimate(defaultEstimate) {
 }
 ```
 
+이 `Math.min` 전략이 핵심인데요, 결국 아래의 네트워크 상황에 맞게 네트워크가 느려질 경우 fast EWMA가 먼저 낮아지기 때문에 버퍼링 방지를 위해 화질을 빠르게 낮추게 되고, 네트워크가 빨라질 경우 slow EWMA가 여전히 낮으므로 천천히 화질을 올리게 됩니다.
+
 > [ewma_bandwidth_estimator.js 전체 소스코드](https://github.com/shaka-project/shaka-player/blob/main/lib/abr/ewma_bandwidth_estimator.js)
 
 ![Dual EWMA 동작 원리](./dual_ewma.png)
-
-이 `Math.min` 전략이 핵심인데요, 결국 아래의 네트워크 상황에 맞게 네트워크가 느려질 경우 fast EWMA가 먼저 낮아지기 때문에 버퍼링 방지를 위해 화질을 빠르게 낮추게 되고, 네트워크가 빨라질 경우 slow EWMA가 여전히 낮으므로 천천히 화질을 올리게 됩니다.
 
 - **네트워크가 느려질 때**: fast EWMA가 먼저 낮아지므로 → 빠르게 화질을 낮춤 (버퍼링 방지)
 - **네트워크가 빨라질 때**: slow EWMA가 여전히 낮으므로 → 천천히 화질을 올림 (불안정한 전환 방지)
