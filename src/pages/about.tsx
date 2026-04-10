@@ -9,7 +9,18 @@ const career = [
     period: '26.01 ~ ing',
     title: 'The Pinkfong Company',
     role: 'Web Development Group Software Engineer',
-    projects: [],
+    projects: [
+      {
+        name: '핑크퐁 공식 홈페이지 개편',
+        details: [
+          'Meet & Play 탭 페이지 개발',
+          'WebGL 및 canvas 기반 gif 이미지 최적화 (65MB → 226KB)',
+          'CloudFront 기반 국가별 쿠키 정책 대응',
+          'Sentry 도입 및 레벨별 커스텀 에러 모니터링 체계 구축',
+          'Claude Code Action 기반 코드 리뷰 자동화 도입',
+        ],
+      },
+    ],
   },
   {
     period: '25.08 ~ 25.12',
@@ -20,15 +31,13 @@ const career = [
         name: '컨텐츠 피드백 시스템 개발 (진행중)',
         details: [
           'Shaka Player + peaks.js 연동 정밀 피드백 플레이어 구현',
-          'ABR 적용 자동 화질 전환 및 Sprite Sheet 프리뷰 최적화 (6ms)',
-          'dnd-kit 기반 영상 비교 분할탭 구현',
-          '프레임 이동, 구간 점프 등 커스텀 단축키 시스템 도입',
-          'SQS/EventBridge Event-Driven 미디어 처리 파이프라인 설계',
-          'Semaphore 기반 Lambda 동시 실행 제어 및 재시도 로직 구현',
+          'webVTT 기반 썸네일 프리뷰 최적화 (6ms)',
+          'dnd-kit 기반 영상 비교 분할탭 및 커스텀 단축키 시스템 도입',
+          'SQS/EventBridge Event-Driven 미디어 처리 파이프라인 서버리스 아키텍처 설계',
         ],
       },
       {
-        name: '사내 카페 시스템 마이그레이션',
+        name: '사내 카페 시스템 레거시 개편',
         details: [
           'Next.js App Router 전환으로 번들 사이즈 72% 감소',
           'TanStack Query v5 도입으로 FCP 58% 개선 (1.2s → 0.5s)',
