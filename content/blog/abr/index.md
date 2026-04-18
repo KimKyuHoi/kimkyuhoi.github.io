@@ -10,7 +10,7 @@ category: 'Media'
 
 ![matvp91의 PR 댓글](./improve.png 'matvp91이 제안한 가중치 기반 ABR 전략')
 
-Shaka의 ABR이 [dash.js](https://github.com/Dash-Industry-Forum/dash.js)에 비해 단순하다는 지적이었는데, 솔직히 그때는 EWMA가 뭔지, dash.js의 rule-based ABR이 어떻게 다른지도 잘 몰랐습니다. 이 글은 그 댓글을 계기로 ABR의 동작 원리를 공부한 과정을 정리한 것입니다.
+Shaka의 ABR이 [dash.js](https://github.com/Dash-Industry-Forum/dash.js)에 비해 단순하다는 지적이었는데, 솔직히 그때는 EWMA가 뭔지, dash.js의 rule-based ABR이 어떻게 다른지도 잘 몰랐습니다. 이 글은 그 댓글을 계기로 ABR의 동작 원리를 공부한 과정을 정리하였습니다.
 
 ## ABR이란?
 
