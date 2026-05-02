@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>MSE 미니 플레이어</title>
+    <style>
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        background: #f8fafc;
+        color: #1f2937;
+      }
+      .container {
+        max-width: 720px;
+        margin: 24px auto;
+        padding: 0 20px;
+      }
+      h1 { font-size: 18px; margin: 0 0 8px; }
+      .sub {
+        font-size: 13px;
+        color: #6b7280;
+        margin: 0 0 16px;
+      }
+      video {
+        width: 100%;
+        border-radius: 8px;
+        background: #000;
+        display: block;
+      }
+      .log {
+        background: #0f172a;
+        color: #e2e8f0;
+        padding: 14px 16px;
+        border-radius: 8px;
+        font-family: 'SF Mono', Menlo, Consolas, monospace;
+        font-size: 12.5px;
+        line-height: 1.7;
+        margin-top: 16px;
+        min-height: 160px;
+        max-height: 280px;
+        overflow-y: auto;
+      }
+      .line { display: block; }
+      .line.dim { color: #64748b; }
+      .step {
+        color: #60a5fa;
+        font-weight: 700;
+        margin-right: 6px;
+      }
+      .ok { color: #4ade80; }
+      .err { color: #f87171; }
+      .restart {
+        margin-top: 12px;
+        padding: 6px 14px;
+        font-size: 12.5px;
+        border: 1px solid #cbd5e1;
+        background: #fff;
+        border-radius: 6px;
+        cursor: pointer;
+        color: #475569;
+      }
+      .restart:hover { background: #f1f5f9; }
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
+
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <script type="text/babel" data-presets="react">
+      const { useEffect, useRef, useState } = React;
+
+      const ASSET_URL = 'https://nickdesaulniers.github.io/netfix/demo/frag_bunny.mp4';
+      const MIME_CODEC = 'video/mp4; codecs="avc1.42E01E, mp4a.40.2"';
+
+      function App() {
+        const videoRef = useRef(null);
+        const [logs, setLogs] = useState([]);
+        const [phase, setPhase] = useState('idle');
+        const [runId, setRunId] = useState(0);
+
+        const addLog = (step, msg, type = '') => {
+          setLogs((prev) => [...prev, { step, msg, type, id: Date.now() + Math.random() }]);
+        };
+
+        useEffect(() => {
+          const video = videoRef.current;
+          if (!video) return;
+
+          setLogs([]);
+          setPhase('running');
+          addLog(1, `자산 URL: ${ASSET_URL}`);
+
+          // 2단계: MediaSource 생성 + <video> 연결
+          const mediaSource = new MediaSource();
+          video.src = URL.createObjectURL(mediaSource);
+          addLog(2, `MediaSource 생성 → readyState: ${mediaSource.readyState}`);
+          addLog(2, 'video.src 연결 완료 (blob URL)');
+
+          let cancelled = false;
+
+          const handleSourceOpen = async () => {
+            if (cancelled) return;
+            addLog(2, `sourceopen 발생 → readyState: ${mediaSource.readyState}`, 'ok');
+
+            // 3단계: 코덱 지원 체크
+            if (!MediaSource.isTypeSupported(MIME_CODEC)) {
+              addLog(3, `❌ 코덱 미지원: ${MIME_CODEC}`, 'err');
+              return;
+            }
+            addLog(3, `✅ 코덱 지원: ${MIME_CODEC}`, 'ok');
+
+            // 4단계: SourceBuffer 생성
+            const sb = mediaSource.addSourceBuffer(MIME_CODEC);
+            addLog(4, 'SourceBuffer 생성 → 디코더 셋업 완료', 'ok');
+
+            // 5단계: 세그먼트 fetch + appendBuffer
+            addLog(5, 'fetch 시작...');
+            try {
+              const buf = await fetch(ASSET_URL).then((r) => r.arrayBuffer());
+              if (cancelled) return;
+              const sizeMB = (buf.byteLength / 1024 / 1024).toFixed(2);
+              addLog(5, `세그먼트 수신 완료 (${sizeMB} MB)`, 'ok');
+
+              sb.addEventListener('updateend', () => {
+                if (cancelled) return;
+                addLog(5, 'appendBuffer 완료 → <video>에서 디코딩·재생 시작', 'ok');
+                try {
+                  if (mediaSource.readyState === 'open') mediaSource.endOfStream();
+                } catch (e) {}
+                setPhase('done');
+              });
+
+              sb.appendBuffer(buf);
+              addLog(5, `appendBuffer 호출 (sb.updating: ${sb.updating})`);
+            } catch (e) {
+              addLog(5, `❌ fetch 실패: ${e.message}`, 'err');
+            }
+          };
+
+          mediaSource.addEventListener('sourceopen', handleSourceOpen);
+          return () => {
+            cancelled = true;
+            mediaSource.removeEventListener('sourceopen', handleSourceOpen);
+          };
+        }, [runId]);
+
+        return (
+          <div className="container">
+            <h1>🎬 MSE로 만든 미니 플레이어</h1>
+            <p className="sub">본문 6단계 흐름이 실제로 어떻게 동작하는지 로그로 확인해보세요.</p>
+            <video ref={videoRef} controls />
+            <div className="log">
+              {logs.map((l) => (
+                <div key={l.id} className="line">
+                  <span className="step">[{l.step}단계]</span>
+                  <span className={l.type}>{l.msg}</span>
+                </div>
+              ))}
+              {phase === 'idle' && <div className="line dim">초기화 중...</div>}
+            </div>
+            <button className="restart" onClick={() => setRunId((n) => n + 1)}>
+              ↻ 다시 실행
+            </button>
+          </div>
+        );
+      }
+
+      ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+    </script>
+  </body>
+</html>

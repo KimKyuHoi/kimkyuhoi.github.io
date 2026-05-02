@@ -13,6 +13,14 @@ const projects = [
     tags: ['Video', 'Alpha Channel', 'AV1'],
     thumbnail: '/playground/stacked-alpha-video-thumb.png',
   },
+  {
+    name: 'MSE 미니 플레이어',
+    description:
+      'Media Source Extensions만으로 만든 가장 단순한 비디오 플레이어. 자산 URL을 직접 넣어보고 6단계 동작 흐름을 로그로 확인할 수 있습니다.',
+    link: '/playground/mse-mini-player',
+    tags: ['Video', 'MSE', 'Streaming'],
+    thumbnail: '/playground/mse-mini-player-thumb.png',
+  },
 ];
 
 const PlaygroundPage: React.FC<PageProps> = ({ location }) => {

@@ -285,8 +285,8 @@ const PostBody = styled.section`
   }
 
   blockquote {
-    margin: 32px 0;
-    padding: 24px 28px;
+    margin: 24px 0;
+    padding: 14px 20px;
     background: #f8fbff;
     border-left: 5px solid ${({ theme }) => theme.accent};
     border-radius: ${({ theme }) => theme.radius.sm};
@@ -371,6 +371,85 @@ const PostBody = styled.section`
       font-size: 14px;
       white-space: pre-wrap;
       word-wrap: break-word;
+    }
+  }
+
+  .gatsby-remark-prismjs-copy-button-container {
+    position: relative;
+    top: 0;
+    left: 0;
+    margin: 0;
+    padding: 0;
+    height: 0;
+    overflow: visible;
+    display: flex;
+    justify-content: flex-end;
+    z-index: 2;
+    pointer-events: none;
+  }
+
+  .gatsby-remark-prismjs-copy-button {
+    pointer-events: auto;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+    height: 26px;
+    padding: 0 12px;
+    margin: 36px 12px 0 0;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    color: rgba(248, 249, 250, 0.9);
+    font-family: ${({ theme }) => theme.font.body};
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    line-height: 1;
+    white-space: nowrap;
+    border-radius: 6px;
+    outline: none;
+    user-select: none;
+    animation: none;
+    transition:
+      background 0.18s ease,
+      color 0.18s ease,
+      border-color 0.18s ease,
+      transform 0.18s ease,
+      box-shadow 0.18s ease;
+  }
+
+  .gatsby-remark-prismjs-copy-button:hover {
+    background: rgba(255, 255, 255, 0.16);
+    border-color: rgba(255, 255, 255, 0.32);
+    color: #ffffff;
+    transform: translateY(-1px);
+  }
+
+  .gatsby-remark-prismjs-copy-button:active {
+    transform: translateY(0);
+  }
+
+  .gatsby-remark-prismjs-copy-button:focus-visible {
+    box-shadow: 0 0 0 2px rgba(120, 170, 255, 0.5);
+    border-color: rgba(120, 170, 255, 0.7);
+  }
+
+  .gatsby-remark-prismjs-copy-button.copied {
+    background: rgba(126, 211, 33, 0.18);
+    border-color: rgba(126, 211, 33, 0.5);
+    color: #b5e88c;
+    animation: none;
+  }
+
+  @media (max-width: 600px) {
+    .gatsby-remark-prismjs-copy-button {
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    .gatsby-remark-prismjs-copy-button:hover {
+      background: rgba(255, 255, 255, 0.18);
     }
   }
 `;
