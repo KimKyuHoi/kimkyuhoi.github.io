@@ -101,6 +101,9 @@ const FieldRow = styled.div`
   align-items: center;
   gap: 12px;
   margin-bottom: 10px;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
 
   @media (max-width: 600px) {
     flex-direction: column;
@@ -120,6 +123,7 @@ const Input = styled.input`
   flex: 1;
   min-width: 0;
   width: 100%;
+  max-width: 100%;
   box-sizing: border-box;
   padding: 8px 12px;
   font-family: ${({ theme }) => theme.font.mono};
