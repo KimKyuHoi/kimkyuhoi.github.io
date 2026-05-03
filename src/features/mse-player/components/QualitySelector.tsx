@@ -163,8 +163,7 @@ const Item = styled.button<{ active: boolean }>`
   align-items: center;
   justify-content: space-between;
   padding: 7px 14px;
-  background: ${({ active, theme }) =>
-    active ? 'rgba(96, 165, 250, 0.08)' : 'transparent'};
+  background: ${({ active }) => (active ? 'rgba(96, 165, 250, 0.08)' : 'transparent')};
   border: none;
   cursor: pointer;
   text-align: left;

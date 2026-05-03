@@ -7,17 +7,12 @@ type Props = {
   bufferedRanges: Array<{ start: number; end: number }>;
 };
 
-const BufferTimeline: React.FC<Props> = ({
-  duration,
-  currentTime,
-  bufferedRanges,
-}) => {
+const BufferTimeline: React.FC<Props> = ({ duration, currentTime, bufferedRanges }) => {
   if (duration <= 0) return null;
   return (
     <Wrap>
       <Label>
-        buffered ranges · 재생 위치 {currentTime.toFixed(1)}s /{' '}
-        {duration.toFixed(1)}s
+        buffered ranges · 재생 위치 {currentTime.toFixed(1)}s / {duration.toFixed(1)}s
       </Label>
       <Track>
         {bufferedRanges.map((r, i) => (

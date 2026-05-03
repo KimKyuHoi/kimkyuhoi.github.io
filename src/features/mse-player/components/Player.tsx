@@ -155,13 +155,13 @@ const Player: React.FC<Props> = ({ asset, codec, runId, preferredVariantId, onVa
     if (isManaged) {
       const onStartStreaming = () => addLog(2, '▶️ startstreaming → 세그먼트 fetch 재개');
       const onEndStreaming = () => addLog(2, '⏸️ endstreaming → 세그먼트 fetch 일시정지 (절전)');
-      ms.addEventListener('startstreaming' as any, onStartStreaming);
-      ms.addEventListener('endstreaming' as any, onEndStreaming);
+      (ms as EventTarget).addEventListener('startstreaming', onStartStreaming);
+      (ms as EventTarget).addEventListener('endstreaming', onEndStreaming);
 
       return () => {
         ms.removeEventListener('sourceopen', handleSourceOpen);
-        ms.removeEventListener('startstreaming' as any, onStartStreaming);
-        ms.removeEventListener('endstreaming' as any, onEndStreaming);
+        (ms as EventTarget).removeEventListener('startstreaming', onStartStreaming);
+        (ms as EventTarget).removeEventListener('endstreaming', onEndStreaming);
         video.removeEventListener('loadedmetadata', onMetadata);
         video.removeEventListener('timeupdate', onTimeUpdate);
       };

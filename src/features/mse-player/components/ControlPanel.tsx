@@ -31,8 +31,8 @@ const ControlPanel: React.FC<Props> = ({
     <>
       <SectionTitle>1. 자산 / 코덱 설정</SectionTitle>
       <SectionDesc>
-        URL 끝의 확장자(.mp4 / .m3u8 / .mpd)로 포맷을 자동 감지합니다. HLS/DASH는
-        manifest에서 코덱을 추출해 자동으로 채우므로 코덱 입력란은 비워두셔도 됩니다.
+        URL 끝의 확장자(.mp4 / .m3u8 / .mpd)로 포맷을 자동 감지합니다. HLS/DASH는 manifest에서
+        코덱을 추출해 자동으로 채우므로 코덱 입력란은 비워두셔도 됩니다.
       </SectionDesc>
 
       <FieldRow>
@@ -66,12 +66,7 @@ const ControlPanel: React.FC<Props> = ({
       <SubLabel>Preset · 정상 케이스</SubLabel>
       <Chips>
         {works.map((p) => (
-          <Chip
-            key={p.id}
-            onClick={() => onPickPreset(p)}
-            title={p.description}
-            tone="works"
-          >
+          <Chip key={p.id} onClick={() => onPickPreset(p)} title={p.description} tone="works">
             {p.label}
           </Chip>
         ))}
@@ -80,12 +75,7 @@ const ControlPanel: React.FC<Props> = ({
       <SubLabel style={{ marginTop: 14 }}>Preset · 일부러 망가뜨린 케이스</SubLabel>
       <Chips>
         {edu.map((p) => (
-          <Chip
-            key={p.id}
-            onClick={() => onPickPreset(p)}
-            title={p.description}
-            tone="edu"
-          >
+          <Chip key={p.id} onClick={() => onPickPreset(p)} title={p.description} tone="edu">
             {p.label}
           </Chip>
         ))}
@@ -117,6 +107,10 @@ const FieldLabel = styled.label`
   font-size: 13px;
   font-weight: 600;
   color: ${({ theme }) => theme.text.muted};
+
+  @media (max-width: 600px) {
+    flex: none;
+  }
 `;
 
 const Input = styled.input`
