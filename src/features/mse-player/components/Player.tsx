@@ -18,13 +18,7 @@ type Props = {
   onVariantChange?: (id: string) => void;
 };
 
-const Player: React.FC<Props> = ({
-  asset,
-  codec,
-  runId,
-  preferredVariantId,
-  onVariantChange,
-}) => {
+const Player: React.FC<Props> = ({ asset, codec, runId, preferredVariantId, onVariantChange }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [logs, setLogs] = useState<LogEntry[]>([]);
   const [state, setState] = useState<PlayerState>(initialPlayerState);
@@ -59,8 +53,7 @@ const Player: React.FC<Props> = ({
     }
   };
 
-  const patchState = (patch: Partial<PlayerState>) =>
-    setState((s) => ({ ...s, ...patch }));
+  const patchState = (patch: Partial<PlayerState>) => setState((s) => ({ ...s, ...patch }));
 
   useEffect(() => {
     const video = videoRef.current;
@@ -117,9 +110,7 @@ const Player: React.FC<Props> = ({
         } else if (format === 'dash') {
           await streamDash(asset, ctx);
         } else {
-          throw new Error(
-            '확장자로 포맷을 추정하지 못했습니다 (.mp4 / .m3u8 / .mpd 만 지원).',
-          );
+          throw new Error('확장자로 포맷을 추정하지 못했습니다 (.mp4 / .m3u8 / .mpd 만 지원).');
         }
       } catch (e) {
         const msg = e instanceof Error ? e.message : String(e);
@@ -145,7 +136,7 @@ const Player: React.FC<Props> = ({
 
   return (
     <Card>
-      <Video ref={videoRef} controls />
+      <Video ref={videoRef} controls playsInline muted preload="metadata" />
 
       <StateBadges state={state} />
 
@@ -178,7 +169,10 @@ const Card = styled.div`
 
 const Video = styled.video`
   width: 100%;
+  aspect-ratio: 16 / 9;
+  min-height: 200px;
   border-radius: 8px;
   background: #000;
   display: block;
+  object-fit: contain;
 `;

@@ -343,24 +343,14 @@ MSE([Media Source Extensions](https://developer.mozilla.org/en-US/docs/Web/API/M
 5. **세그먼트 fetch → appendBuffer** — 세그먼트를 `arrayBuffer`로 받아 `sb.appendBuffer(buf)`로 통에 붓습니다. 그 순간부터 `<video>`가 디코딩·재생을 시작합니다. 단 `appendBuffer`는 비동기라 `sb.updating === false`가 될 때까지 다음 호출을 보류해야 합니다.
 6. **화질 변경** — ABR로 다른 화질로 갈아탈 때 새 `<video>`나 새 `MediaSource`를 만들 필요는 없습니다. 같은 SourceBuffer에 다른 화질의 세그먼트를 이어 붙이면 됩니다(코덱이 같은 경우). 코덱이 바뀌면 `SourceBuffer.changeType()`을 따로 호출합니다.
 
-### 직접 동작시켜 보기
-
-지금까지 따라온 6단계 흐름을 React + 순수 MSE로 그대로 옮겨놓은 미니 플레이어입니다. 비디오가 재생되는 동안 각 단계가 로그 패널에 단계별로 찍힙니다.
-
-<iframe
-  src="/playground/mse-mini-player?embed=1&preset=shaka-bbb-hls"
-  style="width:100%; height:620px; border:1px solid #e5e7eb; border-radius:8px; overflow:hidden;"
-  title="MSE 미니 플레이어"
-  loading="lazy"
-></iframe>
-
+> 지금까지 따라온 6단계 흐름을 React + 순수 MSE로 그대로 옮겨놓은 미니 플레이어를 간단하게 만들어보았습니다.
 > 자세한 내용은 [Playground / MSE 미니 플레이어](/playground/mse-mini-player) 페이지에서 직접 확인해볼 수 있습니다.
 
 ### 그러면 직접 짜서 개발하죠?
 
 위 흐름만 보면 fetch + appendBuffer 반복이라 단순해 보이지만, 막상 만들기 시작하면 다음과 같은 주제들이 줄줄이 따라옵니다.
 
-> **트랜스먹싱(transmuxing)이란?** 미디어 데이터의 _내용_(코덱·프레임·샘플)은 그대로 두고, _컨테이너 포맷_만 다른 형태로 다시 포장하는 작업입니다. 예: `.ts`(MPEG-2 Transport Stream) → fMP4. 디코딩이나 재인코딩(transcoding)과는 달리 화질 손실이 없습니다. CPU 비용도 트랜스코딩보다 훨씬 낮습니다 — 박스 구조만 다시 만들면 되니까요.
+> **트랜스먹싱(transmuxing)이란?** 미디어 데이터의 _내용_(코덱·프레임·샘플)은 그대로 두고, 컨테이너 포맷만 다른 형태로 다시 포장하는 작업입니다. 예: `.ts`(MPEG-2 Transport Stream) → fMP4. 디코딩이나 재인코딩(transcoding)과는 달리 화질 손실이 없습니다. CPU 비용도 트랜스코딩보다 훨씬 낮습니다 — 박스 구조만 다시 만들면 되니까요.
 
 - **fragmented MP4 / init segment 처리** — 일반 MP4는 그대로 부을 수 없고, 첫 조각으로 init segment부터 따로 넣어줘야 한다는 사실
 - **HLS `.ts` 트랜스먹싱** — `.ts` 세그먼트는 MSE가 직접 디코딩하지 못합니다. 패킷을 풀어서 H.264 NALU·AAC 프레임을 추출한 뒤 fMP4(`moov`/`moof`/`mdat` 박스)로 다시 포장해서 SourceBuffer에 부어넣어야 합니다. hls.js가 [mux.js](https://github.com/videojs/mux.js)라는 트랜스먹서를 내장하는 이유가 여기에 있습니다
