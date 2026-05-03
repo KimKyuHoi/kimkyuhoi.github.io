@@ -5,6 +5,7 @@ import Layout from '@/components/Layout';
 import ControlPanel from './components/ControlPanel';
 import Player from './components/Player';
 import { Desc, EmbedRoot, Header, Section, SectionTitle, Title } from './components/styled';
+import { isMseAvailable, isManagedMediaSource } from './mse-compat';
 import { PRESETS } from './presets';
 import type { Preset } from './types';
 
@@ -15,8 +16,8 @@ const MsePlayerPage: React.FC<PageProps> = ({ location }) => {
   const initialAsset = params.get('asset') ?? PRESETS[0].asset;
   const initialCodec = params.get('codec') ?? PRESETS[0].codec;
 
-  // null = SSR/판정 전, true = MSE 가능, false = iOS 등 MSE 불가
-  const [mseSupported, setMseSupported] = useState<boolean | null>(null);
+  // null = SSR/판정 전, 'mse' | 'managed' | 'none'
+  const [support, setSupport] = useState<'mse' | 'managed' | 'none' | null>(null);
   const [assetInput, setAssetInput] = useState(initialAsset);
   const [codecInput, setCodecInput] = useState(initialCodec);
   const [appliedAsset, setAppliedAsset] = useState(initialAsset);
@@ -26,25 +27,14 @@ const MsePlayerPage: React.FC<PageProps> = ({ location }) => {
   const playerSectionRef = useRef<HTMLElement | null>(null);
 
   useEffect(() => {
-    setMseSupported(typeof window !== 'undefined' && !!window.MediaSource);
+    if (!isMseAvailable()) {
+      setSupport('none');
+    } else if (isManagedMediaSource()) {
+      setSupport('managed');
+    } else {
+      setSupport('mse');
+    }
   }, []);
-
-  // iOS에서는 HLS 프리셋만 노출
-  const availablePresets = useMemo(
-    () => (mseSupported === false ? PRESETS.filter((p) => p.asset.endsWith('.m3u8')) : PRESETS),
-    [mseSupported]
-  );
-
-  // MSE 미지원 감지 시 기본 프리셋을 HLS로 교체
-  useEffect(() => {
-    if (mseSupported !== false) return;
-    const hlsPreset = availablePresets[0];
-    if (!hlsPreset) return;
-    setAssetInput(hlsPreset.asset);
-    setCodecInput(hlsPreset.codec);
-    setAppliedAsset(hlsPreset.asset);
-    setAppliedCodec(hlsPreset.codec);
-  }, [mseSupported, availablePresets]);
 
   const scrollToPlayer = () => {
     requestAnimationFrame(() => {
@@ -90,8 +80,8 @@ const MsePlayerPage: React.FC<PageProps> = ({ location }) => {
     setRunId((n) => n + 1);
   };
 
-  // SSR/판정 전에는 헤더만 렌더 (레이아웃 점프 방지)
-  if (mseSupported === null) {
+  // SSR / 판정 전 → 헤더만 렌더 (레이아웃 점프 방지)
+  if (support === null) {
     const shell = (
       <>
         {!isEmbed && (
@@ -120,26 +110,31 @@ const MsePlayerPage: React.FC<PageProps> = ({ location }) => {
               Media Source Extensions
             </a>{' '}
             만으로 만든 streaming player. <strong>외부 라이브러리 없이</strong> m3u8 / mpd
-            매니페스트를 직접 파싱해서 init+segment를 fetch한 뒤 SourceBuffer에 부어 넣습니다.
-            {mseSupported ? ' URL을 직접 바꿔보면서 6단계가 어떻게 흘러가는지 확인해보세요.' : ''}
+            매니페스트를 직접 파싱해서 init+segment를 fetch한 뒤 SourceBuffer에 부어 넣습니다. URL을
+            직접 바꿔보면서 6단계가 어떻게 흘러가는지 확인해보세요.
           </Desc>
         </Header>
       )}
 
-      {!mseSupported && (
-        <IOSNotice>
-          <NoticeIcon>📱</NoticeIcon>
-          <NoticeTitle>iOS 모드 (네이티브 재생)</NoticeTitle>
-          <NoticeDesc>
-            iOS의 모든 브라우저는 Apple 정책상 WebKit 엔진을 사용하며,{' '}
-            <strong>MSE API를 지원하지 않습니다.</strong> MSE 단계별 시각화는 데스크톱에서만
-            가능하지만, <strong>HLS(m3u8)는 iOS가 네이티브로 지원</strong>하므로 아래에서 재생해볼
-            수 있습니다. DASH(mpd)·단일 MP4(MSE 코덱 지정) 프리셋은 비활성됩니다.
-          </NoticeDesc>
-        </IOSNotice>
+      {support === 'managed' && (
+        <ManagedNotice>
+          <span>📱</span> iOS <strong>ManagedMediaSource</strong> 모드로 동작 중 — 데스크톱과
+          동일한 MSE 파이프라인이 실행됩니다.
+        </ManagedNotice>
       )}
 
-      {!isEmbed && (
+      {support === 'none' && (
+        <UnsupportedNotice>
+          <NoticeIcon>🚫</NoticeIcon>
+          <NoticeTitle>이 플레이그라운드는 사용할 수 없습니다</NoticeTitle>
+          <NoticeDesc>
+            이 브라우저는 <strong>MediaSource API</strong>를 지원하지 않습니다. 데스크톱
+            브라우저(Chrome, Firefox, Edge 등) 또는 iOS 17.1 이상으로 업데이트 후 접속해 주세요.
+          </NoticeDesc>
+        </UnsupportedNotice>
+      )}
+
+      {support !== 'none' && !isEmbed && (
         <Section>
           <ControlPanel
             assetInput={assetInput}
@@ -149,22 +144,23 @@ const MsePlayerPage: React.FC<PageProps> = ({ location }) => {
             onRun={runWithInputs}
             onRestart={restart}
             onPickPreset={applyPreset}
-            presets={availablePresets}
+            presets={PRESETS}
           />
         </Section>
       )}
 
-      <Section ref={playerSectionRef}>
-        {!isEmbed && <SectionTitle>2. 동작</SectionTitle>}
-        <Player
-          asset={appliedAsset}
-          codec={appliedCodec}
-          runId={runId}
-          preferredVariantId={preferredVariantId}
-          onVariantChange={onVariantChange}
-          nativeMode={!mseSupported}
-        />
-      </Section>
+      {support !== 'none' && (
+        <Section ref={playerSectionRef}>
+          {!isEmbed && <SectionTitle>2. 동작</SectionTitle>}
+          <Player
+            asset={appliedAsset}
+            codec={appliedCodec}
+            runId={runId}
+            preferredVariantId={preferredVariantId}
+            onVariantChange={onVariantChange}
+          />
+        </Section>
+      )}
     </>
   );
 
@@ -177,33 +173,48 @@ const MsePlayerPage: React.FC<PageProps> = ({ location }) => {
 
 export default MsePlayerPage;
 
-const IOSNotice = styled.div`
+const ManagedNotice = styled.div`
+  padding: 12px 16px;
+  margin: 0 0 20px;
+  border-radius: 8px;
+  font-size: 13.5px;
+  line-height: 1.6;
+  border: 1px solid ${({ theme }) => theme.border};
+  background: ${({ theme }) => theme.bg.muted};
+  color: ${({ theme }) => theme.text.muted};
+
+  strong {
+    color: ${({ theme }) => theme.text.primary};
+  }
+`;
+
+const UnsupportedNotice = styled.div`
   display: flex;
   flex-direction: column;
   align-items: center;
   text-align: center;
-  padding: 32px 20px;
-  margin: 0 0 24px;
+  padding: 48px 24px;
+  margin: 24px 0;
   border-radius: 12px;
-  border: 1px solid ${({ theme }) => theme.border};
+  border: 1px dashed ${({ theme }) => theme.border};
   background: ${({ theme }) => theme.bg.muted};
 `;
 
 const NoticeIcon = styled.span`
-  font-size: 36px;
-  margin-bottom: 12px;
+  font-size: 48px;
+  margin-bottom: 16px;
 `;
 
-const NoticeTitle = styled.h3`
-  margin: 0 0 10px;
-  font-size: 17px;
+const NoticeTitle = styled.h2`
+  margin: 0 0 12px;
+  font-size: 20px;
   color: ${({ theme }) => theme.text.primary};
 `;
 
 const NoticeDesc = styled.p`
   margin: 0;
   max-width: 480px;
-  font-size: 13.5px;
+  font-size: 14px;
   line-height: 1.7;
   color: ${({ theme }) => theme.text.muted};
 

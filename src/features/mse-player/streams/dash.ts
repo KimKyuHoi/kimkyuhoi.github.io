@@ -1,6 +1,7 @@
 import { KEEP_AHEAD_SECONDS, PREBUFFER_SECONDS, SEGMENT_LIMIT } from '../constants';
 import type { StreamCtx, Variant } from '../types';
 import { appendBufferAsync, fillTemplate, resolveUrl, waitForBufferLow } from '../utils';
+import { isTypeSupportedCompat } from '../mse-compat';
 
 export async function streamDash(asset: string, ctx: StreamCtx) {
   const { ms, video, addLog, patchState, cancelled, onSegment, preferredVariantId } = ctx;
@@ -120,7 +121,7 @@ export async function streamDash(asset: string, ctx: StreamCtx) {
   const initUrl = resolveUrl(fillTemplate(initTplStr, repId, 0, bandwidth), base);
 
   const mimeCodec = `${mimeType}; codecs="${codecs}"`;
-  const supported = MediaSource.isTypeSupported(mimeCodec);
+  const supported = isTypeSupportedCompat(mimeCodec);
   patchState({ codecSupported: supported, codecResolved: mimeCodec });
   if (!supported) {
     addLog(3, `❌ 코덱 미지원: ${mimeCodec}`, 'err');

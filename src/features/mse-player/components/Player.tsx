@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import styled from '@emotion/styled';
 import { LOG_INTERVAL_MS } from '../constants';
+import { getMediaSourceClass, isManagedMediaSource } from '../mse-compat';
 import { streamMp4, streamHls, streamDash } from '../streams';
 import type { LogEntry, PlayerState, StreamCtx } from '../types';
 import { initialPlayerState } from '../types';
@@ -16,18 +17,9 @@ type Props = {
   runId: number;
   preferredVariantId?: string;
   onVariantChange?: (id: string) => void;
-  /** iOS 등 MSE 미지원 환경에서 네이티브 재생 모드 */
-  nativeMode?: boolean;
 };
 
-const Player: React.FC<Props> = ({
-  asset,
-  codec,
-  runId,
-  preferredVariantId,
-  onVariantChange,
-  nativeMode = false,
-}) => {
+const Player: React.FC<Props> = ({ asset, codec, runId, preferredVariantId, onVariantChange }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [logs, setLogs] = useState<LogEntry[]>([]);
   const [state, setState] = useState<PlayerState>(initialPlayerState);
@@ -83,49 +75,26 @@ const Player: React.FC<Props> = ({
     addLog(1, `포맷 감지: ${format.toUpperCase()}`, format === 'unknown' ? 'err' : 'ok');
     patchState({ format });
 
-    const onMetadata = () => setDuration(video.duration || 0);
-    const onTimeUpdate = () => setCurrentTime(video.currentTime);
-    video.addEventListener('loadedmetadata', onMetadata);
-    video.addEventListener('timeupdate', onTimeUpdate);
-
-    // ── 네이티브 모드 (iOS): video.src에 직접 연결 ──
-    if (nativeMode) {
-      if (format !== 'hls') {
-        addLog(
-          2,
-          `❌ ${format.toUpperCase()} 포맷은 iOS 네이티브 재생을 지원하지 않습니다.`,
-          'err'
-        );
-        return () => {
-          video.removeEventListener('loadedmetadata', onMetadata);
-          video.removeEventListener('timeupdate', onTimeUpdate);
-        };
-      }
-
-      addLog(2, '📱 iOS 네이티브 모드: video.src에 m3u8 URL을 직접 연결합니다.', 'ok');
-      video.src = asset;
-      addLog(2, '✅ iOS WebKit이 HLS를 자동으로 파싱·재생합니다.', 'ok');
-      patchState({ readyState: 'open' });
-
-      return () => {
-        video.removeEventListener('loadedmetadata', onMetadata);
-        video.removeEventListener('timeupdate', onTimeUpdate);
-      };
+    // MediaSource 또는 ManagedMediaSource 생성자 획득
+    const MSClass = getMediaSourceClass();
+    if (!MSClass) {
+      addLog(2, '❌ 이 브라우저는 MediaSource / ManagedMediaSource 어느 쪽도 지원하지 않습니다.', 'err');
+      return;
     }
 
-    // ── MSE 모드 (데스크톱) ──
-    if (!window.MediaSource) {
-      addLog(2, '❌ 이 브라우저는 MediaSource API를 지원하지 않습니다.', 'err');
-      return () => {
-        video.removeEventListener('loadedmetadata', onMetadata);
-        video.removeEventListener('timeupdate', onTimeUpdate);
-      };
+    const isManaged = isManagedMediaSource();
+    if (isManaged) {
+      addLog(2, '📱 ManagedMediaSource 감지 (iOS 17.1+)', 'ok');
+      // ManagedMediaSource는 AirPlay 비활성화 또는 HLS <source> 폴백이 필수
+      video.disableRemotePlayback = true;
+    } else {
+      addLog(2, 'MediaSource 감지 (데스크톱)');
     }
 
-    const ms = new MediaSource();
+    const ms = new MSClass();
     video.src = URL.createObjectURL(ms);
     patchState({ readyState: ms.readyState });
-    addLog(2, `MediaSource 생성 → readyState: ${ms.readyState}`);
+    addLog(2, `${isManaged ? 'ManagedMediaSource' : 'MediaSource'} 생성 → readyState: ${ms.readyState}`);
     addLog(2, 'video.src 연결 (blob URL)');
 
     const updateBufferedFor = (sb: SourceBuffer) => {
@@ -135,6 +104,11 @@ const Player: React.FC<Props> = ({
       }
       patchState({ bufferedRanges: ranges });
     };
+
+    const onMetadata = () => setDuration(video.duration || 0);
+    const onTimeUpdate = () => setCurrentTime(video.currentTime);
+    video.addEventListener('loadedmetadata', onMetadata);
+    video.addEventListener('timeupdate', onTimeUpdate);
 
     const ctx: StreamCtx = {
       ms,
@@ -170,20 +144,36 @@ const Player: React.FC<Props> = ({
 
     ms.addEventListener('sourceopen', handleSourceOpen);
 
+    // ManagedMediaSource 전력 관리 이벤트
+    if (isManaged) {
+      const onStartStreaming = () => addLog(2, '▶️ startstreaming → 세그먼트 fetch 재개');
+      const onEndStreaming = () => addLog(2, '⏸️ endstreaming → 세그먼트 fetch 일시정지 (절전)');
+      ms.addEventListener('startstreaming' as any, onStartStreaming);
+      ms.addEventListener('endstreaming' as any, onEndStreaming);
+
+      return () => {
+        ms.removeEventListener('sourceopen', handleSourceOpen);
+        ms.removeEventListener('startstreaming' as any, onStartStreaming);
+        ms.removeEventListener('endstreaming' as any, onEndStreaming);
+        video.removeEventListener('loadedmetadata', onMetadata);
+        video.removeEventListener('timeupdate', onTimeUpdate);
+      };
+    }
+
     return () => {
       ms.removeEventListener('sourceopen', handleSourceOpen);
       video.removeEventListener('loadedmetadata', onMetadata);
       video.removeEventListener('timeupdate', onTimeUpdate);
     };
-  }, [asset, codec, runId, preferredVariantId, nativeMode]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [asset, codec, runId, preferredVariantId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <Card>
       <Video ref={videoRef} controls playsInline muted preload="metadata" />
 
-      {!nativeMode && <StateBadges state={state} />}
+      <StateBadges state={state} />
 
-      {!nativeMode && state.variants.length > 0 && onVariantChange && (
+      {state.variants.length > 0 && onVariantChange && (
         <QualitySelector
           variants={state.variants}
           selectedId={state.selectedVariantId}
@@ -191,13 +181,11 @@ const Player: React.FC<Props> = ({
         />
       )}
 
-      {!nativeMode && (
-        <BufferTimeline
-          duration={duration}
-          currentTime={currentTime}
-          bufferedRanges={state.bufferedRanges}
-        />
-      )}
+      <BufferTimeline
+        duration={duration}
+        currentTime={currentTime}
+        bufferedRanges={state.bufferedRanges}
+      />
 
       <LogPanel logs={logs} />
     </Card>

@@ -1,11 +1,12 @@
 import type { StreamCtx } from '../types';
 import { appendBufferAsync } from '../utils';
+import { isTypeSupportedCompat } from '../mse-compat';
 
 export async function streamMp4(asset: string, codec: string, ctx: StreamCtx) {
   const { ms, addLog, patchState, cancelled, onSegment } = ctx;
   if (!codec) throw new Error('MP4 모드는 코덱 문자열이 필요합니다.');
 
-  const supported = MediaSource.isTypeSupported(codec);
+  const supported = isTypeSupportedCompat(codec);
   patchState({ codecSupported: supported, codecResolved: codec });
   if (!supported) {
     addLog(3, `❌ 코덱 미지원: ${codec}`, 'err');

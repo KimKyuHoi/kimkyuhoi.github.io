@@ -1,6 +1,7 @@
 import { KEEP_AHEAD_SECONDS, PREBUFFER_SECONDS, SEGMENT_LIMIT } from '../constants';
 import type { StreamCtx, Variant } from '../types';
 import { appendBufferAsync, resolveUrl, splitCodecs, waitForBufferLow } from '../utils';
+import { isTypeSupportedCompat } from '../mse-compat';
 
 type ParsedVariant = {
   url: string;
@@ -169,7 +170,7 @@ export async function streamHls(asset: string, ctx: StreamCtx) {
     mimeCodec = 'video/mp4; codecs="avc1.42E01E, mp4a.40.2"';
   }
 
-  const supported = MediaSource.isTypeSupported(mimeCodec);
+  const supported = isTypeSupportedCompat(mimeCodec);
   patchState({ codecSupported: supported, codecResolved: mimeCodec });
   if (!supported) {
     addLog(3, `❌ 코덱 미지원: ${mimeCodec}`, 'err');
