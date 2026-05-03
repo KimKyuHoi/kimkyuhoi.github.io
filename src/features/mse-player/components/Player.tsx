@@ -74,6 +74,16 @@ const Player: React.FC<Props> = ({ asset, codec, runId, preferredVariantId, onVa
     addLog(1, `포맷 감지: ${format.toUpperCase()}`, format === 'unknown' ? 'err' : 'ok');
     patchState({ format });
 
+    if (!window.MediaSource) {
+      addLog(
+        2,
+        '이 브라우저는 MediaSource API를 지원하지 않습니다 (iOS Safari 등). 네이티브 재생으로 대체합니다.',
+        'warn'
+      );
+      video.src = asset;
+      return;
+    }
+
     const ms = new MediaSource();
     video.src = URL.createObjectURL(ms);
     patchState({ readyState: ms.readyState });
