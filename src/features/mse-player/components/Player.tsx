@@ -16,9 +16,18 @@ type Props = {
   runId: number;
   preferredVariantId?: string;
   onVariantChange?: (id: string) => void;
+  /** iOS 등 MSE 미지원 환경에서 네이티브 재생 모드 */
+  nativeMode?: boolean;
 };
 
-const Player: React.FC<Props> = ({ asset, codec, runId, preferredVariantId, onVariantChange }) => {
+const Player: React.FC<Props> = ({
+  asset,
+  codec,
+  runId,
+  preferredVariantId,
+  onVariantChange,
+  nativeMode = false,
+}) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [logs, setLogs] = useState<LogEntry[]>([]);
   const [state, setState] = useState<PlayerState>(initialPlayerState);
@@ -74,9 +83,43 @@ const Player: React.FC<Props> = ({ asset, codec, runId, preferredVariantId, onVa
     addLog(1, `포맷 감지: ${format.toUpperCase()}`, format === 'unknown' ? 'err' : 'ok');
     patchState({ format });
 
+    const onMetadata = () => setDuration(video.duration || 0);
+    const onTimeUpdate = () => setCurrentTime(video.currentTime);
+    video.addEventListener('loadedmetadata', onMetadata);
+    video.addEventListener('timeupdate', onTimeUpdate);
+
+    // ── 네이티브 모드 (iOS): video.src에 직접 연결 ──
+    if (nativeMode) {
+      if (format !== 'hls') {
+        addLog(
+          2,
+          `❌ ${format.toUpperCase()} 포맷은 iOS 네이티브 재생을 지원하지 않습니다.`,
+          'err'
+        );
+        return () => {
+          video.removeEventListener('loadedmetadata', onMetadata);
+          video.removeEventListener('timeupdate', onTimeUpdate);
+        };
+      }
+
+      addLog(2, '📱 iOS 네이티브 모드: video.src에 m3u8 URL을 직접 연결합니다.', 'ok');
+      video.src = asset;
+      addLog(2, '✅ iOS WebKit이 HLS를 자동으로 파싱·재생합니다.', 'ok');
+      patchState({ readyState: 'open' });
+
+      return () => {
+        video.removeEventListener('loadedmetadata', onMetadata);
+        video.removeEventListener('timeupdate', onTimeUpdate);
+      };
+    }
+
+    // ── MSE 모드 (데스크톱) ──
     if (!window.MediaSource) {
       addLog(2, '❌ 이 브라우저는 MediaSource API를 지원하지 않습니다.', 'err');
-      return;
+      return () => {
+        video.removeEventListener('loadedmetadata', onMetadata);
+        video.removeEventListener('timeupdate', onTimeUpdate);
+      };
     }
 
     const ms = new MediaSource();
@@ -125,11 +168,6 @@ const Player: React.FC<Props> = ({ asset, codec, runId, preferredVariantId, onVa
       }
     };
 
-    const onMetadata = () => setDuration(video.duration || 0);
-    const onTimeUpdate = () => setCurrentTime(video.currentTime);
-
-    video.addEventListener('loadedmetadata', onMetadata);
-    video.addEventListener('timeupdate', onTimeUpdate);
     ms.addEventListener('sourceopen', handleSourceOpen);
 
     return () => {
@@ -137,15 +175,15 @@ const Player: React.FC<Props> = ({ asset, codec, runId, preferredVariantId, onVa
       video.removeEventListener('loadedmetadata', onMetadata);
       video.removeEventListener('timeupdate', onTimeUpdate);
     };
-  }, [asset, codec, runId, preferredVariantId]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [asset, codec, runId, preferredVariantId, nativeMode]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <Card>
       <Video ref={videoRef} controls playsInline muted preload="metadata" />
 
-      <StateBadges state={state} />
+      {!nativeMode && <StateBadges state={state} />}
 
-      {state.variants.length > 0 && onVariantChange && (
+      {!nativeMode && state.variants.length > 0 && onVariantChange && (
         <QualitySelector
           variants={state.variants}
           selectedId={state.selectedVariantId}
@@ -153,11 +191,13 @@ const Player: React.FC<Props> = ({ asset, codec, runId, preferredVariantId, onVa
         />
       )}
 
-      <BufferTimeline
-        duration={duration}
-        currentTime={currentTime}
-        bufferedRanges={state.bufferedRanges}
-      />
+      {!nativeMode && (
+        <BufferTimeline
+          duration={duration}
+          currentTime={currentTime}
+          bufferedRanges={state.bufferedRanges}
+        />
+      )}
 
       <LogPanel logs={logs} />
     </Card>
