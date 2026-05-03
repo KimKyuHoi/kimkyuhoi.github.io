@@ -75,12 +75,7 @@ const Player: React.FC<Props> = ({ asset, codec, runId, preferredVariantId, onVa
     patchState({ format });
 
     if (!window.MediaSource) {
-      addLog(
-        2,
-        '이 브라우저는 MediaSource API를 지원하지 않습니다 (iOS Safari 등). 네이티브 재생으로 대체합니다.',
-        'warn'
-      );
-      video.src = asset;
+      addLog(2, '❌ 이 브라우저는 MediaSource API를 지원하지 않습니다.', 'err');
       return;
     }
 

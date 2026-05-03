@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import type { PageProps } from 'gatsby';
+import styled from '@emotion/styled';
 import Layout from '@/components/Layout';
 import ControlPanel from './components/ControlPanel';
 import Player from './components/Player';
@@ -14,6 +15,7 @@ const MsePlayerPage: React.FC<PageProps> = ({ location }) => {
   const initialAsset = params.get('asset') ?? PRESETS[0].asset;
   const initialCodec = params.get('codec') ?? PRESETS[0].codec;
 
+  const [mseSupported, setMseSupported] = useState(true);
   const [assetInput, setAssetInput] = useState(initialAsset);
   const [codecInput, setCodecInput] = useState(initialCodec);
   const [appliedAsset, setAppliedAsset] = useState(initialAsset);
@@ -21,6 +23,12 @@ const MsePlayerPage: React.FC<PageProps> = ({ location }) => {
   const [runId, setRunId] = useState(0);
   const [preferredVariantId, setPreferredVariantId] = useState<string | undefined>();
   const playerSectionRef = useRef<HTMLElement | null>(null);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined' && !window.MediaSource) {
+      setMseSupported(false);
+    }
+  }, []);
 
   const scrollToPlayer = () => {
     requestAnimationFrame(() => {
@@ -86,7 +94,20 @@ const MsePlayerPage: React.FC<PageProps> = ({ location }) => {
         </Header>
       )}
 
-      {!isEmbed && (
+      {!mseSupported && (
+        <UnsupportedNotice>
+          <NoticeIcon>🚫</NoticeIcon>
+          <NoticeTitle>이 플레이그라운드는 iOS에서 사용할 수 없습니다</NoticeTitle>
+          <NoticeDesc>
+            iOS의 모든 브라우저(Safari, Chrome, Firefox 등)는 Apple 정책상 WebKit 엔진을 사용하며,
+            WebKit은 <strong>Media Source Extensions(MSE) API</strong>를 지원하지 않습니다. 이
+            데모는 MSE를 직접 활용하는 플레이그라운드이므로, 데스크톱 브라우저(Chrome, Firefox, Edge
+            등)에서 접속해 주세요.
+          </NoticeDesc>
+        </UnsupportedNotice>
+      )}
+
+      {mseSupported && !isEmbed && (
         <Section>
           <ControlPanel
             assetInput={assetInput}
@@ -101,16 +122,18 @@ const MsePlayerPage: React.FC<PageProps> = ({ location }) => {
         </Section>
       )}
 
-      <Section ref={playerSectionRef}>
-        {!isEmbed && <SectionTitle>2. 동작</SectionTitle>}
-        <Player
-          asset={appliedAsset}
-          codec={appliedCodec}
-          runId={runId}
-          preferredVariantId={preferredVariantId}
-          onVariantChange={onVariantChange}
-        />
-      </Section>
+      {mseSupported && (
+        <Section ref={playerSectionRef}>
+          {!isEmbed && <SectionTitle>2. 동작</SectionTitle>}
+          <Player
+            asset={appliedAsset}
+            codec={appliedCodec}
+            runId={runId}
+            preferredVariantId={preferredVariantId}
+            onVariantChange={onVariantChange}
+          />
+        </Section>
+      )}
     </>
   );
 
@@ -122,3 +145,38 @@ const MsePlayerPage: React.FC<PageProps> = ({ location }) => {
 };
 
 export default MsePlayerPage;
+
+const UnsupportedNotice = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 48px 24px;
+  margin: 24px 0;
+  border-radius: 12px;
+  border: 1px dashed ${({ theme }) => theme.border};
+  background: ${({ theme }) => theme.bg.muted};
+`;
+
+const NoticeIcon = styled.span`
+  font-size: 48px;
+  margin-bottom: 16px;
+`;
+
+const NoticeTitle = styled.h2`
+  margin: 0 0 12px;
+  font-size: 20px;
+  color: ${({ theme }) => theme.text.primary};
+`;
+
+const NoticeDesc = styled.p`
+  margin: 0;
+  max-width: 480px;
+  font-size: 14px;
+  line-height: 1.7;
+  color: ${({ theme }) => theme.text.muted};
+
+  strong {
+    color: ${({ theme }) => theme.text.primary};
+  }
+`;
