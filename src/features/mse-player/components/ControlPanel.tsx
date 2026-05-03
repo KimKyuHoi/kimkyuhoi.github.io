@@ -119,6 +119,8 @@ const FieldLabel = styled.label`
 const Input = styled.input`
   flex: 1;
   min-width: 0;
+  width: 100%;
+  box-sizing: border-box;
   padding: 8px 12px;
   font-family: ${({ theme }) => theme.font.mono};
   font-size: 13px;

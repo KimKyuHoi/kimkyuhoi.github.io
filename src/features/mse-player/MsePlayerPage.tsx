@@ -112,6 +112,9 @@ const MsePlayerPage: React.FC<PageProps> = ({ location }) => {
             만으로 만든 streaming player. <strong>외부 라이브러리 없이</strong> m3u8 / mpd
             매니페스트를 직접 파싱해서 init+segment를 fetch한 뒤 SourceBuffer에 부어 넣습니다. URL을
             직접 바꿔보면서 6단계가 어떻게 흘러가는지 확인해보세요.
+            <SupportNote>
+              <strong>[지원 브라우저]</strong> 데스크톱: Chrome 31+, Edge 12+, Firefox 42+, Safari 8+ | 안드로이드: Chrome 147+ | iOS: 17.1+ (Safari/Chrome 동일)
+            </SupportNote>
           </Desc>
         </Header>
       )}
@@ -126,10 +129,12 @@ const MsePlayerPage: React.FC<PageProps> = ({ location }) => {
       {support === 'none' && (
         <UnsupportedNotice>
           <NoticeIcon>🚫</NoticeIcon>
-          <NoticeTitle>이 플레이그라운드는 사용할 수 없습니다</NoticeTitle>
+          <NoticeTitle>이 기기/브라우저에서는 사용할 수 없습니다</NoticeTitle>
           <NoticeDesc>
-            이 브라우저는 <strong>MediaSource API</strong>를 지원하지 않습니다. 데스크톱
-            브라우저(Chrome, Firefox, Edge 등) 또는 iOS 17.1 이상으로 업데이트 후 접속해 주세요.
+            현재 환경은 <strong>MediaSource API</strong>를 지원하지 않습니다.<br />
+            ✅ <strong>데스크톱:</strong> Chrome 31+, Edge 12+, Firefox 42+, Safari 8+ 이상<br />
+            ✅ <strong>안드로이드:</strong> Chrome 147+ 등 최신 브라우저<br />
+            ✅ <strong>iOS:</strong> Safari/Chrome 관계없이 <strong>iOS 17.1 이상</strong> (ManagedMediaSource API 사용)
           </NoticeDesc>
         </UnsupportedNotice>
       )}
@@ -217,6 +222,20 @@ const NoticeDesc = styled.p`
   font-size: 14px;
   line-height: 1.7;
   color: ${({ theme }) => theme.text.muted};
+
+  strong {
+    color: ${({ theme }) => theme.text.primary};
+  }
+`;
+
+const SupportNote = styled.div`
+  margin-top: 12px;
+  font-size: 13px;
+  color: ${({ theme }) => theme.text.muted};
+  background: ${({ theme }) => theme.bg.muted};
+  padding: 8px 12px;
+  border-radius: 6px;
+  border: 1px solid ${({ theme }) => theme.border};
 
   strong {
     color: ${({ theme }) => theme.text.primary};
