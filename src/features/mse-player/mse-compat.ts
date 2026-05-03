@@ -8,7 +8,6 @@
  * 적절한 생성자를 골라서 반환한다.
  */
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
 declare global {
   interface Window {
     ManagedMediaSource?: typeof MediaSource;
@@ -53,4 +52,3 @@ export function isTypeSupportedCompat(mimeCodec: string): boolean {
   if (!MSClass) return false;
   return MSClass.isTypeSupported(mimeCodec);
 }
-

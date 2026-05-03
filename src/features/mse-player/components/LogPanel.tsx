@@ -35,6 +35,7 @@ const Panel = styled.div`
 
 const Line = styled.div`
   display: block;
+  word-break: break-all;
   animation: log-fade-in 0.22s ease-out;
 
   @keyframes log-fade-in {

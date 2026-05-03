@@ -118,8 +118,8 @@ const MsePlayerPage: React.FC<PageProps> = ({ location }) => {
 
       {support === 'managed' && (
         <ManagedNotice>
-          <span>📱</span> iOS <strong>ManagedMediaSource</strong> 모드로 동작 중 — 데스크톱과
-          동일한 MSE 파이프라인이 실행됩니다.
+          <span>📱</span> iOS <strong>ManagedMediaSource</strong> 모드로 동작 중 — 데스크톱과 동일한
+          MSE 파이프라인이 실행됩니다.
         </ManagedNotice>
       )}
 

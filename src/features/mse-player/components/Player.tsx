@@ -78,7 +78,11 @@ const Player: React.FC<Props> = ({ asset, codec, runId, preferredVariantId, onVa
     // MediaSource 또는 ManagedMediaSource 생성자 획득
     const MSClass = getMediaSourceClass();
     if (!MSClass) {
-      addLog(2, '❌ 이 브라우저는 MediaSource / ManagedMediaSource 어느 쪽도 지원하지 않습니다.', 'err');
+      addLog(
+        2,
+        '❌ 이 브라우저는 MediaSource / ManagedMediaSource 어느 쪽도 지원하지 않습니다.',
+        'err'
+      );
       return;
     }
 
@@ -94,7 +98,10 @@ const Player: React.FC<Props> = ({ asset, codec, runId, preferredVariantId, onVa
     const ms = new MSClass();
     video.src = URL.createObjectURL(ms);
     patchState({ readyState: ms.readyState });
-    addLog(2, `${isManaged ? 'ManagedMediaSource' : 'MediaSource'} 생성 → readyState: ${ms.readyState}`);
+    addLog(
+      2,
+      `${isManaged ? 'ManagedMediaSource' : 'MediaSource'} 생성 → readyState: ${ms.readyState}`
+    );
     addLog(2, 'video.src 연결 (blob URL)');
 
     const updateBufferedFor = (sb: SourceBuffer) => {
