@@ -64,8 +64,6 @@ mkdirSync(outDir, { recursive: true });
 
 const browser = await puppeteer.launch({
   headless: true,
-  // CI에서 설치 스텝이 알려준 실행 파일 경로를 직접 사용 (캐시 경로 불일치 방지)
-  executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || undefined,
   args: process.env.CI ? ['--no-sandbox', '--disable-setuid-sandbox'] : [],
 });
 

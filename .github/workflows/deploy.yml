@@ -20,6 +20,9 @@ defaults:
 jobs:
   build:
     runs-on: ubuntu-latest
+    env:
+      # 설치/실행 스텝이 동일한 캐시 경로를 쓰도록 강제 (경로 불일치로 인한 "Could not find Chrome" 방지)
+      PUPPETEER_CACHE_DIR: ${{ github.workspace }}/.puppeteer-cache
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -67,19 +70,14 @@ jobs:
         run: ${{ steps.detect-package-manager.outputs.manager }} run build
 
       - name: Install Chrome for Puppeteer
-        id: chrome
         run: |
           set -euo pipefail
-          rm -rf ~/.cache/puppeteer
           npx puppeteer browsers install chrome
-          CHROME_PATH=$(find ~/.cache/puppeteer/chrome -type f -name chrome | head -1)
+          CHROME_PATH=$(find "$PUPPETEER_CACHE_DIR/chrome" -type f -name chrome | head -1)
           echo "Installed Chrome at: $CHROME_PATH"
           test -x "$CHROME_PATH"
-          echo "executable=$CHROME_PATH" >> "$GITHUB_OUTPUT"
 
       - name: Capture playground thumbnails
-        env:
-          PUPPETEER_EXECUTABLE_PATH: ${{ steps.chrome.outputs.executable }}
         run: |
           npx gatsby serve --prefix-paths &
           npx wait-on http://localhost:9000/ --timeout 30000
