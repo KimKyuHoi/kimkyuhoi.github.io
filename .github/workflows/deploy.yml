@@ -66,6 +66,9 @@ jobs:
           PREFIX_PATHS: 'true'
         run: ${{ steps.detect-package-manager.outputs.manager }} run build
 
+      - name: Install Chrome for Puppeteer
+        run: npx puppeteer browsers install chrome
+
       - name: Capture playground thumbnails
         run: |
           npx gatsby serve --prefix-paths &
