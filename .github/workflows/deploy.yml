@@ -72,6 +72,9 @@ jobs:
       - name: Install Chrome for Puppeteer
         run: |
           set -euo pipefail
+          # npm ci의 postinstall이 폴더만 만들고 바이너리는 미완료로 남기는 경우가 있어,
+          # 깨진 캐시를 비우고 깨끗하게 재설치한다.
+          rm -rf "$PUPPETEER_CACHE_DIR"
           npx puppeteer browsers install chrome
           CHROME_PATH=$(find "$PUPPETEER_CACHE_DIR/chrome" -type f -name chrome | head -1)
           echo "Installed Chrome at: $CHROME_PATH"
