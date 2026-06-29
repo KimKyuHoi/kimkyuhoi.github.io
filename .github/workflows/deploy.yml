@@ -67,11 +67,16 @@ jobs:
         run: ${{ steps.detect-package-manager.outputs.manager }} run build
 
       - name: Install Chrome for Puppeteer
+        id: chrome
         run: |
-          rm -rf ~/.cache/puppeteer/chrome
-          npx puppeteer browsers install chrome
+          rm -rf ~/.cache/puppeteer
+          CHROME_PATH=$(npx puppeteer browsers install chrome --format "{{path}}" | tail -1)
+          echo "Installed Chrome at: $CHROME_PATH"
+          echo "executable=$CHROME_PATH" >> "$GITHUB_OUTPUT"
 
       - name: Capture playground thumbnails
+        env:
+          PUPPETEER_EXECUTABLE_PATH: ${{ steps.chrome.outputs.executable }}
         run: |
           npx gatsby serve --prefix-paths &
           npx wait-on http://localhost:9000/ --timeout 30000
