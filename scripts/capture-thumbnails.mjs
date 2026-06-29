@@ -64,6 +64,8 @@ mkdirSync(outDir, { recursive: true });
 
 const browser = await puppeteer.launch({
   headless: true,
+  // CI에서는 setup-chrome 액션이 설치한 Chrome 경로를 직접 사용
+  executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || undefined,
   args: process.env.CI ? ['--no-sandbox', '--disable-setuid-sandbox'] : [],
 });
 
