@@ -7,6 +7,14 @@ import Seo from '@/components/Seo';
 
 const projects = [
   {
+    name: 'ASIS — macOS 캡처 & 어노테이션 도구',
+    description:
+      '도형·화살표·블러·텍스트 주석부터 GIF 녹화까지, 맥 화면 캡처를 빠르게 처리하기 위해 직접 만든 도구입니다. 다운로드와 버그 제보는 ASIS 페이지에서 받고 있어요.',
+    link: 'https://kimkyuhoi.github.io/ASIS/',
+    tags: ['macOS', 'Electron', 'Annotation', 'GIF'],
+    thumbnail: '/playground/asis-thumb.png',
+  },
+  {
     name: 'Stacked Alpha Video',
     description: 'AV1 stacked alpha 방식과 VP9+HEVC 네이티브 방식의 투명 영상 비교',
     link: '/playground/stacked-alpha-video',
