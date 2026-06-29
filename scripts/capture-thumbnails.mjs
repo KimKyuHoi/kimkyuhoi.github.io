@@ -29,23 +29,35 @@ for (let i = 0; i < args.length; i++) {
   }
 }
 
-// playground.tsx에서 link 필드를 파싱하여 프로젝트 목록 추출
+// playground.tsx에서 link / thumbnail 필드를 파싱하여 프로젝트 목록 추출
 const playgroundSrc = readFileSync(resolve(ROOT, 'src/pages/playground.tsx'), 'utf-8');
 
-const linkRegex = /link:\s*['"]([^'"]+)['"]/g;
-const links = [];
-let match;
-while ((match = linkRegex.exec(playgroundSrc)) !== null) {
-  links.push(match[1]);
-}
+// link와 thumbnail은 각 프로젝트 객체에서 link가 먼저, thumbnail이 나중에 등장한다.
+// 각 link 뒤에 가장 먼저 나오는 thumbnail을 짝지어 출력 파일명으로 사용한다.
+const collect = (regex) => {
+  const out = [];
+  let m;
+  while ((m = regex.exec(playgroundSrc)) !== null) {
+    out.push({ value: m[1], index: m.index });
+  }
+  return out;
+};
 
-if (links.length === 0) {
+const linkMatches = collect(/link:\s*['"]([^'"]+)['"]/g);
+const thumbMatches = collect(/thumbnail:\s*['"]([^'"]+)['"]/g);
+
+const projects = linkMatches.map(({ value: link, index }) => {
+  const thumb = thumbMatches.find((t) => t.index > index);
+  return { link, thumbnail: thumb ? thumb.value : null };
+});
+
+if (projects.length === 0) {
   console.log('No project links found in playground.tsx');
   process.exit(0);
 }
 
-console.log(`Found ${links.length} project(s):`);
-links.forEach((l) => console.log(`  - ${l}`));
+console.log(`Found ${projects.length} project(s):`);
+projects.forEach((p) => console.log(`  - ${p.link}`));
 
 const outDir = outDirArg ? resolve(ROOT, outDirArg) : resolve(ROOT, 'static/playground');
 mkdirSync(outDir, { recursive: true });
@@ -55,11 +67,19 @@ const browser = await puppeteer.launch({
   args: process.env.CI ? ['--no-sandbox', '--disable-setuid-sandbox'] : [],
 });
 
-for (const link of links) {
-  // 내부 경로인 경우 baseUrl과 결합, 외부 URL은 그대로 사용
-  const url = link.startsWith('http') ? link : `${baseUrl}${pathPrefix}${link}`;
-  const slug = link.replace(/^\/playground\//, '').replace(/\//g, '-');
-  const outPath = resolve(outDir, `${slug}-thumb.png`);
+for (const { link, thumbnail } of projects) {
+  // 외부 링크는 CI에서 자동 캡처하지 않고, 직접 커밋한 정적 썸네일을 사용한다.
+  if (link.startsWith('http')) {
+    console.log(`\nSkipping external link (uses committed thumbnail): ${link}`);
+    continue;
+  }
+
+  const url = `${baseUrl}${pathPrefix}${link}`;
+  // 출력 파일명은 카드의 thumbnail 경로를 우선 사용하고, 없으면 link에서 유추한다.
+  const fileName = thumbnail
+    ? thumbnail.split('/').pop()
+    : `${link.replace(/^\/playground\//, '').replace(/\//g, '-')}-thumb.png`;
+  const outPath = resolve(outDir, fileName);
 
   console.log(`\nCapturing: ${url}`);
 
