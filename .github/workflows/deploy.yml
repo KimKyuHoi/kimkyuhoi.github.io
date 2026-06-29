@@ -69,9 +69,12 @@ jobs:
       - name: Install Chrome for Puppeteer
         id: chrome
         run: |
+          set -euo pipefail
           rm -rf ~/.cache/puppeteer
-          CHROME_PATH=$(npx puppeteer browsers install chrome --format "{{path}}" | tail -1)
+          npx puppeteer browsers install chrome
+          CHROME_PATH=$(find ~/.cache/puppeteer/chrome -type f -name chrome | head -1)
           echo "Installed Chrome at: $CHROME_PATH"
+          test -x "$CHROME_PATH"
           echo "executable=$CHROME_PATH" >> "$GITHUB_OUTPUT"
 
       - name: Capture playground thumbnails
