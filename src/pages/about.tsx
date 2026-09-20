@@ -9,43 +9,113 @@ const career = [
     period: '26.01 ~ ing',
     title: 'The Pinkfong Company',
     role: 'Web Development Group Software Engineer',
+    summary: '글로벌 B2C 서비스와 300명 이상이 쓰는 사내 제품을 개발·운영하고 있습니다.',
     projects: [
+      {
+        name: '전사 이슈 트래커 개편',
+        details: ['Umami로 수집한 사용 데이터를 근거로 UI/UX 개편'],
+      },
+      {
+        name: '레거시 카페 어드민 현대화 및 기능 추가',
+        details: [
+          'Next.js 12 → 15 · React 17 → 19 전환',
+          '매출 조회 화면 Speed Index 8.6초 → 0.8초 (91%), LCP 56% 단축',
+          '카페 예약 주문 슬랙봇·쿠폰 일괄 관리 개발',
+        ],
+      },
+      {
+        name: '사내 CMS 번안 대본 기능 개발',
+        details: [
+          'Google Docs·Spreadsheet 기반 번안 대본을 CMS 타임라인에서 편집·내보내도록 개발',
+          '수작업 중심이던 콘텐츠 제작 과정을 시스템화',
+        ],
+      },
+      {
+        name: '사내 디자인 시스템 설계 및 개발',
+        details: [
+          'Button import 기준 번들 939KB → 26KB (97%), preserveModules 적용',
+          'Raw·Semantic 2계층 토큰 설계, Panda CSS → Tailwind 테마 매핑',
+        ],
+      },
+      {
+        name: '콘텐츠 피드백 시스템 개발',
+        details: [
+          '썸네일 첫 프리뷰 2.26초 → 11.7ms (99.48%), 3단계 WebP Sprite Sheet 로딩',
+          'rAF 중복 추적을 useSyncExternalStore 기반 단일 재생 상태로 통합',
+          '메타데이터·썸네일·파형·트랜스코딩을 Lambda로 분리, 재시도·DLQ 적용 (SST)',
+        ],
+      },
       {
         name: '핑크퐁 공식 홈페이지 개편',
         details: [
-          'Meet & Play 탭 페이지 개발',
-          'WebGL 및 canvas 기반 gif 이미지 최적화 (65MB → 226KB)',
-          'CloudFront 기반 국가별 쿠키 정책 대응',
-          'Sentry 도입 및 레벨별 커스텀 에러 모니터링 체계 구축',
-          'Claude Code Action 기반 코드 리뷰 자동화 도입',
+          '투명 배경 영상을 AV1·HEVC + WebGL 합성으로 재구성해 65MB → 226KB (99.6%)',
+          '브라우저별 색상 불일치를 BT.709 표준화로 해소, WebGL 실패 시 Canvas 2D 폴백',
+          'CloudFront 응답 헤더로 iOS Safari 다운로드 문제 해결 및 GA 측정 기준 통일',
+          '리뉴얼 후 사용자당 평균 참여 시간 33초 → 1분 19초 (2.4배)',
         ],
       },
     ],
   },
   {
-    period: '25.08 ~ 25.12',
+    period: '25.09 ~ 25.12',
     title: 'The Pinkfong Company (인턴)',
-    role: 'Web Development Group Software Engineer',
+    role: 'Web Development Group Software Engineer Intern',
+    summary: '미디어 업·다운로드 안정화와 임직원용 카페 서비스 레거시 개편을 맡았습니다.',
     projects: [
-      {
-        name: '컨텐츠 피드백 시스템 개발 (진행중)',
-        details: [
-          'Shaka Player + peaks.js 연동 정밀 피드백 플레이어 구현',
-          'webVTT 기반 썸네일 프리뷰 최적화 (6ms)',
-          'dnd-kit 기반 영상 비교 분할탭 및 커스텀 단축키 시스템 도입',
-          'SQS/EventBridge Event-Driven 미디어 처리 파이프라인 서버리스 아키텍처 설계',
-        ],
-      },
       {
         name: '사내 카페 시스템 레거시 개편',
         details: [
-          'Next.js App Router 전환으로 번들 사이즈 72% 감소',
-          'TanStack Query v5 도입으로 FCP 58% 개선 (1.2s → 0.5s)',
-          '영업 상태 시각화 UI 도입으로 사용자 혼선 해소',
+          'Next.js App Router 전환으로 초기 번들 72% 감축',
+          'TanStack Query v5 도입으로 FCP 1.2초 → 0.5초 (58%)',
+          '영업 상태 시각화 UI로 주문 가능 시간 혼선 해소',
         ],
       },
     ],
   },
+];
+
+const awards = [
+  {
+    period: '26.08',
+    title: 'ICT 학점연계 프로젝트 인턴십 우수성과전 한국정보산업연합회장상',
+    org: '한국정보산업연합회',
+  },
+  {
+    period: '26.06',
+    title: 'Smilegate Modacthon Hackathon 우수상',
+    org: 'Smilegate',
+  },
+  {
+    period: '24.12',
+    title: 'OSSCA 오픈소스 컨트리뷰션 아카데미 Yorkie팀 특별상',
+    org: '한국IT비즈니스진흥협회',
+  },
+  {
+    period: '24.12',
+    title: '오픈소스 SW 포트폴리오 경진대회 최우수상',
+    org: '경북대학교 소프트웨어 교육원',
+  },
+  {
+    period: '23.12',
+    title: '대경권 공공데이터 경진대회 최우수상',
+    org: '경북대학교 소프트웨어 교육원',
+  },
+  {
+    period: '23.12',
+    title: '대구를 빛내는 SW해커톤 우수상',
+    org: '경북대학교 컴퓨터학부',
+  },
+];
+
+const skills = [
+  'TypeScript',
+  'React',
+  'Next.js',
+  'TanStack Query',
+  'Shaka Player',
+  'Vite',
+  'S3',
+  'CloudFront',
 ];
 
 const activity = [
@@ -109,13 +179,12 @@ const AboutPage: React.FC<PageProps> = ({ location }) => {
       <ProfileCard>
         <ProfileHeader>
           <ProfileName>김규회</ProfileName>
-          <ProfileRole>Frontend Developer</ProfileRole>
+          <ProfileRole>Frontend Engineer</ProfileRole>
         </ProfileHeader>
 
         <IntroText>
-          사용자의 목소리에서 개선의 실마리를 찾는 개발자입니다. 서비스의 정답은 언제나 사용자에게
-          있다고 믿으며, 작은 문제에서도 개선의 기회를 발견하고 사용자가 체감할 수 있는 가치를
-          만드는 걸 좋아해요.
+          사용자의 목소리에서 개선의 실마리를 찾는 프론트엔드 엔지니어입니다. 문제를 정의하는 데서
+          멈추지 않고 브라우저·미디어 처리·CDN까지 필요한 만큼 기술 범위를 넓혀 해결합니다.
         </IntroText>
 
         <Divider />
@@ -135,6 +204,10 @@ const AboutPage: React.FC<PageProps> = ({ location }) => {
               Kyungpook National Univ. Computer Science and Engineering (2019.03 - 2026.02)
             </InfoValue>
           </InfoRow>
+          <InfoRow>
+            <InfoLabel>Skills</InfoLabel>
+            <InfoValue>{skills.join(', ')}</InfoValue>
+          </InfoRow>
         </ProfileInfo>
       </ProfileCard>
 
@@ -151,6 +224,7 @@ const AboutPage: React.FC<PageProps> = ({ location }) => {
               <Content>
                 <ItemTitle>{item.title}</ItemTitle>
                 <ItemRole>{item.role}</ItemRole>
+                {item.summary && <ItemSummary>{item.summary}</ItemSummary>}
                 {item.projects.map((project, pIndex) => (
                   <ProjectBlock key={pIndex}>
                     <ProjectName>■ {project.name}</ProjectName>
@@ -182,6 +256,23 @@ const AboutPage: React.FC<PageProps> = ({ location }) => {
                     <div key={i}>{detail}</div>
                   ))}
                 </ItemDetails>
+              </Content>
+            </Row>
+          ))}
+        </Timeline>
+
+        <SectionTitle>Awards</SectionTitle>
+        <Timeline>
+          {awards.map((item, index) => (
+            <Row key={index}>
+              <Period>{item.period}</Period>
+              <Separator>
+                <Line />
+                <Dot />
+              </Separator>
+              <Content>
+                <AwardTitle>{item.title}</AwardTitle>
+                <ItemDetails>{item.org}</ItemDetails>
               </Content>
             </Row>
           ))}
@@ -421,4 +512,19 @@ const OpenSourceLink = styled.a`
   &:hover {
     text-decoration: underline;
   }
+`;
+
+const ItemSummary = styled.p`
+  margin: 0 0 16px;
+  font-size: 14px;
+  line-height: 1.7;
+  color: ${({ theme }) => theme.text.muted};
+`;
+
+const AwardTitle = styled.div`
+  font-size: 15px;
+  font-weight: 600;
+  margin-bottom: 2px;
+  color: ${({ theme }) => theme.text.primary};
+  line-height: 1.5;
 `;
