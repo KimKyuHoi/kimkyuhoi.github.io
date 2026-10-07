@@ -16,7 +16,7 @@
     "@fontsource/merriweather": "^5.0.8",
     "@fontsource/noto-sans-kr": "^5.0.15",
     "framer-motion": "^11.11.17",
-    "gatsby": "^5.14.6",
+    "gatsby": "^5.16.1",
     "gatsby-plugin-catch-links": "^5.16.0",
     "gatsby-plugin-emotion": "^8.14.0",
     "gatsby-plugin-feed": "^5.14.0",
@@ -40,8 +40,8 @@
     "jotai": "^2.15.1",
     "lucide-react": "^0.555.0",
     "prismjs": "^1.29.0",
-    "react": "^18.1.0",
-    "react-dom": "^18.1.0",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0",
     "stacked-alpha-video": "^1.0.10"
   },
   "devDependencies": {

@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>차단형 찜 버튼 — 연타 세 번, 요청 한 번</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Pretendard', 'Noto Sans KR', system-ui, sans-serif; background: #ffffff; color: #191f28; min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 3rem 2rem; }
+    .frame { max-width: 1200px; width: 100%; }
+    .eyebrow { font-family: 'Geist Mono', ui-monospace, monospace; font-size: 0.66rem; letter-spacing: 0.14em; text-transform: uppercase; color: #8b95a1; margin-bottom: 0.5rem; }
+    h1 { font-size: 1.5rem; font-weight: 700; letter-spacing: -0.02em; margin-bottom: 1.5rem; }
+    svg { width: 100%; display: block; }
+  </style>
+</head>
+<body>
+  <div class="frame">
+    <p class="eyebrow">Timeline</p>
+    <h1>차단형 찜 버튼 — 연타 세 번, 요청 한 번</h1>
+
+    <svg viewBox="0 0 640 480" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="blocking-timeline-title blocking-timeline-desc"
+         font-family="'Pretendard', 'Noto Sans KR', 'Apple SD Gothic Neo', sans-serif">
+      <title id="blocking-timeline-title">차단형 찜 버튼 — 연타 세 번, 요청 한 번</title>
+      <desc id="blocking-timeline-desc">사용자·버튼·서버·화면 네 레인의 타임라인. 0ms 탭은 버튼을 잠그고 POST 를 보내며, 150ms·300ms 탭은 잠긴 버튼에 막혀 무시되고, 1200ms 에 201 응답이 와야 화면 하트가 채워진다.</desc>
+      <defs>
+        <marker id="bt-arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+          <path d="M0,0 L8,4 L0,8 Z" fill="#6b7684"/>
+        </marker>
+        <marker id="bt-arrow-blue" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+          <path d="M0,0 L8,4 L0,8 Z" fill="#3182f6"/>
+        </marker>
+      </defs>
+
+      <rect width="100%" height="100%" fill="#ffffff"/>
+
+      <text x="16" y="30" font-size="14" font-weight="700" fill="#191f28">차단형 · 연타 3회</text>
+      <text x="624" y="30" text-anchor="end" font-size="12" font-weight="500" fill="#8b95a1">서버 지연 1200ms</text>
+
+      <!-- 레인 배경 (사용자 · 버튼 · 서버 · 화면) -->
+      <rect x="16" y="80" width="608" height="96" rx="8" fill="#fafbfc"/>
+      <rect x="16" y="272" width="608" height="96" rx="8" fill="#fafbfc"/>
+
+      <!-- 시간축: x=136..584 · 0.32px/ms (1200ms → 520) -->
+      <g font-family="'Geist Mono', ui-monospace, monospace" font-size="10" fill="#8b95a1" text-anchor="middle">
+        <text x="136" y="60">0ms</text>
+        <text x="264" y="60">400</text>
+        <text x="392" y="60">800</text>
+        <text x="520" y="60">1200</text>
+      </g>
+      <line x1="136" y1="68" x2="584" y2="68" stroke="#e5e8eb" stroke-width="1"/>
+      <g stroke="#e5e8eb" stroke-width="1" stroke-dasharray="2,3">
+        <line x1="264" y1="72" x2="264" y2="464"/>
+        <line x1="392" y1="72" x2="392" y2="464"/>
+      </g>
+      <line x1="520" y1="72" x2="520" y2="448" stroke="#8b95a1" stroke-width="1.2" stroke-dasharray="4,3"/>
+
+      <!-- 레인 헤더 -->
+      <g font-size="14" font-weight="700" fill="#191f28">
+        <text x="28" y="132">사용자</text>
+        <text x="28" y="228">버튼</text>
+        <text x="28" y="324">서버</text>
+        <text x="28" y="420">화면</text>
+      </g>
+      <g font-family="'Geist Mono', ui-monospace, monospace" font-size="10" fill="#8b95a1">
+        <text x="28" y="148">tap</text>
+        <text x="28" y="244">disabled</text>
+        <text x="28" y="340">POST /wishlist</text>
+        <text x="28" y="436">heart</text>
+      </g>
+
+      <!-- 연결선 (박스보다 먼저) -->
+      <line x1="136" y1="140" x2="136" y2="212" stroke="#6b7684" stroke-width="1.4" marker-end="url(#bt-arrow)"/>
+      <line x1="136" y1="244" x2="136" y2="308" stroke="#3182f6" stroke-width="1.4" marker-end="url(#bt-arrow-blue)"/>
+      <line x1="520" y1="340" x2="520" y2="404" stroke="#3182f6" stroke-width="1.4" marker-end="url(#bt-arrow-blue)"/>
+      <g stroke="#f04452" stroke-width="1.4">
+        <line x1="184" y1="140" x2="184" y2="206"/>
+        <line x1="232" y1="140" x2="232" y2="206"/>
+      </g>
+
+      <!-- 사용자: 탭 3회 -->
+      <circle cx="136" cy="128" r="9" fill="#191f28"/>
+      <circle cx="184" cy="128" r="9" fill="#ffffff" stroke="#f04452" stroke-width="2"/>
+      <circle cx="232" cy="128" r="9" fill="#ffffff" stroke="#f04452" stroke-width="2"/>
+      <g font-family="'Geist Mono', ui-monospace, monospace" font-size="10" fill="#8b95a1" text-anchor="middle">
+        <text x="136" y="110">0</text>
+        <text x="184" y="110">150</text>
+        <text x="232" y="110">300</text>
+      </g>
+      <text x="256" y="132" font-size="13" font-weight="700" fill="#f04452">두 번은 무시됨</text>
+
+      <!-- 버튼: 잠김 -->
+      <rect x="136" y="212" width="384" height="32" rx="8" fill="#f2f4f6" stroke="#e5e8eb" stroke-width="1"/>
+      <text x="150" y="233" font-family="'Geist Mono', ui-monospace, monospace" font-size="12" fill="#6b7684">pending = true · 클릭 무시</text>
+      <text x="532" y="233" font-family="'Geist Mono', ui-monospace, monospace" font-size="11" fill="#8b95a1">false</text>
+      <g stroke="#f04452" stroke-width="2.2" stroke-linecap="round">
+        <line x1="178" y1="206" x2="190" y2="218"/><line x1="190" y1="206" x2="178" y2="218"/>
+        <line x1="226" y1="206" x2="238" y2="218"/><line x1="238" y1="206" x2="226" y2="218"/>
+      </g>
+
+      <!-- 서버: 요청 -->
+      <rect x="136" y="308" width="384" height="32" rx="8" fill="#e8f0fe" stroke="#3182f6" stroke-width="1.2"/>
+      <text x="150" y="329" font-family="'Geist Mono', ui-monospace, monospace" font-size="12" font-weight="500" fill="#3182f6">POST · 1200ms 처리 중</text>
+      <text x="532" y="329" font-family="'Geist Mono', ui-monospace, monospace" font-size="12" font-weight="600" fill="#3182f6">201</text>
+
+      <!-- 화면: 하트 -->
+      <rect x="136" y="404" width="384" height="32" rx="8" fill="#ffffff" stroke="#e5e8eb" stroke-width="1"/>
+      <text x="150" y="425" font-size="13" fill="#8b95a1" font-family="'Pretendard', 'Apple Color Emoji', 'Noto Color Emoji', sans-serif">🤍 변화 없음</text>
+      <rect x="520" y="404" width="96" height="32" rx="8" fill="#fff0f6" stroke="#ff4d8d" stroke-width="1.2"/>
+      <text x="534" y="425" font-size="13" font-weight="700" fill="#191f28" font-family="'Pretendard', 'Apple Color Emoji', 'Noto Color Emoji', sans-serif">❤️ 채워짐</text>
+
+      <text x="520" y="466" text-anchor="middle" font-size="12" font-weight="600" fill="#6b7684">응답 도착</text>
+    </svg>
+  </div>
+</body>
+</html>

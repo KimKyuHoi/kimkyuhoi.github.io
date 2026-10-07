@@ -325,6 +325,11 @@ const PostBody = styled.section`
       white-space: nowrap;
     }
 
+    td {
+      white-space: normal;
+      word-break: keep-all;
+    }
+
     th {
       font-weight: 700;
       background: ${({ theme }) => theme.bg.muted};

@@ -825,6 +825,18 @@ a:focus {
     white-space: pre-wrap !important; /* 공백 유지하면서 줄바꿈 */
   }
 
+  /* 표 안의 인라인 코드는 글자 단위로 끊지 않고, 넘치면 표를 가로 스크롤 */
+  td code,
+  th code {
+    word-break: normal !important;
+    white-space: nowrap !important;
+  }
+
+  td,
+  th {
+    padding: 10px 12px !important;
+  }
+
   pre {
     white-space: pre-wrap !important; /* 코드 블록 줄바꿈 */
     word-break: break-all !important;
