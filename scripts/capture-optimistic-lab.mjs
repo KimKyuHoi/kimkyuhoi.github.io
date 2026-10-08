@@ -59,6 +59,18 @@ async function scene(name, titles, run, total) {
     const b = Math.max(...rs.map((r) => r.bottom));
     return { x: Math.floor(l) - 8, y: Math.floor(t) - 8, width: Math.ceil(r - l) + 16, height: Math.ceil(b - t) + 16 };
   }, keep);
+  // screencast 는 화면이 바뀔 때만 프레임을 보내서, 마지막 변화가 GIF 에 담기지 않는다.
+  // 눈에 띄지 않는 요소를 계속 움직여 녹화 내내 프레임이 나오게 한다.
+  await page.evaluate(() => {
+    const tick = document.createElement('div');
+    tick.style.cssText = 'position:fixed;left:0;top:0;width:1px;height:1px;opacity:0.01;pointer-events:none';
+    document.body.appendChild(tick);
+    let on = false;
+    setInterval(() => {
+      on = !on;
+      tick.style.background = on ? '#fff' : '#fefefe';
+    }, 50);
+  });
   await sleep(300);
 
   const webm = resolve(TMP, `${name}.webm`);
@@ -91,12 +103,12 @@ await scene('optimistic-rapid', ['즉시 반영', 'useOptimistic만'], async (p,
   await click(p, a); await click(p, b);
 }, 2400);
 
-// 400ms 안에 세 번 클릭: 요청은 하나만
+// 400ms 안에 찜 → 해제: 요청이 하나도 나가지 않는다
 await scene('abort-debounce', ['useOptimistic + abort'], async (p, [i]) => {
-  await click(p, i); await sleep(150); await click(p, i); await sleep(150); await click(p, i);
-}, 2400);
+  await click(p, i); await sleep(150); await click(p, i);
+}, 2000);
 
-// POST가 나간 뒤 반대 클릭: 이전 요청 취소 + DELETE
+// POST가 나간 뒤 반대 클릭: 이전 요청만 취소하고 DELETE는 보내지 않는다
 await scene('abort-inflight', ['useOptimistic + abort'], async (p, [i]) => {
   await click(p, i); await sleep(1000); await click(p, i);
 }, 3000);
