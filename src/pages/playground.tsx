@@ -12,7 +12,7 @@ const projects = [
       '찜 하트를 차단형·즉시 반영·useOptimistic·debounce 등 다섯 가지로 구현해 나란히 놓고, 연타와 "반영 중 반대 클릭"에서 화면이 어떻게 깜빡이는지 비교합니다.',
     link: '/playground/optimistic-ui',
     tags: ['React', 'useOptimistic', 'Optimistic UI'],
-    thumbnail: '',
+    thumbnail: '/playground/optimistic-ui-thumb.png',
   },
   {
     name: 'ASIS — macOS 캡처 & 어노테이션 도구',

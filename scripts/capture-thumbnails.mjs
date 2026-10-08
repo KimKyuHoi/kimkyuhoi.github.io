@@ -33,7 +33,8 @@ for (let i = 0; i < args.length; i++) {
 const playgroundSrc = readFileSync(resolve(ROOT, 'src/pages/playground.tsx'), 'utf-8');
 
 // link와 thumbnail은 각 프로젝트 객체에서 link가 먼저, thumbnail이 나중에 등장한다.
-// 각 link 뒤에 가장 먼저 나오는 thumbnail을 짝지어 출력 파일명으로 사용한다.
+// 각 link 뒤, 다음 link 앞에 있는 thumbnail만 같은 카드의 것으로 짝지어 출력 파일명으로 사용한다.
+// (thumbnail이 비어 있는 카드가 다음 카드의 thumbnail 파일을 덮어쓰지 않도록)
 const collect = (regex) => {
   const out = [];
   let m;
@@ -44,11 +45,12 @@ const collect = (regex) => {
 };
 
 const linkMatches = collect(/link:\s*['"]([^'"]+)['"]/g);
-const thumbMatches = collect(/thumbnail:\s*['"]([^'"]+)['"]/g);
+const thumbMatches = collect(/thumbnail:\s*['"]([^'"]*)['"]/g);
 
-const projects = linkMatches.map(({ value: link, index }) => {
-  const thumb = thumbMatches.find((t) => t.index > index);
-  return { link, thumbnail: thumb ? thumb.value : null };
+const projects = linkMatches.map(({ value: link, index }, i) => {
+  const nextLinkIndex = linkMatches[i + 1]?.index ?? Infinity;
+  const thumb = thumbMatches.find((t) => t.index > index && t.index < nextLinkIndex);
+  return { link, thumbnail: thumb?.value || null };
 });
 
 if (projects.length === 0) {
@@ -57,7 +59,7 @@ if (projects.length === 0) {
 }
 
 console.log(`Found ${projects.length} project(s):`);
-projects.forEach((p) => console.log(`  - ${p.link}`));
+projects.forEach((p) => console.log(`  - ${p.link} -> ${p.thumbnail ?? '(link에서 유추)'}`));
 
 const outDir = outDirArg ? resolve(ROOT, outDirArg) : resolve(ROOT, 'static/playground');
 mkdirSync(outDir, { recursive: true });
