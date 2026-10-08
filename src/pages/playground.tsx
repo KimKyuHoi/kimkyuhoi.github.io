@@ -7,6 +7,14 @@ import Seo from '@/components/Seo';
 
 const projects = [
   {
+    name: 'Optimistic UI Lab',
+    description:
+      '찜 하트를 차단형·즉시 반영·useOptimistic·debounce 등 다섯 가지로 구현해 나란히 놓고, 연타와 "반영 중 반대 클릭"에서 화면이 어떻게 깜빡이는지 비교합니다.',
+    link: '/playground/optimistic-ui',
+    tags: ['React', 'useOptimistic', 'Optimistic UI'],
+    thumbnail: '',
+  },
+  {
     name: 'ASIS — macOS 캡처 & 어노테이션 도구',
     description:
       '도형·화살표·블러·텍스트 주석부터 GIF 녹화까지, 맥 화면 캡처를 빠르게 처리하기 위해 직접 만든 도구입니다. 다운로드와 버그 제보는 ASIS 페이지에서 받고 있어요.',
