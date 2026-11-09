@@ -40,14 +40,14 @@ git clone https://github.com/KimKyuHoi/blog.git
 cd blog
 
 # 의존성 설치
-npm install
+pnpm install
 ```
 
 ### Run Locally
 
 ```bash
 # 개발 서버 실행
-npm run develop
+pnpm develop
 ```
 
 브라우저에서 `http://localhost:8000`으로 접속하여 확인하세요.
@@ -56,10 +56,10 @@ npm run develop
 
 ```bash
 # 프로덕션 빌드
-npm run build
+pnpm build
 
 # GitHub Pages 배포
-npm run deploy
+pnpm run deploy
 ```
 
 ## 👤 Author

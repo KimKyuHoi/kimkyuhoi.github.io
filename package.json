@@ -69,6 +69,7 @@
     "url": "git+https://github.com/gatsbyjs/gatsby-starter-blog.git"
   },
   "scripts": {
+    "preinstall": "npx only-allow pnpm",
     "build": "gatsby build",
     "develop": "gatsby develop",
     "deploy": "gatsby build --prefix-paths && gh-pages -d public",
@@ -78,5 +79,6 @@
     "clean": "gatsby clean",
     "capture-thumbnails": "node scripts/capture-thumbnails.mjs",
     "test": "echo \"Write tests! -> https://gatsby.dev/unit-testing\" && exit 1"
-  }
+  },
+  "packageManager": "pnpm@11.12.0"
 }

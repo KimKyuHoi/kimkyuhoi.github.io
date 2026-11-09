@@ -22,28 +22,21 @@ jobs:
     runs-on: ubuntu-latest
     env:
       # Chrome은 setup-chrome 액션으로 설치하고 PUPPETEER_EXECUTABLE_PATH로 지정하므로,
-      # npm ci 시 puppeteer의 브라우저 자동 다운로드는 끈다 (불안정한 다운로드 회피).
+      # pnpm install 시 puppeteer의 브라우저 자동 다운로드는 끈다 (불안정한 다운로드 회피).
       PUPPETEER_SKIP_DOWNLOAD: 'true'
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Detect package manager
-        id: detect-package-manager
-        run: |
-          if [ -f "${{ github.workspace }}/package-lock.json" ]; then
-            echo "manager=npm" >> $GITHUB_OUTPUT
-            echo "command=ci" >> $GITHUB_OUTPUT
-          else
-            echo "Unable to determine package manager" >&2
-            exit 1
-          fi
+      - name: Setup pnpm
+        # 버전은 package.json의 packageManager 필드를 따른다.
+        uses: pnpm/action-setup@v4
 
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: 24
-          cache: ${{ steps.detect-package-manager.outputs.manager }}
+          cache: pnpm
 
       - name: Setup Pages
         id: pages
@@ -55,20 +48,20 @@ jobs:
           path: |
             public
             .cache
-          key: ${{ runner.os }}-gatsby-${{ hashFiles('package-lock.json') }}
+          key: ${{ runner.os }}-gatsby-${{ hashFiles('pnpm-lock.yaml') }}
           restore-keys: |
             ${{ runner.os }}-gatsby-
 
       - name: Install dependencies
-        run: ${{ steps.detect-package-manager.outputs.manager }} ${{ steps.detect-package-manager.outputs.command }}
+        run: pnpm install --frozen-lockfile
 
       - name: Clean Gatsby cache
-        run: npm run clean
+        run: pnpm clean
 
       - name: Build with Gatsby
         env:
           PREFIX_PATHS: 'true'
-        run: ${{ steps.detect-package-manager.outputs.manager }} run build
+        run: pnpm build
 
       - name: Setup Chrome
         id: setup-chrome
@@ -82,8 +75,8 @@ jobs:
         run: |
           echo "Using Chrome at: $PUPPETEER_EXECUTABLE_PATH"
           "$PUPPETEER_EXECUTABLE_PATH" --version || true
-          npx gatsby serve --prefix-paths &
-          npx wait-on http://localhost:9000/ --timeout 30000
+          pnpm exec gatsby serve --prefix-paths &
+          pnpm exec wait-on http://localhost:9000/ --timeout 30000
           node scripts/capture-thumbnails.mjs http://localhost:9000 --out-dir public/playground
           kill %1 || true
 
