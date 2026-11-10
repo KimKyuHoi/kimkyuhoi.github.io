@@ -4,7 +4,7 @@ date: '2026-11-09'
 description: 'System Design 시리즈 2장.'
 tags: ['System Design']
 category: 'System Design'
-chapter: 1
+chapter: 2
 ---
 
 ## 호텔 객실 예약 시스템으로 알아보는 분산시스템 예시
