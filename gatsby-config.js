@@ -142,10 +142,65 @@ module.exports = {
       options: {
         host: 'https://kimkyuhoi.github.io',
         sitemap: 'https://kimkyuhoi.github.io/sitemap-index.xml',
-        policy: [{ userAgent: '*', allow: '/' }],
+        policy: [
+          { userAgent: '*', allow: '/' },
+          // AI 검색·답변 엔진의 크롤러를 명시적으로 허용한다 (GEO).
+          {
+            userAgent: [
+              'GPTBot',
+              'OAI-SearchBot',
+              'ChatGPT-User',
+              'ClaudeBot',
+              'Claude-SearchBot',
+              'Claude-User',
+              'PerplexityBot',
+              'Perplexity-User',
+              'Google-Extended',
+              'Applebot-Extended',
+            ],
+            allow: '/',
+          },
+        ],
       },
     },
-    `gatsby-plugin-sitemap`,
+    {
+      resolve: `gatsby-plugin-sitemap`,
+      options: {
+        // 글 페이지에는 작성일을 lastmod로 실어, 검색 엔진이 새 글과 오래된 글을 구분할 수 있게 한다.
+        query: `
+          {
+            site {
+              siteMetadata {
+                siteUrl
+              }
+            }
+            allSitePage {
+              nodes {
+                path
+              }
+            }
+            allMarkdownRemark {
+              nodes {
+                fields {
+                  slug
+                }
+                frontmatter {
+                  date(formatString: "YYYY-MM-DD")
+                }
+              }
+            }
+          }
+        `,
+        resolveSiteUrl: ({ site }) => site.siteMetadata.siteUrl,
+        resolvePages: ({ allSitePage, allMarkdownRemark }) => {
+          const dates = new Map(
+            allMarkdownRemark.nodes.map((post) => [post.fields.slug, post.frontmatter.date])
+          );
+          return allSitePage.nodes.map((page) => ({ ...page, lastmod: dates.get(page.path) }));
+        },
+        serialize: ({ path, lastmod }) => ({ url: path, lastmod }),
+      },
+    },
     `gatsby-plugin-catch-links`,
   ],
 };

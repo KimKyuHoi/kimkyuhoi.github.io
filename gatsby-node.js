@@ -1,5 +1,7 @@
 /* eslint-disable @typescript-eslint/no-require-imports */
 const path = require(`path`);
+const fs = require(`fs`);
+const { createOgImageRenderer } = require(`./scripts/og-image`);
 const { createFilePath } = require(`gatsby-source-filesystem`);
 
 const blogPost = path.resolve(`./src/features/blog/templates/BlogPost.tsx`);
@@ -83,6 +85,7 @@ exports.createSchemaCustomization = ({ actions }) => {
       twitter: String
       github: String
       linkedin: String
+      velog: String
       email: String
     }
 
@@ -100,6 +103,7 @@ exports.createSchemaCustomization = ({ actions }) => {
       tags: [String]
       featured: Boolean
       hero: String
+      chapter: Int
     }
 
     type Fields {
@@ -128,8 +132,129 @@ exports.onCreateWebpackConfig = ({ actions, getConfig }) => {
       '@/atoms': path.resolve(__dirname, 'src/shared/atoms'),
       '@/hooks': path.resolve(__dirname, 'src/shared/hooks'),
       '@/providers': path.resolve(__dirname, 'src/shared/providers'),
+      '@/motion': path.resolve(__dirname, 'src/shared/motion'),
+      '@/reactbits': path.resolve(__dirname, 'src/shared/reactbits'),
     },
   };
 
   actions.replaceWebpackConfig(config);
 };
+
+/**
+ * GEO(생성형 검색 최적화): AI 답변 엔진이 사이트를 쉽게 읽도록 llms.txt 규약을 따른다.
+ * - /llms.txt       글 목록과 한 줄 요약 (https://llmstxt.org)
+ * - /llms-full.txt  모든 글의 마크다운 원문을 한 파일로
+ * - /<slug>/index.md 글별 마크다운 원문
+ *
+ * 같은 자리에서 글별 공유 이미지(/og/<slug>.png)도 만든다. 대표 이미지가 없는 글을 SNS나 메신저에
+ * 공유했을 때 모두 같은 기본 이미지가 뜨지 않고, 글 제목이 보이게 하기 위해서다.
+ */
+exports.onPostBuild = async ({ graphql, reporter }) => {
+  const result = await graphql(`
+    {
+      site {
+        siteMetadata {
+          title
+          description
+          siteUrl
+        }
+      }
+      allMarkdownRemark(sort: { frontmatter: { date: DESC } }) {
+        nodes {
+          rawMarkdownBody
+          excerpt(pruneLength: 160)
+          fields {
+            slug
+          }
+          frontmatter {
+            title
+            description
+            category
+            tags
+            date(formatString: "YYYY-MM-DD")
+          }
+        }
+      }
+    }
+  `);
+
+  if (result.errors) {
+    reporter.warn(`llms.txt를 만들지 못했습니다: ${result.errors}`);
+    return;
+  }
+
+  const { title, description, siteUrl } = result.data.site.siteMetadata;
+  const posts = result.data.allMarkdownRemark.nodes;
+  const publicDir = path.join(__dirname, `public`);
+  const oneLine = (text) => (text || ``).replace(/\s+/g, ` `).trim();
+
+  const toMarkdown = ({ frontmatter, fields, rawMarkdownBody }) =>
+    [
+      `# ${frontmatter.title}`,
+      ``,
+      `- URL: ${siteUrl}${fields.slug}`,
+      `- 작성일: ${frontmatter.date}`,
+      `- 카테고리: ${frontmatter.category || `기타`}`,
+      frontmatter.tags?.length ? `- 태그: ${frontmatter.tags.join(`, `)}` : null,
+      frontmatter.description ? `- 요약: ${oneLine(frontmatter.description)}` : null,
+      ``,
+      rawMarkdownBody.trim(),
+      ``,
+    ]
+      .filter((line) => line !== null)
+      .join(`\n`);
+
+  const byCategory = new Map();
+  posts.forEach((post) => {
+    const category = post.frontmatter.category || `기타`;
+    byCategory.set(category, [...(byCategory.get(category) || []), post]);
+  });
+
+  const index = [
+    `# ${title}`,
+    ``,
+    `> ${description}. 프론트엔드 개발자 김규회(앤디)가 미디어 스트리밍, 코덱, React, 오픈소스 기여 경험을 한국어로 기록합니다.`,
+    ``,
+    `- 저자 소개: ${siteUrl}/about/`,
+    `- 전체 글 원문: ${siteUrl}/llms-full.txt`,
+    `- RSS: ${siteUrl}/rss.xml`,
+    ``,
+    ...[...byCategory].flatMap(([category, items]) => [
+      `## ${category}`,
+      ``,
+      ...items.map(
+        ({ frontmatter, fields, excerpt }) =>
+          `- [${frontmatter.title}](${siteUrl}${fields.slug}index.md): ${oneLine(
+            frontmatter.description || excerpt
+          )}`
+      ),
+      ``,
+    ]),
+  ].join(`\n`);
+
+  fs.writeFileSync(path.join(publicDir, `llms.txt`), index);
+  fs.writeFileSync(path.join(publicDir, `llms-full.txt`), posts.map(toMarkdown).join(`\n---\n\n`));
+  posts.forEach((post) => {
+    const dir = path.join(publicDir, post.fields.slug);
+    if (fs.existsSync(dir)) fs.writeFileSync(path.join(dir, `index.md`), toMarkdown(post));
+  });
+
+  reporter.info(`llms.txt, llms-full.txt, 글별 index.md ${posts.length}개를 만들었습니다.`);
+
+  const ogDir = path.join(publicDir, `og`);
+  fs.mkdirSync(ogDir, { recursive: true });
+  const renderOgImage = createOgImageRenderer();
+  for (const { frontmatter, fields } of posts) {
+    const png = await renderOgImage({
+      title: frontmatter.title,
+      category: frontmatter.category || `기타`,
+      siteTitle: title,
+      author: `김규회`,
+    });
+    fs.writeFileSync(path.join(ogDir, `${ogImageName(fields.slug)}.png`), png);
+  }
+  reporter.info(`글별 공유 이미지 ${posts.length}개를 만들었습니다.`);
+};
+
+// "/abr/" → "abr". src/features/blog/templates/BlogPost.tsx의 ogImagePath와 같은 규칙이어야 한다.
+const ogImageName = (slug) => slug.replace(/^\/|\/$/g, ``).replace(/\//g, `-`);
