@@ -42,6 +42,7 @@ declare module '@emotion/react' {
     text: TextScale;
     border: string;
     accent: string;
+    accentSolid: string;
     accent2: string;
     radius: RadiusScale & { xl: string; full: string };
     shadow: ShadowScale & { hover: string };

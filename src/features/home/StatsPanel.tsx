@@ -192,7 +192,9 @@ const CloseButton = styled.button`
   color: #f9fafb;
   cursor: pointer;
 
-  &:hover {
-    background: rgba(255, 255, 255, 0.14);
+  @media (hover: hover) {
+    &:hover {
+      background: rgba(255, 255, 255, 0.14);
+    }
   }
 `;

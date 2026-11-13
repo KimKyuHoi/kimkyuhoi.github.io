@@ -107,8 +107,10 @@ const Trigger = styled.button`
   cursor: pointer;
   color: ${({ theme }) => theme.text.primary};
 
-  &:hover {
-    border-color: ${({ theme }) => theme.accent};
+  @media (hover: hover) {
+    &:hover {
+      border-color: ${({ theme }) => theme.accent};
+    }
   }
 
   @media (hover: none) {

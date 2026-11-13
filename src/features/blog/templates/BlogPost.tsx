@@ -292,6 +292,12 @@ const Category = styled(Link)`
     text-decoration: underline;
     text-underline-offset: 4px;
   }
+
+  /* 손가락으로 누르기 쉽게 누르는 영역만 넓힌다 (보이는 위치는 그대로). */
+  @media (hover: none) {
+    margin: -8px -8px 4px;
+    padding: 8px;
+  }
 `;
 
 const Title = styled.h1`
@@ -330,6 +336,11 @@ const Author = styled(Link)`
   &:hover {
     text-decoration: underline;
     text-underline-offset: 4px;
+  }
+
+  @media (hover: none) {
+    margin: -8px;
+    padding: 8px;
   }
 `;
 
@@ -389,6 +400,13 @@ const Tags = styled.div`
 
 const Tag = styled(Link)`
   padding: 4px 10px;
+
+  /* 손가락으로 누르기 쉽게 키운다. */
+  @media (hover: none) {
+    min-width: 44px;
+    padding: 9px 12px;
+    text-align: center;
+  }
   background: ${({ theme }) => theme.bg.muted};
   border-radius: ${({ theme }) => theme.radius.sm};
   font-size: 13px;
@@ -476,6 +494,11 @@ const PostBody = styled.section`
     /* 라이트 전용 배경색이 다크 모드에서도 쓰여 글자가 보이지 않던 것을 바로잡는다. */
     body.dark & {
       background: ${({ theme }) => theme.bg.muted};
+    }
+
+    /* 다크 모드의 인용문 바탕은 페이지보다 밝아서, 본문 링크 색 그대로는 대비가 3:1에 못 미친다. */
+    body.dark & a {
+      color: #8ab8ff;
     }
 
     border-radius: ${({ theme }) => theme.radius.sm};
@@ -644,6 +667,16 @@ const PostBody = styled.section`
 
     .gatsby-remark-prismjs-copy-button:hover {
       background: rgba(255, 255, 255, 0.18);
+    }
+  }
+
+  /* 터치 기기에서는 복사 버튼을 손가락으로 누르기 쉬운 크기로 키운다. */
+  @media (hover: none) {
+    .gatsby-remark-prismjs-copy-button {
+      height: 40px;
+      padding: 0 14px;
+      margin: 30px 8px 0 0;
+      font-size: 12px;
     }
   }
 `;

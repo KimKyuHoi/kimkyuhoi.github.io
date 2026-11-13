@@ -8,7 +8,7 @@ import { Moon, Search, Sun } from 'lucide-react';
 import Toast from '@/components/Toast';
 import Dock from '@/components/Dock';
 import { isActivePath, navItems } from '@/components/navigation';
-import { DOCK_GAP, DOCK_HEIGHT, media } from '@/styles/media';
+import { DOCK_GAP, DOCK_HEIGHT, PHONE_MAX, media } from '@/styles/media';
 
 interface LayoutProps {
   location?: WindowLocation;
@@ -327,9 +327,12 @@ const TopBar = styled.header`
     height: 56px;
     margin-bottom: 0;
     padding-right: calc(var(--gutter-right) - 10px);
+  }
+
+  /* 폰, 그리고 폰을 가로로 눕힌 것처럼 세로가 짧은 화면: 읽어 내려가는 동안에는 화면을 넓게 쓰도록 헤더를 위로 접는다. */
+  @media (max-width: ${PHONE_MAX}px), (max-height: 500px) {
     transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1);
 
-    /* 읽어 내려가는 동안에는 화면을 넓게 쓰도록 헤더를 위로 접는다. */
     &[data-collapsed] {
       transform: translateY(-100%);
     }
@@ -456,9 +459,11 @@ const SearchButton = styled.button`
     color 0.2s ease,
     border-color 0.2s ease;
 
-  &:hover {
-    color: ${({ theme }) => theme.text.primary};
-    border-color: ${({ theme }) => theme.text.muted};
+  @media (hover: hover) {
+    &:hover {
+      color: ${({ theme }) => theme.text.primary};
+      border-color: ${({ theme }) => theme.text.muted};
+    }
   }
 
   @media (max-width: 768px) {
@@ -501,11 +506,20 @@ const ThemeButtonBase = styled.button`
   color: ${({ theme }) => theme.text.primary};
   transition: background 0.2s ease;
 
-  &:hover {
-    background: ${({ theme }) => theme.bg.muted};
+  @media (hover: hover) {
+    &:hover {
+      background: ${({ theme }) => theme.bg.muted};
+    }
   }
 
+  /* 폰과 터치 기기(태블릿)에서는 손가락으로 누르기 쉬운 크기로 */
   ${media.phone} {
+    width: 44px;
+    height: 44px;
+    padding: 0;
+  }
+
+  ${media.touch} {
     width: 44px;
     height: 44px;
     padding: 0;
@@ -549,8 +563,8 @@ const FooterLinks = styled.div`
     cursor: pointer;
   }
 
-  /* 손가락으로 누르기 쉽게 누르는 영역을 키운다. */
-  ${media.phone} {
+  /* 폰과 터치 기기(태블릿)에서는 손가락으로 누르기 쉽게 누르는 영역을 키운다. */
+  ${media.phone}, (hover: none) {
     gap: 4px;
     margin-right: -10px;
 

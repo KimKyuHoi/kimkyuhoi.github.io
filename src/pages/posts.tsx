@@ -187,7 +187,7 @@ const TabPill = styled(motion.span)`
   position: absolute;
   inset: -1px;
   border-radius: inherit;
-  background: ${({ theme }) => theme.accent};
+  background: ${({ theme }) => theme.accentSolid};
 `;
 
 const TagFilter = styled.div`

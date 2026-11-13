@@ -264,7 +264,14 @@ const IconButton = styled.button`
   cursor: pointer;
   transition: background 0.2s ease;
 
-  &:hover:not(:disabled) {
+  /* 마우스가 있는 기기에서만. 터치 기기에서는 hover가 누른 뒤에도 남아 버튼이 계속 켜진 것처럼 보인다. */
+  @media (hover: hover) {
+    &:hover:not(:disabled) {
+      background: ${({ theme }) => theme.bg.muted};
+    }
+  }
+
+  &:active:not(:disabled) {
     background: ${({ theme }) => theme.bg.muted};
   }
 

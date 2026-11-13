@@ -141,10 +141,10 @@ const CategoryLink = styled(Link)`
   font-weight: 700;
   color: ${({ theme }) => theme.accent};
 
-  /* 손가락으로 누르기 쉽게 누르는 영역만 위아래로 넓힌다 (보이는 위치는 그대로). */
+  /* 손가락으로 누르기 쉽게 누르는 영역만 사방으로 넓힌다 (보이는 위치는 그대로). */
   @media (hover: none) {
-    margin: -10px 0;
-    padding: 10px 0;
+    margin: -10px;
+    padding: 10px;
   }
 
   &:hover {
@@ -238,9 +238,11 @@ const TagLink = styled(Link)`
   display: block;
   padding: 4px 10px;
 
-  /* 손가락으로 누르기 쉽게 높이를 키운다 (태블릿). */
+  /* 손가락으로 누르기 쉽게 키운다 (태블릿). */
   @media (hover: none) {
+    min-width: 44px;
     padding: 9px 12px;
+    text-align: center;
   }
   border-radius: ${({ theme }) => theme.radius.sm};
   background: ${({ theme }) => theme.bg.muted};

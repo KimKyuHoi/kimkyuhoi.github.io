@@ -35,6 +35,11 @@ const useImageZoom = (bodyRef: React.RefObject<HTMLElement | null>) => {
           const link = image.closest<HTMLAnchorElement>('a.gatsby-resp-image-link');
           if (!link) return null;
           image.setAttribute('data-zoom-src', link.href);
+          // 대체 텍스트가 없는 이미지는 링크에도 이름이 없어, 보조 기술이 무엇을 하는 링크인지 알 수 없다.
+          link.setAttribute(
+            'aria-label',
+            image.alt ? `${image.alt} 크게 보기` : '이미지 크게 보기'
+          );
           const onClick = (event: MouseEvent) => {
             event.preventDefault();
             // 이미지를 직접 누른 경우는 medium-zoom이 처리한다. 키보드로 링크를 연 경우만 여기서 연다.

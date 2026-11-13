@@ -45,6 +45,8 @@ const lightValues = {
   border: '#e5e8eb',
   // 흰 배경 위 글자색으로도 쓰이므로 4.5:1을 넘는 파랑을 쓴다
   accent: '#1b64da',
+  // 흰 글자를 올리는 채움색(버튼, 선택된 탭). 흰 글자와 4.5:1을 넘어야 한다.
+  accentSolid: '#1b64da',
   accent2: '#6b7684',
   shadow: {
     soft: '0 4px 20px rgba(0, 0, 0, 0.05)',
@@ -71,6 +73,9 @@ const darkValues = {
   },
   border: '#333d4b',
   accent: '#3182f6',
+  // 다크의 강조색(#3182f6)은 어두운 바탕 위의 글자용이라 밝다. 그 위에 흰 글자를 올리면 3.7:1에 그치므로
+  // 채움색은 라이트와 같은 진한 파랑을 쓴다.
+  accentSolid: '#1b64da',
   accent2: '#9ca3af',
   shadow: {
     soft: '0 4px 20px rgba(0, 0, 0, 0.4)',
@@ -100,6 +105,7 @@ export const theme: Theme = {
   },
   border: 'var(--border)',
   accent: 'var(--accent)',
+  accentSolid: 'var(--accent-solid)',
   accent2: 'var(--accent2)',
   shadow: {
     soft: 'var(--shadow-soft)',
@@ -123,6 +129,7 @@ export const globalStyles = css`
     --text-inverse: ${lightValues.text.inverse};
     --border: ${lightValues.border};
     --accent: ${lightValues.accent};
+    --accent-solid: ${lightValues.accentSolid};
     --accent2: ${lightValues.accent2};
     --shadow-soft: ${lightValues.shadow.soft};
     --shadow-card: ${lightValues.shadow.card};
@@ -143,6 +150,7 @@ export const globalStyles = css`
     --text-inverse: ${darkValues.text.inverse};
     --border: ${darkValues.border};
     --accent: ${darkValues.accent};
+    --accent-solid: ${darkValues.accentSolid};
     --accent2: ${darkValues.accent2};
     --shadow-soft: ${darkValues.shadow.soft};
     --shadow-card: ${darkValues.shadow.card};

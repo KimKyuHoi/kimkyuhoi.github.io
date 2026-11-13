@@ -192,9 +192,11 @@ const CloseButton = styled.button`
   color: ${({ theme }) => theme.text.muted};
   cursor: pointer;
 
-  &:hover {
-    background: ${({ theme }) => theme.bg.muted};
-    color: ${({ theme }) => theme.text.primary};
+  @media (hover: hover) {
+    &:hover {
+      background: ${({ theme }) => theme.bg.muted};
+      color: ${({ theme }) => theme.text.primary};
+    }
   }
 
   svg {

@@ -109,7 +109,7 @@ const Field = styled.div`
   /* 터치 기기에서는 슬라이더를 잡기 쉽게 누르는 영역을 키운다. */
   @media (hover: none) {
     input {
-      height: 32px;
+      height: 40px;
     }
   }
 `;
@@ -184,8 +184,8 @@ const Btn = styled.button<{ $ghost?: boolean }>`
   padding: 8px 12px;
   font-size: 13px;
   border-radius: ${({ theme }) => theme.radius.sm};
-  border: 1px solid ${({ theme, $ghost }) => ($ghost ? theme.border : theme.accent)};
-  background: ${({ theme, $ghost }) => ($ghost ? 'transparent' : theme.accent)};
+  border: 1px solid ${({ theme, $ghost }) => ($ghost ? theme.border : theme.accentSolid)};
+  background: ${({ theme, $ghost }) => ($ghost ? 'transparent' : theme.accentSolid)};
   color: ${({ theme, $ghost }) => ($ghost ? theme.text.primary : theme.text.inverse)};
   cursor: pointer;
 
