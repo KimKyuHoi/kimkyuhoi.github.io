@@ -5,6 +5,7 @@ import { useDrag } from '@use-gesture/react';
 import {
   Captions,
   ChartNoAxesColumn,
+  ChevronDown,
   Link as LinkIcon,
   Pause,
   Play,
@@ -19,6 +20,10 @@ import { CAPTIONS, type CaptionKey } from '@/features/home/captions';
 
 // 전문 통계는 열 때만 내려받는다.
 const StatsPanel = React.lazy(() => import('@/features/home/StatsPanel'));
+// 화질·재생 속도 메뉴(Radix)는 첫 화면을 그린 뒤 한가할 때 미리 내려받는다.
+const loadPlayerMenu = () => import('@/features/home/PlayerMenu');
+const PlayerMenu = React.lazy(loadPlayerMenu);
+type MenuName = 'rate' | 'quality';
 
 // 화질 사다리. 적응형 스트리밍(ABR)이 낮은 화질에서 시작해 올라가는 과정을 그대로 흉내 낸다.
 // blur 값은 style.css의 stream-warmup 키프레임과 같아야 한다.
@@ -32,6 +37,7 @@ const TOP = LADDER.length - 1;
 // 자동 화질은 영상이 시작되고 이 간격마다 한 단계씩 오른다 (stream-warmup 1.35초를 3등분).
 const STEP_SECONDS = 0.45;
 const RATES = [0.5, 1, 2];
+const RATE_OPTIONS = RATES.map((value) => ({ value: String(value), label: `${value}배속` }));
 const EVENT_CAPTION_MS = 2400;
 // 화면을 손가락으로 끌어 되감을 때, 화면 폭만큼 끌면 영상 전체보다 조금 더 넘어가게 해 끝까지 닿기 쉽게 한다.
 const SCRUB_REACH = 1.15;
@@ -96,6 +102,9 @@ const StreamHero: React.FC = () => {
   // 첫 로드의 제목 선명도는 CSS 애니메이션(.stream-warmup)이 맡는다. 사용자가 영상을 조작한 뒤부터 JS가 맡는다.
   const [userDriven, setUserDriven] = useState(false);
 
+  // 메뉴 코드를 다 내려받았는지, 그리고 그 전에 사용자가 이미 눌러 둔 메뉴가 있는지
+  const [menuReady, setMenuReady] = useState(false);
+  const [menuWanted, setMenuWanted] = useState<MenuName | null>(null);
   // 화면을 눌러 재생·일시정지했을 때 화면 가운데에 잠깐 뜨는 표시
   const [bezel, setBezel] = useState<{ kind: 'play' | 'pause'; key: number } | null>(null);
 
@@ -226,15 +235,39 @@ const StreamHero: React.FC = () => {
     seekTo(Math.min(DURATION, Math.max(0, clock.current.time + (forward ? 0.25 : -0.25))));
   };
 
-  const handleRate = (event: React.ChangeEvent<HTMLSelectElement>) => {
-    const next = Number(event.target.value);
+  // 메뉴 코드를 미리 내려받아 둔다. 그래야 처음 누를 때도 바로 열린다.
+  useEffect(() => {
+    let alive = true;
+    const preload = () => {
+      loadPlayerMenu().then(() => {
+        if (alive) setMenuReady(true);
+      });
+    };
+    const idle = window.requestIdleCallback
+      ? window.requestIdleCallback(preload, { timeout: 2500 })
+      : window.setTimeout(preload, 1200);
+    return () => {
+      alive = false;
+      if (window.cancelIdleCallback) window.cancelIdleCallback(idle);
+      else window.clearTimeout(idle);
+    };
+  }, []);
+
+  /** 메뉴 코드가 오기 전에 버튼이 눌렸을 때: 바로 내려받고, 도착하면 그 메뉴를 연 채로 보여 준다. */
+  const requestMenu = (name: MenuName) => {
+    setMenuWanted(name);
+    loadPlayerMenu().then(() => setMenuReady(true));
+  };
+
+  const handleRate = (value: string) => {
+    const next = Number(value);
     clock.current.rate = next;
     setRate(next);
     renderFrame();
   };
 
-  const handleQuality = (event: React.ChangeEvent<HTMLSelectElement>) => {
-    const next = event.target.value === 'auto' ? 'auto' : Number(event.target.value);
+  const handleQuality = (value: string) => {
+    const next = value === 'auto' ? 'auto' : Number(value);
     const nextLevel = next === 'auto' ? autoLevelAt(clock.current.time) : next;
     flash(nextLevel < level ? 'qualityDown' : 'qualityUp');
     setUserDriven(true);
@@ -288,6 +321,27 @@ const StreamHero: React.FC = () => {
   );
 
   const shown = LADDER[offline ? 0 : level];
+
+  const qualityLabel = quality === 'auto' ? `자동 (${shown.label})` : LADDER[quality].label;
+  const qualityOptions = [
+    { value: 'auto', label: `자동 (${shown.label})` },
+    ...LADDER.map((rung, index) => ({ value: String(index), label: rung.label })).reverse(),
+  ];
+
+  // 메뉴를 여는 버튼. 메뉴 코드가 오기 전에는 이 버튼만 보이고, 온 뒤에는 PlayerMenu가 이 버튼에 메뉴를 붙인다.
+  const menuButton = (name: MenuName, label: string, text: string) => (
+    <MenuButton
+      type="button"
+      aria-label={`${label}: ${text}`}
+      data-optional={name === 'rate' ? '' : undefined}
+      onClick={menuReady ? undefined : () => requestMenu(name)}
+    >
+      {text}
+      <ChevronDown aria-hidden="true" />
+    </MenuButton>
+  );
+  const rateButton = menuButton('rate', '재생 속도', `${rate}배속`);
+  const qualityButton = menuButton('quality', '화질', qualityLabel);
 
   const describeQuality = () => {
     const size = stageRef.current?.size();
@@ -388,21 +442,34 @@ const StreamHero: React.FC = () => {
           >
             <Captions data-outline="" />
           </IconButton>
-          <Select aria-label="재생 속도" value={rate} onChange={handleRate} data-optional="">
-            {RATES.map((value) => (
-              <option key={value} value={value}>
-                {value}배속
-              </option>
-            ))}
-          </Select>
-          <Select aria-label="화질" value={quality} onChange={handleQuality}>
-            <option value="auto">자동 ({shown.label})</option>
-            {LADDER.map((rung, index) => (
-              <option key={rung.label} value={index}>
-                {rung.label}
-              </option>
-            )).reverse()}
-          </Select>
+          {menuReady ? (
+            <React.Suspense fallback={rateButton}>
+              <PlayerMenu
+                trigger={rateButton}
+                label="재생 속도"
+                value={String(rate)}
+                options={RATE_OPTIONS}
+                onChange={handleRate}
+                defaultOpen={menuWanted === 'rate'}
+              />
+            </React.Suspense>
+          ) : (
+            rateButton
+          )}
+          {menuReady ? (
+            <React.Suspense fallback={qualityButton}>
+              <PlayerMenu
+                trigger={qualityButton}
+                label="화질"
+                value={String(quality)}
+                options={qualityOptions}
+                onChange={handleQuality}
+                defaultOpen={menuWanted === 'quality'}
+              />
+            </React.Suspense>
+          ) : (
+            qualityButton
+          )}
           <IconButton
             type="button"
             onClick={handleStats}
@@ -539,9 +606,11 @@ const SocialLink = styled.a`
     background 0.2s ease,
     border-color 0.2s ease;
 
-  &:hover {
-    background: var(--aside-chip-hover);
-    border-color: var(--aside-text-soft);
+  @media (hover: hover) {
+    &:hover {
+      background: var(--aside-chip-hover);
+      border-color: var(--aside-text-soft);
+    }
   }
 
   svg {
@@ -728,6 +797,23 @@ const Seek = styled.input`
     outline: 2px solid #ffffff;
     outline-offset: 2px;
   }
+
+  /* 터치 기기: 가는 막대를 손가락으로 잡기 쉽게 누르는 영역만 위아래로 넓힌다. 늘어난 만큼 여백을 당겨 자리는 그대로 둔다. */
+  ${media.touch} {
+    height: 40px;
+    margin: -10px 0;
+
+    &::-webkit-slider-thumb {
+      width: 18px;
+      height: 18px;
+      margin-top: -7px;
+    }
+
+    &::-moz-range-thumb {
+      width: 18px;
+      height: 18px;
+    }
+  }
 `;
 
 const Buttons = styled.div`
@@ -757,8 +843,11 @@ const IconButton = styled.button`
     background 0.2s ease,
     opacity 0.2s ease;
 
-  &:hover {
-    background: rgba(255, 255, 255, 0.14);
+  /* 마우스가 있는 기기에서만. 터치 기기에서는 hover가 누른 뒤에도 남아 버튼이 켜진 것처럼 보인다. */
+  @media (hover: hover) {
+    &:hover {
+      background: rgba(255, 255, 255, 0.14);
+    }
   }
 
   /* 꺼진 토글(자막)은 흐리게 보여 준다. */
@@ -794,37 +883,48 @@ const Spacer = styled.span`
   flex: 1;
 `;
 
-const Select = styled.select`
+// 화질·재생 속도 메뉴를 여는 버튼. 지금 값과 아래 화살표를 보여 준다.
+const MenuButton = styled.button`
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
   flex-shrink: 0;
   height: 44px;
   padding: 0 8px;
-
-  @media (max-width: 400px) {
-    padding: 0 2px;
-  }
-
-  /* 아주 좁은 화면에서는 재생 속도 선택을 숨겨 화질 선택과 통계 버튼이 잘리지 않게 한다. */
-  @media (max-width: 345px) {
-    &[data-optional] {
-      display: none;
-    }
-  }
-
   border: none;
   border-radius: ${({ theme }) => theme.radius.sm};
   background: transparent;
   font: inherit;
   color: inherit;
+  white-space: nowrap;
   cursor: pointer;
   transition: background 0.2s ease;
 
-  &:hover {
+  @media (hover: hover) {
+    &:hover {
+      background: rgba(255, 255, 255, 0.14);
+    }
+  }
+
+  /* 메뉴가 열려 있는 동안 */
+  &[data-state='open'] {
     background: rgba(255, 255, 255, 0.14);
   }
 
-  /* 펼친 목록은 브라우저가 그린다. 어두운 패널 색을 따라가 글자가 안 보이는 일을 막는다. */
-  option {
-    background: #ffffff;
-    color: #191f28;
+  svg {
+    width: 16px;
+    height: 16px;
+    opacity: 0.8;
+  }
+
+  @media (max-width: 400px) {
+    padding: 0 4px;
+  }
+
+  /* 아주 좁은 화면에서는 재생 속도 메뉴를 숨겨 화질 메뉴와 통계 버튼이 잘리지 않게 한다. */
+  @media (max-width: 345px) {
+    &[data-optional] {
+      display: none;
+    }
   }
 `;

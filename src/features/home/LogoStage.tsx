@@ -205,8 +205,9 @@ export const ScreenPanel = styled.section`
     display: grid;
     grid-template-columns: minmax(0, 1fr);
     /* 첫 줄: 로고가 드러나는 자리. 화면 폭에 비례해 커지되 너무 길어지지는 않게 한다.
+       폰을 가로로 눕혀 세로가 짧을 때는 화면 높이에 맞춰 줄여, 제목이 첫 화면에 들어오게 한다.
        로고의 가로획이 이 줄 안에서 끝나도록 아래 Logo의 크기와 함께 맞춘 값이다. */
-    grid-template-rows: clamp(200px, 60vw, 320px);
+    grid-template-rows: clamp(160px, min(60vw, 48svh), 320px);
     grid-auto-rows: auto;
     min-height: 0;
     /* 좌우 여백을 조금 넘겨, 영상 화면이 본문보다 넓게 보이게 한다. */
@@ -268,7 +269,7 @@ const Logo = styled.svg`
   ${media.phone} {
     top: -5%;
     right: -9%;
-    height: min(92vw, 420px);
+    height: min(92vw, 420px, 72svh);
     transform: none;
   }
 `;
