@@ -401,10 +401,10 @@ const Tags = styled.div`
 const Tag = styled(Link)`
   padding: 4px 10px;
 
-  /* 손가락으로 누르기 쉽게 키운다. */
+  /* 손가락으로 누르기 쉽게 조금 키운다. 태그는 보조 링크라 칩이 화면을 차지하지 않을 만큼만 키운다. */
   @media (hover: none) {
-    min-width: 44px;
-    padding: 9px 12px;
+    min-width: 40px;
+    padding: 6px 12px;
     text-align: center;
   }
   background: ${({ theme }) => theme.bg.muted};
@@ -670,13 +670,18 @@ const PostBody = styled.section`
     }
   }
 
-  /* 터치 기기에서는 복사 버튼을 손가락으로 누르기 쉬운 크기로 키운다. */
+  /* 터치 기기에서는 복사 버튼을 손가락으로 누르기 쉬운 크기로 키운다.
+     커진 버튼이 코드 첫 줄을 가리지 않도록, 복사 버튼이 붙은 코드 블록은 위쪽을 그만큼 비운다. */
   @media (hover: none) {
     .gatsby-remark-prismjs-copy-button {
       height: 40px;
       padding: 0 14px;
       margin: 30px 8px 0 0;
       font-size: 12px;
+    }
+
+    .gatsby-remark-prismjs-copy-button-container + .gatsby-highlight pre {
+      padding-top: 58px;
     }
   }
 `;

@@ -238,10 +238,10 @@ const TagLink = styled(Link)`
   display: block;
   padding: 4px 10px;
 
-  /* 손가락으로 누르기 쉽게 키운다 (태블릿). */
+  /* 손가락으로 누르기 쉽게 조금 키운다 (태블릿). 보조 링크라 칩이 카드를 차지하지 않을 만큼만 키운다. */
   @media (hover: none) {
-    min-width: 44px;
-    padding: 9px 12px;
+    min-width: 40px;
+    padding: 6px 12px;
     text-align: center;
   }
   border-radius: ${({ theme }) => theme.radius.sm};
