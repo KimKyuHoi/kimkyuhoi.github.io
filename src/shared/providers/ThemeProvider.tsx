@@ -1,11 +1,12 @@
 import React, { useEffect, useRef } from 'react';
 import { Global, ThemeProvider as EmotionThemeProvider } from '@emotion/react';
-import { useAtom } from 'jotai';
-import { themeModeAtom } from '@/atoms/theme';
+import { useAtomValue, useSetAtom } from 'jotai';
+import { systemModeAtom, themeModeAtom } from '@/atoms/theme';
 import { theme, globalStyles } from '@/styles/theme';
 
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [mode, setMode] = useAtom(themeModeAtom);
+  const mode = useAtomValue(themeModeAtom);
+  const setSystemMode = useSetAtom(systemModeAtom);
   const adopted = useRef(false);
 
   // 상태 → body 클래스. 첫 실행은 건너뛴다. 그 시점의 mode는 저장값을 읽기 전의 기본값(light)이라,
@@ -20,10 +21,16 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   }, [mode]);
 
   // 첫 렌더 뒤, 초기화 스크립트가 정한 테마(저장값, 없으면 시스템 설정)를 상태로 가져온다.
+  // 사용자가 고른 것이 아니므로 저장하지 않고, 이후 시스템 설정이 바뀌면 그대로 따라간다.
   useEffect(() => {
     adopted.current = true;
-    if (document.body.classList.contains('dark')) setMode('dark');
-  }, [setMode]);
+    setSystemMode(document.body.classList.contains('dark') ? 'dark' : 'light');
+
+    const system = window.matchMedia('(prefers-color-scheme: dark)');
+    const follow = (event: MediaQueryListEvent) => setSystemMode(event.matches ? 'dark' : 'light');
+    system.addEventListener('change', follow);
+    return () => system.removeEventListener('change', follow);
+  }, [setSystemMode]);
 
   return (
     <EmotionThemeProvider theme={theme}>
