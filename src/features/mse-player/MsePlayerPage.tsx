@@ -230,7 +230,10 @@ const NoticeDesc = styled.p`
   }
 `;
 
-const SupportNote = styled.div`
+// 설명 문단(<p>) 안에 들어가므로 span으로 둔다. div를 쓰면 HTML 규칙상 문단이 중간에 끊겨
+// 서버가 그린 화면과 브라우저가 다시 그린 화면이 어긋난다(하이드레이션 오류).
+const SupportNote = styled.span`
+  display: block;
   margin-top: 12px;
   font-size: 13px;
   color: ${({ theme }) => theme.text.muted};

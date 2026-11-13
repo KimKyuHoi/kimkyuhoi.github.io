@@ -1,19 +1,28 @@
 import React from 'react';
 import styled from '@emotion/styled';
+import { keyframes } from '@emotion/react';
+import { ArrowUpRight } from 'lucide-react';
 import type { PageProps } from 'gatsby';
 import Layout from '@/components/Layout';
 import Seo from '@/components/Seo';
+import { media } from '@/styles/media';
 
 const career = [
   {
     period: '26.01 ~ ing',
     title: 'The Pinkfong Company',
-    role: 'Web Development Group Software Engineer',
-    summary: '글로벌 B2C 서비스와 300명 이상이 쓰는 사내 제품을 개발·운영하고 있습니다.',
+    role: '기술개발 부문 웹개발팀 Software Engineer',
+    summary: '사내 서비스 및 핑크퐁 스토어와 고객센터를 담당하여 개발하고 있습니다.',
     projects: [
       {
         name: '전사 이슈 트래커 개편',
-        details: ['Umami로 수집한 사용 데이터를 근거로 UI/UX 개편'],
+        details: [
+          '실사용자 웹 바이탈 개선: LCP 2.51초 → 1.50초(−40%, CLS 0.62 → 0.19(−69%)',
+          '목록 화면에 필요한 데이터를 차례로 불러오던 구조를 동시 요청으로 바꿔 목록 로딩 1.37초 → 0.12초',
+          '참조자가 많은 이슈에서 13.8초 걸리던 코멘트 작성을 DB 트리거 개선으로 0.1초 미만으로 단축',
+          '필터마다 흩어져 있던 메뉴를 두 개의 탭 화면으로 정리해 화면을 오가는 이동을 74% → 35%로 감소',
+          '모바일에서도 업무를 볼 수 있도록 반응형 화면을 적용해 모바일 사용량 34% 증가',
+        ],
       },
       {
         name: '레거시 카페 어드민 현대화 및 기능 추가',
@@ -26,32 +35,32 @@ const career = [
       {
         name: '사내 CMS 번안 대본 기능 개발',
         details: [
-          'Google Docs·Spreadsheet 기반 번안 대본을 CMS 타임라인에서 편집·내보내도록 개발',
-          '수작업 중심이던 콘텐츠 제작 과정을 시스템화',
+          '번안 대본(Docs·Sheets)을 CMS 타임라인에서 편집·내보내는 기능으로 수작업 제작 과정을 시스템화',
         ],
       },
       {
         name: '사내 디자인 시스템 설계 및 개발',
         details: [
-          'Button import 기준 번들 939KB → 26KB (97%), preserveModules 적용',
           'Raw·Semantic 2계층 토큰 설계, Panda CSS → Tailwind 테마 매핑',
+          '단일 번들로 트리 쉐이킹이 안 되던 구조를 preserveModules로 바꿔 Button import 번들 939KB → 26KB(97%) 절감',
+          '코드를 원본으로 두고 Figma MCP로 디자인 시스템 기반 피그마 화면을 만들어 기획·화면 설계에 활용',
         ],
       },
       {
         name: '콘텐츠 피드백 시스템 개발',
         details: [
+          '플레이어 및 분할 뷰 개발',
           '썸네일 첫 프리뷰 2.26초 → 11.7ms (99.48%), 3단계 WebP Sprite Sheet 로딩',
-          'rAF 중복 추적을 useSyncExternalStore 기반 단일 재생 상태로 통합',
-          '메타데이터·썸네일·파형·트랜스코딩을 Lambda로 분리, 재시도·DLQ 적용 (SST)',
+          '비동기 이벤트 기반 영상 변환 파이프라인 설계 및 개발',
         ],
       },
       {
         name: '핑크퐁 공식 홈페이지 개편',
+        url: 'https://www.pinkfong.com/ko',
         details: [
-          '투명 배경 영상을 AV1·HEVC + WebGL 합성으로 재구성해 65MB → 226KB (99.6%)',
-          '브라우저별 색상 불일치를 BT.709 표준화로 해소, WebGL 실패 시 Canvas 2D 폴백',
-          'CloudFront 응답 헤더로 iOS Safari 다운로드 문제 해결 및 GA 측정 기준 통일',
-          '리뉴얼 후 사용자당 평균 참여 시간 33초 → 1분 19초 (2.4배)',
+          '(밋앤플레이) 이벤트·스케줄 페이지 개발',
+          '투명 배경 GIF의 브라우저별 색상 불일치를 해결하고 용량 65MB → 226KB(99.6%) 절감',
+          'CloudFront 응답 헤더로 iOS Safari 다운로드 크로스 브라우징 문제를 해결하고 환경별 GA 측정 기준 통일',
         ],
       },
     ],
@@ -105,17 +114,6 @@ const awards = [
     title: '대구를 빛내는 SW해커톤 우수상',
     org: '경북대학교 컴퓨터학부',
   },
-];
-
-const skills = [
-  'TypeScript',
-  'React',
-  'Next.js',
-  'TanStack Query',
-  'Shaka Player',
-  'Vite',
-  'S3',
-  'CloudFront',
 ];
 
 const activity = [
@@ -173,21 +171,36 @@ const openSource = [
   },
 ];
 
+// 성과 수치를 찾는다: "8.6초 → 0.8초 (91%)" 같은 전후 비교와 단독 백분율("72%").
+// 숫자 뒤에는 단위까지만 포함한다. "35%로"의 조사처럼 단위가 아닌 글자는 강조에 넣지 않는다.
+const NUMBER = String.raw`\d+(?:[.,]\d+)*(?:ms|KB|MB|GB|px|초|분|시간|배|개|건|명|%)?`;
+const METRIC = new RegExp(
+  String.raw`${NUMBER}(?: ${NUMBER})? → ${NUMBER}(?: ${NUMBER})?(?: \([^)]+\))?|\d+(?:\.\d+)?%`,
+  'g'
+);
+
+/** 문장 속 성과 수치만 눈에 띄게 감싼다. */
+const withMetrics = (text: string) => {
+  const parts: React.ReactNode[] = [];
+  let last = 0;
+  METRIC.lastIndex = 0;
+  for (let match = METRIC.exec(text); match; match = METRIC.exec(text)) {
+    if (match.index > last) parts.push(text.slice(last, match.index));
+    parts.push(<Metric key={match.index}>{match[0]}</Metric>);
+    last = match.index + match[0].length;
+  }
+  if (last < text.length) parts.push(text.slice(last));
+  return parts;
+};
+
 const AboutPage: React.FC<PageProps> = ({ location }) => {
   return (
     <Layout location={location}>
       <ProfileCard>
         <ProfileHeader>
           <ProfileName>김규회</ProfileName>
-          <ProfileRole>Frontend Engineer</ProfileRole>
+          <ProfileRole>Software Engineer</ProfileRole>
         </ProfileHeader>
-
-        <IntroText>
-          사용자의 목소리에서 개선의 실마리를 찾는 프론트엔드 엔지니어입니다. 문제를 정의하는 데서
-          멈추지 않고 브라우저·미디어 처리·CDN까지 필요한 만큼 기술 범위를 넓혀 해결합니다.
-        </IntroText>
-
-        <Divider />
 
         <ProfileInfo>
           <InfoRow>
@@ -203,10 +216,6 @@ const AboutPage: React.FC<PageProps> = ({ location }) => {
             <InfoValue>
               Kyungpook National Univ. Computer Science and Engineering (2019.03 - 2026.02)
             </InfoValue>
-          </InfoRow>
-          <InfoRow>
-            <InfoLabel>Skills</InfoLabel>
-            <InfoValue>{skills.join(', ')}</InfoValue>
           </InfoRow>
         </ProfileInfo>
       </ProfileCard>
@@ -227,10 +236,20 @@ const AboutPage: React.FC<PageProps> = ({ location }) => {
                 {item.summary && <ItemSummary>{item.summary}</ItemSummary>}
                 {item.projects.map((project, pIndex) => (
                   <ProjectBlock key={pIndex}>
-                    <ProjectName>■ {project.name}</ProjectName>
+                    <ProjectName>
+                      ■{' '}
+                      {project.url ? (
+                        <ProjectLink href={project.url} target="_blank" rel="noopener noreferrer">
+                          {project.name}
+                          <ArrowUpRight aria-hidden="true" />
+                        </ProjectLink>
+                      ) : (
+                        project.name
+                      )}
+                    </ProjectName>
                     <ProjectDetails>
                       {project.details.map((detail, dIndex) => (
-                        <li key={dIndex}>{detail}</li>
+                        <li key={dIndex}>{withMetrics(detail)}</li>
                       ))}
                     </ProjectDetails>
                   </ProjectBlock>
@@ -300,7 +319,8 @@ export default AboutPage;
 export const Head = () => (
   <Seo
     title="About"
-    pathname="/about"
+    pathname="/about/"
+    type="profile"
     description="프론트엔드 개발자 김규회(앤디)의 소개. 경력, 활동, 오픈소스 기여 이력을 확인하세요."
   />
 );
@@ -314,6 +334,10 @@ const SectionTitle = styled.h2`
   font-weight: 700;
   margin: 48px 0 24px;
   color: ${({ theme }) => theme.text.primary};
+
+  ${media.phone} {
+    margin: 40px 0 20px;
+  }
 `;
 
 const Timeline = styled.div`
@@ -323,10 +347,18 @@ const Timeline = styled.div`
 
 const Row = styled.div`
   display: grid;
-  grid-template-columns: 140px 24px 1fr;
+  grid-template-columns: 140px 24px minmax(0, 1fr);
 
   @media (max-width: 768px) {
-    grid-template-columns: 90px 24px 1fr;
+    grid-template-columns: 90px 24px minmax(0, 1fr);
+  }
+
+  /* 폰: 기간을 제목 위로 올리고 타임라인 선을 왼쪽 끝에 붙여, 내용이 화면 폭을 다 쓰게 한다. */
+  ${media.phone} {
+    grid-template-columns: 18px minmax(0, 1fr);
+    grid-template-areas:
+      'line period'
+      'line content';
   }
 `;
 
@@ -338,20 +370,63 @@ const Period = styled.div`
   color: ${({ theme }) => theme.text.muted};
   font-family: ${({ theme }) => theme.font.mono};
   line-height: 1.5;
+
+  ${media.phone} {
+    grid-area: period;
+    padding: 0 0 2px 10px;
+    font-size: 13px;
+    text-align: left;
+  }
 `;
 
 const Separator = styled.div`
   position: relative;
   display: flex;
   justify-content: center;
+
+  ${media.phone} {
+    grid-area: line;
+  }
 `;
 
+const lineFill = keyframes`
+  from {
+    transform: scaleY(0);
+  }
+`;
+
+const dotOn = keyframes`
+  to {
+    border-color: var(--accent);
+    background-color: var(--accent);
+  }
+`;
+
+// 타임라인의 세로선. 스크롤 연동 애니메이션을 지원하는 브라우저에서는 읽어 내려온 곳까지 강조색으로 채워진다.
+// view(50% 50%)는 화면 한가운데의 가로선을 기준으로 삼는다는 뜻이다. 선의 위쪽 끝이 그 기준선에 닿을 때 채워지기
+// 시작해 아래쪽 끝이 닿을 때 다 채워지므로, 항목마다 따로 있는 선들이 하나로 이어져 채워지는 것처럼 보인다.
 const Line = styled.div`
+  position: relative;
   width: 1px;
   background-color: ${({ theme }) => theme.border};
   height: 100%;
+
+  @media (prefers-reduced-motion: no-preference) {
+    @supports (animation-timeline: view()) {
+      &::after {
+        content: '';
+        position: absolute;
+        inset: 0 -0.5px;
+        background: ${({ theme }) => theme.accent};
+        transform-origin: 50% 0;
+        animation: ${lineFill} linear both;
+        animation-timeline: view(50% 50%);
+      }
+    }
+  }
 `;
 
+// 항목의 시작점. 화면 한가운데를 지나면 강조색으로 켜진다.
 const Dot = styled.div`
   position: absolute;
   top: 6px;
@@ -361,11 +436,23 @@ const Dot = styled.div`
   background-color: ${({ theme }) => theme.bg.page};
   border: 1.5px solid ${({ theme }) => theme.text.muted};
   z-index: 1;
+
+  @media (prefers-reduced-motion: no-preference) {
+    @supports (animation-timeline: view()) {
+      animation: ${dotOn} linear both;
+      animation-timeline: view(50% 50%);
+    }
+  }
 `;
 
 const Content = styled.div`
   padding-bottom: 32px;
   padding-left: 16px;
+
+  ${media.phone} {
+    grid-area: content;
+    padding-left: 10px;
+  }
 `;
 
 const ItemTitle = styled.div`
@@ -380,38 +467,35 @@ const ItemDetails = styled.div`
   font-size: 14px;
   color: ${({ theme }) => theme.text.muted};
   line-height: 1.6;
+
+  ${media.phone} {
+    font-size: 15px;
+  }
 `;
 
+// 이름표(왼쪽)와 값(오른쪽)의 두 칸 격자. 이름표 칸은 가장 긴 이름표에 맞춰지므로 값들이 같은 세로선에서 시작한다.
 const ProfileInfo = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  margin-bottom: 16px;
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
+  align-items: baseline;
+  gap: 8px 16px;
 `;
 
+// 한 줄(이름표 + 값)을 묶는 상자. 격자에는 안의 두 요소가 직접 놓인다.
 const InfoRow = styled.div`
-  display: flex;
-  align-items: baseline;
-  gap: 8px;
+  display: contents;
 `;
 
 const InfoLabel = styled.span`
   font-size: 15px;
   font-weight: 700;
   color: ${({ theme }) => theme.text.primary};
-  min-width: fit-content;
 `;
 
 const InfoValue = styled.span`
   font-size: 15px;
   color: ${({ theme }) => theme.text.muted};
-`;
-
-const IntroText = styled.p`
-  margin: 0;
-  font-size: 16px;
-  line-height: 1.8;
-  color: ${({ theme }) => theme.text.muted};
+  overflow-wrap: anywhere;
 `;
 
 const ProfileCard = styled.div`
@@ -419,6 +503,10 @@ const ProfileCard = styled.div`
   border: 1px solid ${({ theme }) => theme.border};
   border-radius: ${({ theme }) => theme.radius.lg};
   padding: 32px;
+
+  ${media.phone} {
+    padding: 24px 20px;
+  }
 `;
 
 const ProfileHeader = styled.div`
@@ -438,17 +526,14 @@ const ProfileRole = styled.div`
   font-weight: 600;
 `;
 
-const Divider = styled.hr`
-  border: none;
-  height: 1px;
-  background: ${({ theme }) => theme.border};
-  margin: 24px 0;
-`;
-
 const ItemRole = styled.div`
-  font-size: 13px;
+  font-size: 14px;
   color: ${({ theme }) => theme.text.muted};
   margin-bottom: 14px;
+
+  ${media.phone} {
+    font-size: 15px;
+  }
 `;
 
 const ProjectBlock = styled.div`
@@ -464,14 +549,48 @@ const ProjectName = styled.div`
   font-weight: 600;
   color: ${({ theme }) => theme.text.primary};
   margin-bottom: 6px;
+
+  ${media.phone} {
+    font-size: 15px;
+  }
+`;
+
+// 프로젝트 이름에 걸리는 링크(공개된 서비스 주소). 새 탭으로 열린다는 것을 화살표로 알린다.
+const ProjectLink = styled.a`
+  color: inherit;
+  text-decoration: underline;
+  text-decoration-color: ${({ theme }) => theme.border};
+  text-underline-offset: 4px;
+  transition:
+    color 0.2s ease,
+    text-decoration-color 0.2s ease;
+
+  &:hover {
+    color: ${({ theme }) => theme.accent};
+    text-decoration-color: currentColor;
+  }
+
+  svg {
+    width: 15px;
+    height: 15px;
+    margin-left: 2px;
+    vertical-align: -2px;
+  }
 `;
 
 const ProjectDetails = styled.ul`
   margin: 0;
-  padding-left: 14px;
-  font-size: 12px;
+  padding-left: 16px;
+  font-size: 14px;
   color: ${({ theme }) => theme.text.muted};
   line-height: 1.7;
+  word-break: keep-all;
+
+  /* 폰에서는 내용 칸이 넓어진 만큼 글자를 키워 읽기 편하게 한다. */
+  ${media.phone} {
+    padding-left: 18px;
+    font-size: 15px;
+  }
 
   li {
     margin-bottom: 4px;
@@ -480,6 +599,13 @@ const ProjectDetails = styled.ul`
       margin-bottom: 0;
     }
   }
+`;
+
+const Metric = styled.strong`
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  color: ${({ theme }) => theme.text.primary};
 `;
 
 const OpenSourceList = styled.ul`
@@ -519,6 +645,10 @@ const ItemSummary = styled.p`
   font-size: 14px;
   line-height: 1.7;
   color: ${({ theme }) => theme.text.muted};
+
+  ${media.phone} {
+    font-size: 15px;
+  }
 `;
 
 const AwardTitle = styled.div`

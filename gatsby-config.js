@@ -39,7 +39,14 @@ module.exports = {
       },
     },
     `gatsby-plugin-image`,
-    `gatsby-plugin-emotion`,
+    {
+      resolve: `gatsby-plugin-emotion`,
+      options: {
+        // 스타일 소스맵은 개발할 때만 쓴다. 옵션을 주지 않으면 플러그인의 기본값(true)이
+        // "프로덕션에서는 끈다"는 내부 설정을 덮어써서, 프로덕션 빌드에서도 styled 선언마다 소스맵이 붙는다.
+        sourceMap: process.env.NODE_ENV !== `production`,
+      },
+    },
     {
       resolve: `gatsby-source-filesystem`,
       options: {
@@ -133,6 +140,10 @@ module.exports = {
         short_name: `Andy Tech`,
         start_url: `/`,
         background_color: `#ffffff`,
+        // 홈 화면에 추가했을 때 쓰이는 색. 페이지 안의 theme-color 메타는 테마에 따라 바뀌어야 하므로
+        // 플러그인이 넣지 않게 하고 gatsby-ssr.js에서 직접 넣는다.
+        theme_color: `#ffffff`,
+        theme_color_in_head: false,
         display: `minimal-ui`,
         icon: `src/images/logo.svg`,
       },
@@ -142,10 +153,65 @@ module.exports = {
       options: {
         host: 'https://kimkyuhoi.github.io',
         sitemap: 'https://kimkyuhoi.github.io/sitemap-index.xml',
-        policy: [{ userAgent: '*', allow: '/' }],
+        policy: [
+          { userAgent: '*', allow: '/' },
+          // AI 검색·답변 엔진의 크롤러를 명시적으로 허용한다 (GEO).
+          {
+            userAgent: [
+              'GPTBot',
+              'OAI-SearchBot',
+              'ChatGPT-User',
+              'ClaudeBot',
+              'Claude-SearchBot',
+              'Claude-User',
+              'PerplexityBot',
+              'Perplexity-User',
+              'Google-Extended',
+              'Applebot-Extended',
+            ],
+            allow: '/',
+          },
+        ],
       },
     },
-    `gatsby-plugin-sitemap`,
+    {
+      resolve: `gatsby-plugin-sitemap`,
+      options: {
+        // 글 페이지에는 작성일을 lastmod로 실어, 검색 엔진이 새 글과 오래된 글을 구분할 수 있게 한다.
+        query: `
+          {
+            site {
+              siteMetadata {
+                siteUrl
+              }
+            }
+            allSitePage {
+              nodes {
+                path
+              }
+            }
+            allMarkdownRemark {
+              nodes {
+                fields {
+                  slug
+                }
+                frontmatter {
+                  date(formatString: "YYYY-MM-DD")
+                }
+              }
+            }
+          }
+        `,
+        resolveSiteUrl: ({ site }) => site.siteMetadata.siteUrl,
+        resolvePages: ({ allSitePage, allMarkdownRemark }) => {
+          const dates = new Map(
+            allMarkdownRemark.nodes.map((post) => [post.fields.slug, post.frontmatter.date])
+          );
+          return allSitePage.nodes.map((page) => ({ ...page, lastmod: dates.get(page.path) }));
+        },
+        serialize: ({ path, lastmod }) => ({ url: path, lastmod }),
+      },
+    },
     `gatsby-plugin-catch-links`,
   ],
 };

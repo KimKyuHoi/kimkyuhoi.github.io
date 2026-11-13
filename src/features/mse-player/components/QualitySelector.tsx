@@ -107,8 +107,15 @@ const Trigger = styled.button`
   cursor: pointer;
   color: ${({ theme }) => theme.text.primary};
 
-  &:hover {
-    border-color: ${({ theme }) => theme.accent};
+  @media (hover: hover) {
+    &:hover {
+      border-color: ${({ theme }) => theme.accent};
+    }
+  }
+
+  @media (hover: none) {
+    min-height: 44px;
+    font-size: 14px;
   }
 `;
 
@@ -172,6 +179,11 @@ const Item = styled.button<{ active: boolean }>`
 
   &:hover {
     background: ${({ theme }) => theme.bg.muted};
+  }
+
+  @media (hover: none) {
+    min-height: 44px;
+    font-size: 14px;
   }
 `;
 

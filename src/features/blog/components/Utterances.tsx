@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { graphql, useStaticQuery } from 'gatsby';
 import styled from '@emotion/styled';
+import { media } from '@/styles/media';
 import { useThemeMode } from '@/hooks/useThemeMode';
 
 type UtterancesQuery = {
@@ -96,4 +97,12 @@ const Comments = styled.section`
   padding: 20px;
   border: 1px solid ${({ theme }) => theme.border};
   box-shadow: ${({ theme }) => theme.shadow.soft};
+
+  /* 폰에서는 상자를 벗겨 댓글이 화면 폭을 다 쓰게 한다. 댓글 위젯 안에도 여백이 있어, 상자까지 두르면 글 쓰는 칸이 너무 좁아진다. */
+  ${media.phone} {
+    padding: 0;
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
+  }
 `;

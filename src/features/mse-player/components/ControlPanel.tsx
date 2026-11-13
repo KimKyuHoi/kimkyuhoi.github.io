@@ -36,8 +36,13 @@ const ControlPanel: React.FC<Props> = ({
       </SectionDesc>
 
       <FieldRow>
-        <FieldLabel>자산 URL</FieldLabel>
+        <FieldLabel htmlFor="mse-asset-url">자산 URL</FieldLabel>
         <Input
+          id="mse-asset-url"
+          inputMode="url"
+          autoCapitalize="none"
+          autoCorrect="off"
+          spellCheck={false}
           value={assetInput}
           onChange={(e) => onAssetChange(e.target.value)}
           placeholder="https://example.com/master.m3u8"
@@ -47,8 +52,12 @@ const ControlPanel: React.FC<Props> = ({
         />
       </FieldRow>
       <FieldRow>
-        <FieldLabel>MIME codec</FieldLabel>
+        <FieldLabel htmlFor="mse-mime-codec">MIME codec</FieldLabel>
         <Input
+          id="mse-mime-codec"
+          autoCapitalize="none"
+          autoCorrect="off"
+          spellCheck={false}
           value={codecInput}
           onChange={(e) => onCodecChange(e.target.value)}
           placeholder='(.mp4만 필수) video/mp4; codecs="avc1.42E01E, mp4a.40.2"'
@@ -127,6 +136,12 @@ const Input = styled.input`
   background: ${({ theme }) => theme.bg.surface};
   color: ${({ theme }) => theme.text.primary};
 
+  /* 터치 기기: 누르기 쉬운 높이로 키우고, 글자를 16px로 두어 iOS가 입력할 때 화면을 확대하지 않게 한다. */
+  @media (hover: none) {
+    min-height: 44px;
+    font-size: 16px;
+  }
+
   &:focus {
     outline: none;
     border-color: ${({ theme }) => theme.accent};
@@ -144,14 +159,21 @@ const PrimaryButton = styled.button`
   padding: 8px 18px;
   font-size: 13.5px;
   font-weight: 600;
-  background: ${({ theme }) => theme.accent};
+  background: ${({ theme }) => theme.accentSolid};
   color: ${({ theme }) => theme.text.inverse};
   border: none;
   border-radius: 6px;
   cursor: pointer;
 
-  &:hover {
-    opacity: 0.9;
+  @media (hover: hover) {
+    &:hover {
+      opacity: 0.9;
+    }
+  }
+
+  @media (hover: none) {
+    min-height: 44px;
+    font-size: 15px;
   }
 `;
 
@@ -166,6 +188,11 @@ const SecondaryButton = styled.button`
 
   &:hover {
     background: ${({ theme }) => theme.bg.muted};
+  }
+
+  @media (hover: none) {
+    min-height: 44px;
+    font-size: 15px;
   }
 `;
 
@@ -183,12 +210,28 @@ const Chip = styled.button<{ tone?: 'works' | 'edu' }>`
   background: ${({ theme, tone }) =>
     tone === 'edu' ? 'rgba(248, 113, 113, 0.08)' : theme.bg.surface};
   color: ${({ theme, tone }) => (tone === 'edu' ? '#dc2626' : theme.text.primary)};
+
+  /* 다크 모드의 어두운 바탕에서는 진한 빨강이 묻혀 읽기 어렵다. */
+  body.dark & {
+    color: ${({ theme, tone }) => (tone === 'edu' ? '#f87171' : theme.text.primary)};
+  }
   border-radius: 999px;
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition:
+    color 0.15s ease,
+    border-color 0.15s ease;
 
-  &:hover {
-    border-color: ${({ theme, tone }) => (tone === 'edu' ? '#dc2626' : theme.accent)};
-    color: ${({ theme, tone }) => (tone === 'edu' ? '#dc2626' : theme.accent)};
+  @media (hover: none) {
+    min-height: 44px;
+    padding: 8px 14px;
+    font-size: 14px;
+    text-align: left;
+  }
+
+  @media (hover: hover) {
+    &:hover {
+      border-color: ${({ theme, tone }) => (tone === 'edu' ? '#dc2626' : theme.accent)};
+      color: ${({ theme, tone }) => (tone === 'edu' ? '#dc2626' : theme.accent)};
+    }
   }
 `;
