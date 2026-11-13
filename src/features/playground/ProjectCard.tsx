@@ -60,12 +60,14 @@ const Card = styled.a`
   color: inherit;
   transition: box-shadow 0.3s ease;
 
-  &:hover {
-    box-shadow: ${({ theme }) => theme.shadow.hover};
-  }
+  @media (hover: hover) {
+    &:hover {
+      box-shadow: ${({ theme }) => theme.shadow.hover};
+    }
 
-  &:hover img {
-    transform: scale(1.06);
+    &:hover img {
+      transform: scale(1.06);
+    }
   }
 `;
 

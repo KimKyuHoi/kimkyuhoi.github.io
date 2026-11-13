@@ -110,6 +110,11 @@ const Trigger = styled.button`
   &:hover {
     border-color: ${({ theme }) => theme.accent};
   }
+
+  @media (hover: none) {
+    min-height: 44px;
+    font-size: 14px;
+  }
 `;
 
 const Current = styled.span`
@@ -172,6 +177,11 @@ const Item = styled.button<{ active: boolean }>`
 
   &:hover {
     background: ${({ theme }) => theme.bg.muted};
+  }
+
+  @media (hover: none) {
+    min-height: 44px;
+    font-size: 14px;
   }
 `;
 

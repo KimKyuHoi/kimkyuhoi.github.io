@@ -105,6 +105,13 @@ const Field = styled.div`
   input {
     width: 100%;
   }
+
+  /* 터치 기기에서는 슬라이더를 잡기 쉽게 누르는 영역을 키운다. */
+  @media (hover: none) {
+    input {
+      height: 32px;
+    }
+  }
 `;
 
 const Switch = styled.label<{ $on: boolean }>`
@@ -123,6 +130,10 @@ const Switch = styled.label<{ $on: boolean }>`
     opacity: 0;
     width: 0;
     height: 0;
+  }
+
+  @media (hover: none) {
+    min-height: 44px;
   }
 `;
 
@@ -181,5 +192,12 @@ const Btn = styled.button<{ $ghost?: boolean }>`
   &:disabled {
     opacity: 0.5;
     cursor: default;
+  }
+
+  /* 터치 기기에서는 손가락으로 누르기 쉬운 높이로 키운다. */
+  @media (hover: none) {
+    min-height: 44px;
+    padding: 8px 14px;
+    font-size: 14px;
   }
 `;

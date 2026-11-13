@@ -127,6 +127,12 @@ const Input = styled.input`
   background: ${({ theme }) => theme.bg.surface};
   color: ${({ theme }) => theme.text.primary};
 
+  /* 터치 기기: 누르기 쉬운 높이로 키우고, 글자를 16px로 두어 iOS가 입력할 때 화면을 확대하지 않게 한다. */
+  @media (hover: none) {
+    min-height: 44px;
+    font-size: 16px;
+  }
+
   &:focus {
     outline: none;
     border-color: ${({ theme }) => theme.accent};
@@ -153,6 +159,11 @@ const PrimaryButton = styled.button`
   &:hover {
     opacity: 0.9;
   }
+
+  @media (hover: none) {
+    min-height: 44px;
+    font-size: 15px;
+  }
 `;
 
 const SecondaryButton = styled.button`
@@ -166,6 +177,11 @@ const SecondaryButton = styled.button`
 
   &:hover {
     background: ${({ theme }) => theme.bg.muted};
+  }
+
+  @media (hover: none) {
+    min-height: 44px;
+    font-size: 15px;
   }
 `;
 
@@ -185,7 +201,16 @@ const Chip = styled.button<{ tone?: 'works' | 'edu' }>`
   color: ${({ theme, tone }) => (tone === 'edu' ? '#dc2626' : theme.text.primary)};
   border-radius: 999px;
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition:
+    color 0.15s ease,
+    border-color 0.15s ease;
+
+  @media (hover: none) {
+    min-height: 44px;
+    padding: 8px 14px;
+    font-size: 14px;
+    text-align: left;
+  }
 
   &:hover {
     border-color: ${({ theme, tone }) => (tone === 'edu' ? '#dc2626' : theme.accent)};

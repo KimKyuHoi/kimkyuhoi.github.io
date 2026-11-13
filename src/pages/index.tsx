@@ -43,7 +43,7 @@ const IndexPage: React.FC<PageProps<Queries.IndexPageQuery>> = ({ data, location
           <Section>
             <SectionHeader>
               <SectionTitle>최신 글</SectionTitle>
-              {/* 좁은 화면에서는 사이드바가 숨으므로 여기에 전체 목록 링크를 둔다. */}
+              {/* 좁은 화면에서는 사이드바가 글 목록 아래로 내려가므로, 전체 목록 링크를 제목 옆에도 둔다. */}
               <MoreLink to="/posts/" data-narrow-only="">
                 모든 글 보기
               </MoreLink>
@@ -77,7 +77,7 @@ const IndexPage: React.FC<PageProps<Queries.IndexPageQuery>> = ({ data, location
                 </li>
               ))}
             </CategoryList>
-            <SmallLink to="/posts">모든 글 보기 →</SmallLink>
+            <SmallLink to="/posts/">모든 글 보기 →</SmallLink>
           </Widget>
 
           <Widget>
@@ -177,14 +177,17 @@ const Main = styled.div`
   gap: 40px;
 `;
 
+// 넓은 화면에서는 글 목록 옆에 붙어 따라오는 사이드바. 좁은 화면에서는 글 목록 아래로 내려와 화면 폭을 다 쓴다.
 const Sidebar = styled.aside`
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: 32px;
   position: sticky;
   top: 100px;
 
   @media (max-width: 980px) {
-    display: none;
+    position: static;
+    gap: 36px;
   }
 `;
 
@@ -231,6 +234,14 @@ const MoreLink = styled(Link)`
       display: none;
     }
   }
+
+  /* 손가락으로 누르기 쉽게 누르는 영역만 키운다 (보이는 위치는 그대로). */
+  @media (hover: none) {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    margin: -10px 0;
+  }
 `;
 
 const List = styled.div`
@@ -248,17 +259,36 @@ const ProjectGrid = styled.div`
   }
 `;
 
-const Widget = styled.div`
+const Widget = styled.section`
   background: ${({ theme }) => theme.bg.surface};
   border-radius: ${({ theme }) => theme.radius.lg};
   border: 1px solid ${({ theme }) => theme.border};
   padding: 16px;
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: 12px;
+
+  /* 좁은 화면에서는 상자를 벗고, 글 목록과 같은 급의 섹션이 된다. */
+  @media (max-width: 980px) {
+    padding: 0;
+    border: none;
+    border-radius: 0;
+    background: none;
+    gap: 16px;
+  }
 `;
 
-const WidgetTitle = styled.div`
+const WidgetTitle = styled.h2`
+  margin: 0;
+  font-size: 16px;
   font-weight: 800;
+  line-height: 1.8;
+
+  @media (max-width: 980px) {
+    font-size: 22px;
+    font-weight: 700;
+    line-height: 1.4;
+  }
 `;
 
 const CategoryList = styled.ul`
@@ -275,7 +305,9 @@ const CategoryList = styled.ul`
     border: 1px solid ${({ theme }) => theme.border};
     border-radius: ${({ theme }) => theme.radius.sm};
     font-size: 13px;
-    transition: all 0.2s ease;
+    transition:
+      background 0.2s ease,
+      transform 0.2s ease;
 
     a {
       display: block;
@@ -284,11 +316,22 @@ const CategoryList = styled.ul`
       text-decoration: none;
     }
 
-    &:hover {
-      background: ${({ theme }) => theme.border};
-      transform: translateY(-1px);
+    @media (hover: hover) {
+      &:hover {
+        background: ${({ theme }) => theme.border};
+        transform: translateY(-1px);
+        a {
+          color: ${({ theme }) => theme.text.primary};
+        }
+      }
+    }
+
+    /* 좁은 화면에서는 손가락으로 누르기 쉽게 키운다. */
+    @media (max-width: 980px) {
+      font-size: 15px;
+
       a {
-        color: ${({ theme }) => theme.text.primary};
+        padding: 9px 14px;
       }
     }
   }
@@ -298,11 +341,34 @@ const SmallLink = styled(Link)`
   color: ${({ theme }) => theme.accent};
   font-weight: 700;
   font-size: 14px;
+
+  /* 좁은 화면에서는 "최신 글" 제목 옆에 같은 링크가 이미 있다. */
+  @media (max-width: 980px) {
+    display: none;
+  }
 `;
 
 const MiniList = styled.div`
   display: grid;
   gap: 8px;
+
+  /* 좁은 화면: 옆으로 넘기는 카드 줄. 다음 카드가 살짝 보여 넘길 수 있음을 알린다.
+     줄은 화면 양끝까지 닿고, 첫 카드는 본문과 같은 여백에서 시작한다. */
+  @media (max-width: 980px) {
+    display: flex;
+    gap: 12px;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scroll-snap-type: x mandatory;
+    scroll-padding-left: var(--gutter-left, 20px);
+    margin: 0 calc(-1 * var(--gutter-right, 20px)) 0 calc(-1 * var(--gutter-left, 20px));
+    padding: 2px var(--gutter-right, 20px) 6px var(--gutter-left, 20px);
+    scrollbar-width: none;
+
+    &::-webkit-scrollbar {
+      display: none;
+    }
+  }
 `;
 
 const MiniItem = styled.div`
@@ -319,6 +385,40 @@ const MiniItem = styled.div`
     color: ${({ theme }) => theme.text.caption};
     font-size: 12px;
   }
+
+  @media (max-width: 980px) {
+    position: relative;
+    flex: 0 0 min(74%, 300px);
+    align-content: space-between;
+    gap: 14px;
+    min-height: 116px;
+    padding: 16px 18px;
+    border: 1px solid ${({ theme }) => theme.border};
+    border-radius: ${({ theme }) => theme.radius.lg};
+    scroll-snap-align: start;
+
+    a {
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      font-size: 17px;
+      line-height: 1.45;
+      white-space: normal;
+      word-break: keep-all;
+    }
+
+    /* 카드 어디를 눌러도 글로 이동한다. */
+    a::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+    }
+
+    span {
+      font-size: 13px;
+    }
+  }
 `;
 
 const TagCloud = styled.div`
@@ -334,6 +434,11 @@ const TagBadge = styled(Link)`
   border: 1px solid ${({ theme }) => theme.border};
   color: ${({ theme }) => theme.text.muted};
   font-size: 12px;
+
+  @media (max-width: 980px) {
+    padding: 9px 14px;
+    font-size: 14px;
+  }
   transition:
     color 0.2s ease,
     background 0.2s ease;

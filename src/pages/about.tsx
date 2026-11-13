@@ -1,15 +1,18 @@
 import React from 'react';
 import styled from '@emotion/styled';
+import { keyframes } from '@emotion/react';
+import { ArrowUpRight } from 'lucide-react';
 import type { PageProps } from 'gatsby';
 import Layout from '@/components/Layout';
 import Seo from '@/components/Seo';
+import { media } from '@/styles/media';
 
 const career = [
   {
     period: '26.01 ~ ing',
     title: 'The Pinkfong Company',
-    role: 'Web Development Group Software Engineer',
-    summary: '글로벌 B2C 서비스와 300명 이상이 쓰는 사내 제품을 개발·운영하고 있습니다.',
+    role: '기술개발 부문 웹개발팀 Software Engineer',
+    summary: '사내 서비스 및 핑크퐁 스토어와 고객센터를 담당하여 개발하고 있습니다.',
     projects: [
       {
         name: '전사 이슈 트래커 개편',
@@ -53,6 +56,7 @@ const career = [
       },
       {
         name: '핑크퐁 공식 홈페이지 개편',
+        url: 'https://www.pinkfong.com/ko',
         details: [
           '(밋앤플레이) 이벤트·스케줄 페이지 개발',
           '투명 배경 GIF의 브라우저별 색상 불일치를 해결하고 용량 65MB → 226KB(99.6%) 절감',
@@ -110,17 +114,6 @@ const awards = [
     title: '대구를 빛내는 SW해커톤 우수상',
     org: '경북대학교 컴퓨터학부',
   },
-];
-
-const skills = [
-  'TypeScript',
-  'React',
-  'Next.js',
-  'TanStack Query',
-  'Shaka Player',
-  'Vite',
-  'S3',
-  'CloudFront',
 ];
 
 const activity = [
@@ -224,10 +217,6 @@ const AboutPage: React.FC<PageProps> = ({ location }) => {
               Kyungpook National Univ. Computer Science and Engineering (2019.03 - 2026.02)
             </InfoValue>
           </InfoRow>
-          <InfoRow>
-            <InfoLabel>Skills</InfoLabel>
-            <InfoValue>{skills.join(', ')}</InfoValue>
-          </InfoRow>
         </ProfileInfo>
       </ProfileCard>
 
@@ -247,7 +236,17 @@ const AboutPage: React.FC<PageProps> = ({ location }) => {
                 {item.summary && <ItemSummary>{item.summary}</ItemSummary>}
                 {item.projects.map((project, pIndex) => (
                   <ProjectBlock key={pIndex}>
-                    <ProjectName>■ {project.name}</ProjectName>
+                    <ProjectName>
+                      ■{' '}
+                      {project.url ? (
+                        <ProjectLink href={project.url} target="_blank" rel="noopener noreferrer">
+                          {project.name}
+                          <ArrowUpRight aria-hidden="true" />
+                        </ProjectLink>
+                      ) : (
+                        project.name
+                      )}
+                    </ProjectName>
                     <ProjectDetails>
                       {project.details.map((detail, dIndex) => (
                         <li key={dIndex}>{withMetrics(detail)}</li>
@@ -335,6 +334,10 @@ const SectionTitle = styled.h2`
   font-weight: 700;
   margin: 48px 0 24px;
   color: ${({ theme }) => theme.text.primary};
+
+  ${media.phone} {
+    margin: 40px 0 20px;
+  }
 `;
 
 const Timeline = styled.div`
@@ -344,10 +347,18 @@ const Timeline = styled.div`
 
 const Row = styled.div`
   display: grid;
-  grid-template-columns: 140px 24px 1fr;
+  grid-template-columns: 140px 24px minmax(0, 1fr);
 
   @media (max-width: 768px) {
-    grid-template-columns: 90px 24px 1fr;
+    grid-template-columns: 90px 24px minmax(0, 1fr);
+  }
+
+  /* 폰: 기간을 제목 위로 올리고 타임라인 선을 왼쪽 끝에 붙여, 내용이 화면 폭을 다 쓰게 한다. */
+  ${media.phone} {
+    grid-template-columns: 18px minmax(0, 1fr);
+    grid-template-areas:
+      'line period'
+      'line content';
   }
 `;
 
@@ -359,20 +370,63 @@ const Period = styled.div`
   color: ${({ theme }) => theme.text.muted};
   font-family: ${({ theme }) => theme.font.mono};
   line-height: 1.5;
+
+  ${media.phone} {
+    grid-area: period;
+    padding: 0 0 2px 10px;
+    font-size: 13px;
+    text-align: left;
+  }
 `;
 
 const Separator = styled.div`
   position: relative;
   display: flex;
   justify-content: center;
+
+  ${media.phone} {
+    grid-area: line;
+  }
 `;
 
+const lineFill = keyframes`
+  from {
+    transform: scaleY(0);
+  }
+`;
+
+const dotOn = keyframes`
+  to {
+    border-color: var(--accent);
+    background-color: var(--accent);
+  }
+`;
+
+// 타임라인의 세로선. 스크롤 연동 애니메이션을 지원하는 브라우저에서는 읽어 내려온 곳까지 강조색으로 채워진다.
+// view(50% 50%)는 화면 한가운데의 가로선을 기준으로 삼는다는 뜻이다. 선의 위쪽 끝이 그 기준선에 닿을 때 채워지기
+// 시작해 아래쪽 끝이 닿을 때 다 채워지므로, 항목마다 따로 있는 선들이 하나로 이어져 채워지는 것처럼 보인다.
 const Line = styled.div`
+  position: relative;
   width: 1px;
   background-color: ${({ theme }) => theme.border};
   height: 100%;
+
+  @media (prefers-reduced-motion: no-preference) {
+    @supports (animation-timeline: view()) {
+      &::after {
+        content: '';
+        position: absolute;
+        inset: 0 -0.5px;
+        background: ${({ theme }) => theme.accent};
+        transform-origin: 50% 0;
+        animation: ${lineFill} linear both;
+        animation-timeline: view(50% 50%);
+      }
+    }
+  }
 `;
 
+// 항목의 시작점. 화면 한가운데를 지나면 강조색으로 켜진다.
 const Dot = styled.div`
   position: absolute;
   top: 6px;
@@ -382,11 +436,23 @@ const Dot = styled.div`
   background-color: ${({ theme }) => theme.bg.page};
   border: 1.5px solid ${({ theme }) => theme.text.muted};
   z-index: 1;
+
+  @media (prefers-reduced-motion: no-preference) {
+    @supports (animation-timeline: view()) {
+      animation: ${dotOn} linear both;
+      animation-timeline: view(50% 50%);
+    }
+  }
 `;
 
 const Content = styled.div`
   padding-bottom: 32px;
   padding-left: 16px;
+
+  ${media.phone} {
+    grid-area: content;
+    padding-left: 10px;
+  }
 `;
 
 const ItemTitle = styled.div`
@@ -401,31 +467,35 @@ const ItemDetails = styled.div`
   font-size: 14px;
   color: ${({ theme }) => theme.text.muted};
   line-height: 1.6;
+
+  ${media.phone} {
+    font-size: 15px;
+  }
 `;
 
+// 이름표(왼쪽)와 값(오른쪽)의 두 칸 격자. 이름표 칸은 가장 긴 이름표에 맞춰지므로 값들이 같은 세로선에서 시작한다.
 const ProfileInfo = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  margin-bottom: 16px;
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
+  align-items: baseline;
+  gap: 8px 16px;
 `;
 
+// 한 줄(이름표 + 값)을 묶는 상자. 격자에는 안의 두 요소가 직접 놓인다.
 const InfoRow = styled.div`
-  display: flex;
-  align-items: baseline;
-  gap: 8px;
+  display: contents;
 `;
 
 const InfoLabel = styled.span`
   font-size: 15px;
   font-weight: 700;
   color: ${({ theme }) => theme.text.primary};
-  min-width: fit-content;
 `;
 
 const InfoValue = styled.span`
   font-size: 15px;
   color: ${({ theme }) => theme.text.muted};
+  overflow-wrap: anywhere;
 `;
 
 const ProfileCard = styled.div`
@@ -433,6 +503,10 @@ const ProfileCard = styled.div`
   border: 1px solid ${({ theme }) => theme.border};
   border-radius: ${({ theme }) => theme.radius.lg};
   padding: 32px;
+
+  ${media.phone} {
+    padding: 24px 20px;
+  }
 `;
 
 const ProfileHeader = styled.div`
@@ -456,6 +530,10 @@ const ItemRole = styled.div`
   font-size: 14px;
   color: ${({ theme }) => theme.text.muted};
   margin-bottom: 14px;
+
+  ${media.phone} {
+    font-size: 15px;
+  }
 `;
 
 const ProjectBlock = styled.div`
@@ -471,6 +549,33 @@ const ProjectName = styled.div`
   font-weight: 600;
   color: ${({ theme }) => theme.text.primary};
   margin-bottom: 6px;
+
+  ${media.phone} {
+    font-size: 15px;
+  }
+`;
+
+// 프로젝트 이름에 걸리는 링크(공개된 서비스 주소). 새 탭으로 열린다는 것을 화살표로 알린다.
+const ProjectLink = styled.a`
+  color: inherit;
+  text-decoration: underline;
+  text-decoration-color: ${({ theme }) => theme.border};
+  text-underline-offset: 4px;
+  transition:
+    color 0.2s ease,
+    text-decoration-color 0.2s ease;
+
+  &:hover {
+    color: ${({ theme }) => theme.accent};
+    text-decoration-color: currentColor;
+  }
+
+  svg {
+    width: 15px;
+    height: 15px;
+    margin-left: 2px;
+    vertical-align: -2px;
+  }
 `;
 
 const ProjectDetails = styled.ul`
@@ -480,6 +585,12 @@ const ProjectDetails = styled.ul`
   color: ${({ theme }) => theme.text.muted};
   line-height: 1.7;
   word-break: keep-all;
+
+  /* 폰에서는 내용 칸이 넓어진 만큼 글자를 키워 읽기 편하게 한다. */
+  ${media.phone} {
+    padding-left: 18px;
+    font-size: 15px;
+  }
 
   li {
     margin-bottom: 4px;
@@ -534,6 +645,10 @@ const ItemSummary = styled.p`
   font-size: 14px;
   line-height: 1.7;
   color: ${({ theme }) => theme.text.muted};
+
+  ${media.phone} {
+    font-size: 15px;
+  }
 `;
 
 const AwardTitle = styled.div`

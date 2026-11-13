@@ -97,8 +97,18 @@ const Card = styled.article`
     transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1);
   }
 
-  &:hover .spotlight-card {
-    transform: translateY(-4px);
+  /* 마우스가 있는 기기에서만 떠오른다. 터치 기기에서는 hover가 누른 뒤에도 남아 카드가 떠 있는 채로 굳는다. */
+  @media (hover: hover) {
+    &:hover .spotlight-card {
+      transform: translateY(-4px);
+    }
+  }
+
+  /* 손가락으로 누르는 동안에는 살짝 눌린다. */
+  @media (hover: none) {
+    &:active .spotlight-card {
+      transform: scale(0.985);
+    }
   }
 
   @media (max-width: 768px) {
@@ -130,6 +140,12 @@ const CategoryLink = styled(Link)`
   font-weight: 700;
   color: ${({ theme }) => theme.accent};
 
+  /* 손가락으로 누르기 쉽게 누르는 영역만 위아래로 넓힌다 (보이는 위치는 그대로). */
+  @media (hover: none) {
+    margin: -10px 0;
+    padding: 10px 0;
+  }
+
   &:hover {
     text-decoration: underline;
     text-underline-offset: 4px;
@@ -148,8 +164,10 @@ const Title = styled.h3`
   word-break: keep-all;
   transition: color 0.25s ease;
 
-  article:hover & {
-    color: ${({ theme }) => theme.accent};
+  @media (hover: hover) {
+    article:hover & {
+      color: ${({ theme }) => theme.accent};
+    }
   }
 
   @media (max-width: 768px) {
@@ -212,6 +230,11 @@ const Tags = styled.ul`
 const TagLink = styled(Link)`
   display: block;
   padding: 4px 10px;
+
+  /* 손가락으로 누르기 쉽게 높이를 키운다. */
+  @media (hover: none) {
+    padding: 9px 12px;
+  }
   border-radius: ${({ theme }) => theme.radius.sm};
   background: ${({ theme }) => theme.bg.muted};
   color: ${({ theme }) => theme.text.muted};
