@@ -8,14 +8,49 @@ import Toc from '@/features/blog/components/TableOfContents';
 import BuyMeCoffee from '@/features/blog/components/BuyMeCoffee';
 import { Skeleton } from '@/ui/Skeleton';
 import { useMounted } from '@/hooks/useMounted';
+import RevealText from '@/motion/RevealText';
+import PlayerBar from '@/features/blog/components/PlayerBar';
+import PostCard, { categoryPath, tagPath } from '@/features/blog/components/PostCard';
+import useImageZoom from '@/features/blog/hooks/useImageZoom';
 
 const Utterances = React.lazy(() => import('@/features/blog/components/Utterances'));
+
+// 빌드할 때 만들어 두는 글별 공유 이미지의 경로. gatsby-node.js의 ogImageName과 같은 규칙이어야 한다.
+const ogImagePath = (slug: string) => `/og/${slug.replace(/^\/|\/$/g, '').replace(/\//g, '-')}.png`;
 
 const BlogPostTemplate: React.FC<PageProps<Queries.BlogPostBySlugQuery>> = ({ data, location }) => {
   const post = data.markdownRemark;
   const previous = data.previous;
   const next = data.next;
   const isMounted = useMounted();
+  const bodyRef = React.useRef<HTMLElement>(null);
+  useImageZoom(bodyRef);
+
+  // 시리즈: 같은 카테고리에서 chapter가 매겨진 글을 장 순서대로 잇는다.
+  const category = post?.frontmatter?.category || '기타';
+  const series =
+    post?.frontmatter?.chapter == null
+      ? []
+      : data.others.nodes
+          .filter(
+            (node) => node.frontmatter?.category === category && node.frontmatter?.chapter != null
+          )
+          .sort((a, b) => (a.frontmatter?.chapter || 0) - (b.frontmatter?.chapter || 0));
+
+  // 이어서 볼 글: 같은 카테고리와 겹치는 태그가 많은 순으로 고른다.
+  const tags = (post?.frontmatter?.tags as string[]) || [];
+  const related = data.others.nodes
+    .filter((node) => node.fields?.slug !== post?.fields?.slug)
+    .map((node) => ({
+      node,
+      score:
+        (node.frontmatter?.category === post?.frontmatter?.category ? 2 : 0) +
+        (node.frontmatter?.tags || []).filter((tag) => tag && tags.includes(tag)).length,
+    }))
+    .filter(({ score }) => score > 0)
+    .sort((a, b) => b.score - a.score)
+    .slice(0, 3)
+    .map(({ node }) => node);
 
   return (
     <Layout location={location}>
@@ -23,14 +58,26 @@ const BlogPostTemplate: React.FC<PageProps<Queries.BlogPostBySlugQuery>> = ({ da
         <Main>
           <article itemScope itemType="http://schema.org/Article">
             <header>
-              <Category>{post?.frontmatter?.category || '기타'}</Category>
-              <Title itemProp="headline">{post?.frontmatter?.title}</Title>
+              <Category to={categoryPath(category)}>{category}</Category>
+              <Title itemProp="headline" data-morph-title="">
+                <RevealText text={post?.frontmatter?.title || ''} />
+              </Title>
+              {post?.frontmatter?.description ? (
+                <Lead itemProp="description">{post.frontmatter.description}</Lead>
+              ) : null}
               <Meta>
-                <span>{post?.frontmatter?.date}</span>
+                <Author to="/about/" rel="author">
+                  김규회
+                </Author>
+                <time dateTime={post?.frontmatter?.rawDate || undefined}>
+                  {post?.frontmatter?.date}
+                </time>
                 {post?.frontmatter?.tags?.length ? (
                   <Tags>
                     {(post.frontmatter.tags as string[]).map((tag) => (
-                      <Tag key={tag}>#{tag}</Tag>
+                      <Tag key={tag} to={tagPath(tag)}>
+                        #{tag}
+                      </Tag>
                     ))}
                   </Tags>
                 ) : null}
@@ -38,13 +85,51 @@ const BlogPostTemplate: React.FC<PageProps<Queries.BlogPostBySlugQuery>> = ({ da
               {post?.frontmatter?.hero ? <Hero src={post.frontmatter.hero} alt="" /> : null}
             </header>
 
+            {series.length > 1 ? (
+              <Series aria-labelledby="series-heading">
+                <SeriesTitle id="series-heading">{category} 시리즈</SeriesTitle>
+                <ol>
+                  {series.map((item) => {
+                    const current = item.fields?.slug === post?.fields?.slug;
+                    return (
+                      <li key={item.fields?.slug} aria-current={current ? 'page' : undefined}>
+                        {current ? (
+                          <span>{item.frontmatter?.title}</span>
+                        ) : (
+                          <Link to={item.fields?.slug || ''}>{item.frontmatter?.title}</Link>
+                        )}
+                      </li>
+                    );
+                  })}
+                </ol>
+              </Series>
+            ) : null}
+
             <PostBody
+              ref={bodyRef}
               dangerouslySetInnerHTML={{ __html: post?.html || '' }}
               itemProp="articleBody"
             />
           </article>
 
           <BuyMeCoffee />
+
+          {related.length ? (
+            <Related aria-labelledby="related-heading">
+              <RelatedTitle id="related-heading">이어서 볼 글</RelatedTitle>
+              {related.map((node) => (
+                <PostCard
+                  key={node.fields?.slug}
+                  slug={node.fields?.slug || ''}
+                  title={node.frontmatter?.title || ''}
+                  description={node.frontmatter?.description || ''}
+                  date={node.frontmatter?.date || ''}
+                  category={node.frontmatter?.category || '기타'}
+                  tags={(node.frontmatter?.tags as string[]) || []}
+                />
+              ))}
+            </Related>
+          ) : null}
 
           <Nav>
             {previous ? (
@@ -76,6 +161,7 @@ const BlogPostTemplate: React.FC<PageProps<Queries.BlogPostBySlugQuery>> = ({ da
           <Toc tableOfContents={post?.tableOfContents as string} />
         </Aside>
       </ArticleWrapper>
+      <PlayerBar bodyRef={bodyRef} />
     </Layout>
   );
 };
@@ -92,11 +178,13 @@ export const Head: React.FC<PageProps<Queries.BlogPostBySlugQuery>> = ({ data })
       title={post?.frontmatter?.title || siteTitle}
       description={post?.frontmatter?.description || post?.excerpt || undefined}
       pathname={slug}
-      image={post?.frontmatter?.hero || undefined}
+      image={post?.frontmatter?.hero || ogImagePath(slug)}
       article={{
         publishedTime: post?.frontmatter?.rawDate || undefined,
         modifiedTime: post?.frontmatter?.rawDate || undefined,
         tags: (post?.frontmatter?.tags as string[]) || [],
+        category: post?.frontmatter?.category || undefined,
+        words: post?.wordCount?.words || undefined,
       }}
     />
   );
@@ -114,6 +202,9 @@ export const pageQuery = graphql`
       excerpt(pruneLength: 160)
       html
       tableOfContents
+      wordCount {
+        words
+      }
       fields {
         slug
       }
@@ -125,6 +216,22 @@ export const pageQuery = graphql`
         category
         tags
         hero
+        chapter
+      }
+    }
+    others: allMarkdownRemark(sort: { frontmatter: { date: DESC } }) {
+      nodes {
+        fields {
+          slug
+        }
+        frontmatter {
+          title
+          date(formatString: "YYYY년 M월 D일")
+          description
+          category
+          tags
+          chapter
+        }
       }
     }
     previous: markdownRemark(id: { eq: $previousPostId }) {
@@ -174,14 +281,23 @@ const Aside = styled.div`
   }
 `;
 
-const Category = styled.div`
+const Category = styled(Link)`
+  display: inline-block;
   color: ${({ theme }) => theme.accent};
   font-weight: 700;
   font-size: 16px;
   margin-bottom: 12px;
+
+  &:hover {
+    text-decoration: underline;
+    text-underline-offset: 4px;
+  }
 `;
 
 const Title = styled.h1`
+  /* 페이지 전환에서 글자만 자연스럽게 커지도록, 상자를 글자 폭에 맞춘다. */
+  width: fit-content;
+  max-width: 100%;
   margin: 0 0 24px;
   font-size: 40px;
   line-height: 1.3;
@@ -192,6 +308,65 @@ const Title = styled.h1`
   @media (max-width: 768px) {
     font-size: 30px;
   }
+`;
+
+// 글의 한 줄 요약. 검색 엔진과 AI 답변 엔진이 글의 요지를 바로 읽을 수 있게 본문 위에 보여 준다.
+const Lead = styled.p`
+  margin: -8px 0 24px;
+  font-size: 18px;
+  line-height: 1.7;
+  color: ${({ theme }) => theme.text.muted};
+  word-break: keep-all;
+
+  @media (max-width: 768px) {
+    font-size: 16px;
+  }
+`;
+
+const Author = styled(Link)`
+  font-weight: 700;
+  color: ${({ theme }) => theme.text.primary};
+
+  &:hover {
+    text-decoration: underline;
+    text-underline-offset: 4px;
+  }
+`;
+
+const Series = styled.nav`
+  margin: 0 0 32px;
+  padding: 20px 24px;
+  border: 1px solid ${({ theme }) => theme.border};
+  border-radius: ${({ theme }) => theme.radius.lg};
+
+  ol {
+    display: grid;
+    gap: 8px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  li {
+    margin: 0;
+    font-size: 15px;
+    color: ${({ theme }) => theme.text.muted};
+  }
+
+  a:hover {
+    color: ${({ theme }) => theme.accent};
+  }
+
+  li[aria-current='page'] {
+    font-weight: 700;
+    color: ${({ theme }) => theme.text.primary};
+  }
+`;
+
+const SeriesTitle = styled.h2`
+  margin: 0 0 12px;
+  font-size: 16px;
+  font-weight: 700;
 `;
 
 const Meta = styled.div`
@@ -212,13 +387,21 @@ const Tags = styled.div`
   flex-wrap: wrap;
 `;
 
-const Tag = styled.span`
+const Tag = styled(Link)`
   padding: 4px 10px;
   background: ${({ theme }) => theme.bg.muted};
   border-radius: ${({ theme }) => theme.radius.sm};
   font-size: 13px;
   font-weight: 500;
   color: ${({ theme }) => theme.text.muted};
+  transition:
+    color 0.2s ease,
+    background 0.2s ease;
+
+  &:hover {
+    background: ${({ theme }) => theme.border};
+    color: ${({ theme }) => theme.text.primary};
+  }
 `;
 
 const Hero = styled.img`
@@ -230,7 +413,7 @@ const Hero = styled.img`
 `;
 
 const PostBody = styled.section`
-  font-size: 15px;
+  font-size: 16px;
   line-height: 1.75;
   color: ${({ theme }) => theme.text.primary};
   overflow-x: hidden;
@@ -289,6 +472,12 @@ const PostBody = styled.section`
     padding: 14px 20px;
     background: #f8fbff;
     border-left: 5px solid ${({ theme }) => theme.accent};
+
+    /* 라이트 전용 배경색이 다크 모드에서도 쓰여 글자가 보이지 않던 것을 바로잡는다. */
+    body.dark & {
+      background: ${({ theme }) => theme.bg.muted};
+    }
+
     border-radius: ${({ theme }) => theme.radius.sm};
     box-shadow: 0 2px 12px rgba(0, 0, 0, 0.03);
 
@@ -457,6 +646,18 @@ const PostBody = styled.section`
       background: rgba(255, 255, 255, 0.18);
     }
   }
+`;
+
+const Related = styled.section`
+  display: grid;
+  gap: 16px;
+  margin-top: 60px;
+`;
+
+const RelatedTitle = styled.h2`
+  margin: 0;
+  font-size: 22px;
+  font-weight: 700;
 `;
 
 const Nav = styled.nav`

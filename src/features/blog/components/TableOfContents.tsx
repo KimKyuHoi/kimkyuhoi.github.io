@@ -1,14 +1,66 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import styled from '@emotion/styled';
 
 interface TocProps {
   tableOfContents?: string | null;
 }
 
+// 제목이 화면 위에서 이만큼 내려온 지점을 지나면 "지금 읽는 곳"으로 본다 (고정 헤더 + 여유).
+const READING_LINE = 120;
+
 const Toc: React.FC<TocProps> = ({ tableOfContents }) => {
+  const wrapperRef = useRef<HTMLElement>(null);
+
+  // 지금 읽고 있는 제목을 목차에서 표시한다.
+  useEffect(() => {
+    const wrapper = wrapperRef.current;
+    if (!wrapper) return undefined;
+
+    const links = Array.from(wrapper.querySelectorAll<HTMLAnchorElement>('a[href*="#"]'));
+    const headings = links.map((link) =>
+      document.getElementById(decodeURIComponent(link.hash.slice(1)))
+    );
+    let active = -1;
+    let raf = 0;
+
+    const update = () => {
+      raf = 0;
+      let index = -1;
+      headings.forEach((heading, i) => {
+        if (heading && heading.getBoundingClientRect().top <= READING_LINE) index = i;
+      });
+      if (index === active) return;
+
+      links[active]?.removeAttribute('aria-current');
+      active = index;
+      const link = links[index];
+      if (!link) return;
+      link.setAttribute('aria-current', 'location');
+
+      // 목차가 길어 자체 스크롤이 생겼을 때, 표시된 항목이 목차 안에서 보이게 한다.
+      const top = link.offsetTop;
+      if (top < wrapper.scrollTop) wrapper.scrollTop = top - 12;
+      else if (top + link.offsetHeight > wrapper.scrollTop + wrapper.clientHeight) {
+        wrapper.scrollTop = top + link.offsetHeight - wrapper.clientHeight + 12;
+      }
+    };
+
+    const onScroll = () => {
+      if (!raf) raf = requestAnimationFrame(update);
+    };
+
+    window.addEventListener('scroll', onScroll, { passive: true });
+    update();
+
+    return () => {
+      cancelAnimationFrame(raf);
+      window.removeEventListener('scroll', onScroll);
+    };
+  }, [tableOfContents]);
+
   if (!tableOfContents) return null;
   return (
-    <Wrapper>
+    <Wrapper ref={wrapperRef} aria-label="목차" data-lenis-prevent="">
       <Title>목차</Title>
       <div dangerouslySetInnerHTML={{ __html: tableOfContents }} />
     </Wrapper>
@@ -17,7 +69,7 @@ const Toc: React.FC<TocProps> = ({ tableOfContents }) => {
 
 export default Toc;
 
-const Wrapper = styled.aside`
+const Wrapper = styled.nav`
   position: sticky;
   top: 120px;
   padding: 16px;
@@ -60,7 +112,9 @@ const Wrapper = styled.aside`
     font-size: 14px;
     text-decoration: none;
     display: block;
-    transition: all 0.2s ease;
+    transition:
+      color 0.2s ease,
+      transform 0.2s ease;
 
     /* Text truncation */
     white-space: nowrap;
@@ -68,9 +122,13 @@ const Wrapper = styled.aside`
     text-overflow: ellipsis;
 
     &:hover {
-      color: ${({ theme }) => theme.text.primary};
       transform: translateX(4px);
       color: ${({ theme }) => theme.accent};
+    }
+
+    &[aria-current='location'] {
+      color: ${({ theme }) => theme.accent};
+      font-weight: 700;
     }
   }
 `;
