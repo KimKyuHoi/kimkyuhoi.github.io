@@ -1,3 +1,5 @@
+// React Bits(https://reactbits.dev)의 컴포넌트를 가져와 이 프로젝트의 포맷에 맞춘 것이다.
+// MIT + Commons Clause 라이선스이며 전문은 같은 폴더의 LICENSE.md에 있다.
 'use client';
 
 import { useEffect, useRef, type HTMLAttributes, type ReactNode } from 'react';
