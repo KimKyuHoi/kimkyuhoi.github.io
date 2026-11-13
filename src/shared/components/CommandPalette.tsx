@@ -3,6 +3,7 @@ import { graphql, navigate, useStaticQuery } from 'gatsby';
 import styled from '@emotion/styled';
 import { Command } from 'cmdk';
 import { Compass, FileText, Moon } from 'lucide-react';
+import { media } from '@/styles/media';
 
 type CommandPaletteProps = {
   open: boolean;
@@ -93,7 +94,13 @@ const CommandPalette: React.FC<CommandPaletteProps> = ({ open, onOpenChange, onT
     >
       {open ? (
         <Command label="검색" loop>
-          <Command.Input placeholder="글 제목, 태그로 검색" />
+          <SearchRow>
+            <Command.Input placeholder="글 제목, 태그로 검색" />
+            {/* 터치 기기에는 Esc가 없고, 바깥을 누르면 닫힌다는 것도 눈에 보이지 않으므로 닫기 버튼을 둔다. */}
+            <CloseButton type="button" onClick={() => dialogRef.current?.close()}>
+              닫기
+            </CloseButton>
+          </SearchRow>
           <Command.List data-lenis-prevent="">
             <Command.Empty>일치하는 글이 없습니다. 다른 단어로 찾아보세요.</Command.Empty>
             <Command.Group heading="글">
@@ -137,6 +144,32 @@ const CommandPalette: React.FC<CommandPaletteProps> = ({ open, onOpenChange, onT
 
 export default CommandPalette;
 
+const SearchRow = styled.div`
+  display: flex;
+  align-items: center;
+  border-bottom: 1px solid ${({ theme }) => theme.border};
+`;
+
+const CloseButton = styled.button`
+  display: none;
+
+  @media (hover: none) {
+    display: block;
+    flex-shrink: 0;
+    min-height: 44px;
+    margin-right: 8px;
+    padding: 0 12px;
+    border: none;
+    border-radius: ${({ theme }) => theme.radius.sm};
+    background: transparent;
+    font: inherit;
+    font-size: 15px;
+    font-weight: 600;
+    color: ${({ theme }) => theme.text.muted};
+    cursor: pointer;
+  }
+`;
+
 const Dialog = styled.dialog`
   width: min(600px, calc(100vw - 24px));
   max-height: none;
@@ -169,10 +202,10 @@ const Dialog = styled.dialog`
   }
 
   [cmdk-input] {
-    width: 100%;
+    flex: 1;
+    min-width: 0;
     padding: 18px 20px;
     border: none;
-    border-bottom: 1px solid ${({ theme }) => theme.border};
     outline: none;
     background: transparent;
     font: inherit;
@@ -189,6 +222,19 @@ const Dialog = styled.dialog`
     overflow-y: auto;
     overscroll-behavior: contain;
     padding: 8px;
+  }
+
+  /* 폰: 화면 위쪽에 붙이고 목록을 낮게 잡아, 화면 키보드가 올라와도 결과가 그 위에 보이게 한다. */
+  ${media.phone} {
+    margin-top: max(10px, env(safe-area-inset-top, 0px));
+
+    [cmdk-list] {
+      max-height: min(44dvh, 360px);
+    }
+
+    [cmdk-item] {
+      min-height: 48px;
+    }
   }
 
   [cmdk-group-heading] {
