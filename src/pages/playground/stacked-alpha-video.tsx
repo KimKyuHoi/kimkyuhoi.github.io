@@ -336,7 +336,7 @@ export default StackedAlphaVideoPage;
 export const Head = () => (
   <Seo
     title="Stacked Alpha Video"
-    pathname="/playground/stacked-alpha-video"
+    pathname="/playground/stacked-alpha-video/"
     description="stacked-alpha-video Web Component를 활용한 투명 영상 구현 데모"
   />
 );

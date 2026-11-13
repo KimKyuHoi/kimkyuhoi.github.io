@@ -26,7 +26,7 @@ export default OptimisticUiPage;
 export const Head = () => (
   <Seo
     title="Optimistic UI Lab"
-    pathname="/playground/optimistic-ui"
+    pathname="/playground/optimistic-ui/"
     description="찜 하트를 차단형·즉시 반영·useOptimistic·debounce 등 다섯 가지로 구현해 연타와 요청 취소 동작을 비교하는 실험실."
   />
 );

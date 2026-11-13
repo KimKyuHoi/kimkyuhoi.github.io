@@ -13,7 +13,13 @@ const career = [
     projects: [
       {
         name: '전사 이슈 트래커 개편',
-        details: ['Umami로 수집한 사용 데이터를 근거로 UI/UX 개편'],
+        details: [
+          '실사용자 웹 바이탈 개선: LCP 2.51초 → 1.50초(−40%, CLS 0.62 → 0.19(−69%)',
+          '목록 화면에 필요한 데이터를 차례로 불러오던 구조를 동시 요청으로 바꿔 목록 로딩 1.37초 → 0.12초',
+          '참조자가 많은 이슈에서 13.8초 걸리던 코멘트 작성을 DB 트리거 개선으로 0.1초 미만으로 단축',
+          '필터마다 흩어져 있던 메뉴를 두 개의 탭 화면으로 정리해 화면을 오가는 이동을 74% → 35%로 감소',
+          '모바일에서도 업무를 볼 수 있도록 반응형 화면을 적용해 모바일 사용량 34% 증가',
+        ],
       },
       {
         name: '레거시 카페 어드민 현대화 및 기능 추가',
@@ -26,32 +32,31 @@ const career = [
       {
         name: '사내 CMS 번안 대본 기능 개발',
         details: [
-          'Google Docs·Spreadsheet 기반 번안 대본을 CMS 타임라인에서 편집·내보내도록 개발',
-          '수작업 중심이던 콘텐츠 제작 과정을 시스템화',
+          '번안 대본(Docs·Sheets)을 CMS 타임라인에서 편집·내보내는 기능으로 수작업 제작 과정을 시스템화',
         ],
       },
       {
         name: '사내 디자인 시스템 설계 및 개발',
         details: [
-          'Button import 기준 번들 939KB → 26KB (97%), preserveModules 적용',
           'Raw·Semantic 2계층 토큰 설계, Panda CSS → Tailwind 테마 매핑',
+          '단일 번들로 트리 쉐이킹이 안 되던 구조를 preserveModules로 바꿔 Button import 번들 939KB → 26KB(97%) 절감',
+          '코드를 원본으로 두고 Figma MCP로 디자인 시스템 기반 피그마 화면을 만들어 기획·화면 설계에 활용',
         ],
       },
       {
         name: '콘텐츠 피드백 시스템 개발',
         details: [
+          '플레이어 및 분할 뷰 개발',
           '썸네일 첫 프리뷰 2.26초 → 11.7ms (99.48%), 3단계 WebP Sprite Sheet 로딩',
-          'rAF 중복 추적을 useSyncExternalStore 기반 단일 재생 상태로 통합',
-          '메타데이터·썸네일·파형·트랜스코딩을 Lambda로 분리, 재시도·DLQ 적용 (SST)',
+          '비동기 이벤트 기반 영상 변환 파이프라인 설계 및 개발',
         ],
       },
       {
         name: '핑크퐁 공식 홈페이지 개편',
         details: [
-          '투명 배경 영상을 AV1·HEVC + WebGL 합성으로 재구성해 65MB → 226KB (99.6%)',
-          '브라우저별 색상 불일치를 BT.709 표준화로 해소, WebGL 실패 시 Canvas 2D 폴백',
-          'CloudFront 응답 헤더로 iOS Safari 다운로드 문제 해결 및 GA 측정 기준 통일',
-          '리뉴얼 후 사용자당 평균 참여 시간 33초 → 1분 19초 (2.4배)',
+          '(밋앤플레이) 이벤트·스케줄 페이지 개발',
+          '투명 배경 GIF의 브라우저별 색상 불일치를 해결하고 용량 65MB → 226KB(99.6%) 절감',
+          'CloudFront 응답 헤더로 iOS Safari 다운로드 크로스 브라우징 문제를 해결하고 환경별 GA 측정 기준 통일',
         ],
       },
     ],
@@ -173,21 +178,36 @@ const openSource = [
   },
 ];
 
+// 성과 수치를 찾는다: "8.6초 → 0.8초 (91%)" 같은 전후 비교와 단독 백분율("72%").
+// 숫자 뒤에는 단위까지만 포함한다. "35%로"의 조사처럼 단위가 아닌 글자는 강조에 넣지 않는다.
+const NUMBER = String.raw`\d+(?:[.,]\d+)*(?:ms|KB|MB|GB|px|초|분|시간|배|개|건|명|%)?`;
+const METRIC = new RegExp(
+  String.raw`${NUMBER}(?: ${NUMBER})? → ${NUMBER}(?: ${NUMBER})?(?: \([^)]+\))?|\d+(?:\.\d+)?%`,
+  'g'
+);
+
+/** 문장 속 성과 수치만 눈에 띄게 감싼다. */
+const withMetrics = (text: string) => {
+  const parts: React.ReactNode[] = [];
+  let last = 0;
+  METRIC.lastIndex = 0;
+  for (let match = METRIC.exec(text); match; match = METRIC.exec(text)) {
+    if (match.index > last) parts.push(text.slice(last, match.index));
+    parts.push(<Metric key={match.index}>{match[0]}</Metric>);
+    last = match.index + match[0].length;
+  }
+  if (last < text.length) parts.push(text.slice(last));
+  return parts;
+};
+
 const AboutPage: React.FC<PageProps> = ({ location }) => {
   return (
     <Layout location={location}>
       <ProfileCard>
         <ProfileHeader>
           <ProfileName>김규회</ProfileName>
-          <ProfileRole>Frontend Engineer</ProfileRole>
+          <ProfileRole>Software Engineer</ProfileRole>
         </ProfileHeader>
-
-        <IntroText>
-          사용자의 목소리에서 개선의 실마리를 찾는 프론트엔드 엔지니어입니다. 문제를 정의하는 데서
-          멈추지 않고 브라우저·미디어 처리·CDN까지 필요한 만큼 기술 범위를 넓혀 해결합니다.
-        </IntroText>
-
-        <Divider />
 
         <ProfileInfo>
           <InfoRow>
@@ -230,7 +250,7 @@ const AboutPage: React.FC<PageProps> = ({ location }) => {
                     <ProjectName>■ {project.name}</ProjectName>
                     <ProjectDetails>
                       {project.details.map((detail, dIndex) => (
-                        <li key={dIndex}>{detail}</li>
+                        <li key={dIndex}>{withMetrics(detail)}</li>
                       ))}
                     </ProjectDetails>
                   </ProjectBlock>
@@ -300,7 +320,8 @@ export default AboutPage;
 export const Head = () => (
   <Seo
     title="About"
-    pathname="/about"
+    pathname="/about/"
+    type="profile"
     description="프론트엔드 개발자 김규회(앤디)의 소개. 경력, 활동, 오픈소스 기여 이력을 확인하세요."
   />
 );
@@ -407,13 +428,6 @@ const InfoValue = styled.span`
   color: ${({ theme }) => theme.text.muted};
 `;
 
-const IntroText = styled.p`
-  margin: 0;
-  font-size: 16px;
-  line-height: 1.8;
-  color: ${({ theme }) => theme.text.muted};
-`;
-
 const ProfileCard = styled.div`
   background: ${({ theme }) => theme.bg.surface};
   border: 1px solid ${({ theme }) => theme.border};
@@ -438,15 +452,8 @@ const ProfileRole = styled.div`
   font-weight: 600;
 `;
 
-const Divider = styled.hr`
-  border: none;
-  height: 1px;
-  background: ${({ theme }) => theme.border};
-  margin: 24px 0;
-`;
-
 const ItemRole = styled.div`
-  font-size: 13px;
+  font-size: 14px;
   color: ${({ theme }) => theme.text.muted};
   margin-bottom: 14px;
 `;
@@ -468,10 +475,11 @@ const ProjectName = styled.div`
 
 const ProjectDetails = styled.ul`
   margin: 0;
-  padding-left: 14px;
-  font-size: 12px;
+  padding-left: 16px;
+  font-size: 14px;
   color: ${({ theme }) => theme.text.muted};
   line-height: 1.7;
+  word-break: keep-all;
 
   li {
     margin-bottom: 4px;
@@ -480,6 +488,13 @@ const ProjectDetails = styled.ul`
       margin-bottom: 0;
     }
   }
+`;
+
+const Metric = styled.strong`
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  color: ${({ theme }) => theme.text.primary};
 `;
 
 const OpenSourceList = styled.ul`

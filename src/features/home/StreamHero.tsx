@@ -1,0 +1,618 @@
+import React, { useEffect, useRef, useState } from 'react';
+import styled from '@emotion/styled';
+import {
+  Captions,
+  ChartNoAxesColumn,
+  Link as LinkIcon,
+  Pause,
+  Play,
+  RotateCcw,
+} from 'lucide-react';
+import { Github, Linkedin } from '@/ui/BrandIcons';
+import Magnet from '@/reactbits/Magnet';
+import LogoStage, { ScreenPanel, type LogoStageHandle } from '@/features/home/LogoStage';
+import { DURATION, SETTLE_END, WALK_END, poseAt } from '@/features/home/logoMotion';
+import { CAPTIONS, type CaptionKey } from '@/features/home/captions';
+
+// 전문 통계는 열 때만 내려받는다.
+const StatsPanel = React.lazy(() => import('@/features/home/StatsPanel'));
+
+// 화질 사다리. 적응형 스트리밍(ABR)이 낮은 화질에서 시작해 올라가는 과정을 그대로 흉내 낸다.
+// blur 값은 style.css의 stream-warmup 키프레임과 같아야 한다.
+const LADDER = [
+  { label: '144p', block: 40, blur: 5 },
+  { label: '360p', block: 20, blur: 2.2 },
+  { label: '720p', block: 8, blur: 0.7 },
+  { label: '1080p', block: 1, blur: 0 },
+];
+const TOP = LADDER.length - 1;
+// 자동 화질은 영상이 시작되고 이 간격마다 한 단계씩 오른다 (stream-warmup 1.35초를 3등분).
+const STEP_SECONDS = 0.45;
+const RATES = [0.5, 1, 2];
+const EVENT_CAPTION_MS = 2400;
+
+const socials = [
+  { href: 'https://github.com/KimKyuHoi', label: 'GitHub', Icon: Github, caption: 'github' },
+  {
+    href: 'https://www.linkedin.com/in/%EA%B7%9C%ED%9A%8C-%EA%B9%80-2ba0a5254/',
+    label: 'LinkedIn',
+    Icon: Linkedin,
+    caption: 'linkedin',
+  },
+  {
+    href: 'https://velog.io/@k_gu_wae123/posts',
+    label: 'Velog',
+    Icon: LinkIcon,
+    caption: 'velog',
+  },
+] as const;
+
+const autoLevelAt = (time: number) => Math.min(TOP, Math.floor(time / STEP_SECONDS));
+
+const timecode = (time: number) => `0:0${Math.min(DURATION, Math.floor(time))} / 0:0${DURATION}`;
+
+/** 지금 화면에서 나고 있을 법한 소리. 영상의 진행 상태로 정해진다. */
+const sceneCaption = (time: number, playing: boolean, rate: number): CaptionKey => {
+  if (time >= SETTLE_END) return 'idle';
+  if (!playing) return 'paused';
+  if (time >= WALK_END) return 'settle';
+  if (rate > 1) return 'run';
+  return rate < 1 ? 'stroll' : 'walk';
+};
+
+/**
+ * 홈 화면의 히어로. 영상 플레이어처럼 생겼고 실제로 그렇게 동작한다.
+ * 재생되는 "영상"은 로고가 걸어 들어와 자리를 잡는 4초짜리 장면이고(logoMotion.ts),
+ * 재생/일시정지, 탐색, 배속, 화질, 자막을 모두 조작할 수 있다. 다 재생되면 멈춘다.
+ */
+const StreamHero: React.FC = () => {
+  const rootRef = useRef<HTMLElement>(null);
+  const titleRef = useRef<HTMLHeadingElement>(null);
+  const stageRef = useRef<LogoStageHandle>(null);
+  const seekRef = useRef<HTMLInputElement>(null);
+  const timecodeRef = useRef<HTMLSpanElement>(null);
+
+  // 재생 위치처럼 매 프레임 바뀌는 값은 ref에 두고 DOM을 직접 고친다. 화면 구성이 달라지는 값만 state로 둔다.
+  const clock = useRef({ time: DURATION, rate: 1, playing: false, raf: 0, last: 0 });
+  const eventTimer = useRef(0);
+
+  const [playing, setPlaying] = useState(false);
+  const [ended, setEnded] = useState(true);
+  const [rate, setRate] = useState(1);
+  const [quality, setQuality] = useState<'auto' | number>('auto');
+  const [level, setLevel] = useState(TOP);
+  const [scene, setScene] = useState<CaptionKey>('idle');
+  const [eventCaption, setEventCaption] = useState<CaptionKey | null>(null);
+  const [captionsOn, setCaptionsOn] = useState(true);
+  const [statsOpen, setStatsOpen] = useState(false);
+  const [offline, setOffline] = useState(false);
+  // 첫 로드의 제목 선명도는 CSS 애니메이션(.stream-warmup)이 맡는다. 사용자가 영상을 조작한 뒤부터 JS가 맡는다.
+  const [userDriven, setUserDriven] = useState(false);
+
+  const qualityRef = useRef(quality);
+  qualityRef.current = quality;
+
+  /** 다른 자막을 잠깐 띄웠다가 원래 장면 자막으로 돌아간다. */
+  const flash = (key: CaptionKey) => {
+    window.clearTimeout(eventTimer.current);
+    setEventCaption(key);
+    eventTimer.current = window.setTimeout(() => setEventCaption(null), EVENT_CAPTION_MS);
+  };
+
+  /** 재생 위치에 맞춰 화면 전체를 맞춘다: 로고의 모양, 탐색 바, 시간 표시, 자동 화질, 장면 자막. */
+  const renderFrame = () => {
+    const { time, playing: isPlaying, rate: currentRate } = clock.current;
+    stageRef.current?.draw(poseAt(time));
+
+    const seek = seekRef.current;
+    if (seek) {
+      seek.value = String(time);
+      seek.style.setProperty('--progress', `${(time / DURATION) * 100}%`);
+      seek.setAttribute('aria-valuetext', timecode(time));
+    }
+    if (timecodeRef.current) timecodeRef.current.textContent = timecode(time);
+
+    if (qualityRef.current === 'auto') setLevel(autoLevelAt(time));
+    setScene(sceneCaption(time, isPlaying, currentRate));
+  };
+
+  const stop = () => {
+    cancelAnimationFrame(clock.current.raf);
+    clock.current.playing = false;
+    setPlaying(false);
+  };
+
+  const tick = (now: number) => {
+    const state = clock.current;
+    const delta = state.last ? Math.min((now - state.last) / 1000, 0.1) : 0;
+    state.last = now;
+    state.time = Math.min(DURATION, state.time + delta * state.rate);
+
+    if (state.time >= DURATION) {
+      stop();
+      setEnded(true);
+      renderFrame();
+      return;
+    }
+    renderFrame();
+    state.raf = requestAnimationFrame(tick);
+  };
+
+  const play = () => {
+    const state = clock.current;
+    if (state.time >= DURATION) state.time = 0;
+    cancelAnimationFrame(state.raf);
+    state.playing = true;
+    state.last = 0;
+    setPlaying(true);
+    setEnded(false);
+    state.raf = requestAnimationFrame(tick);
+  };
+
+  useEffect(() => {
+    // 서버가 그려 둔 제목의 CSS 애니메이션이 아직 재생 중일 때만, 그 시각에 맞춰 영상을 이어서 재생한다.
+    // 하이드레이션이 늦어 애니메이션이 이미 끝났거나 모션 줄이기 상태라면, 다 재생된 마지막 장면으로 둔다.
+    const warmup = titleRef.current
+      ?.getAnimations?.()
+      .find((animation) => (animation as CSSAnimation).animationName === 'stream-warmup');
+    if (warmup?.playState === 'running') {
+      clock.current.time = (Number(warmup.currentTime) || 0) / 1000;
+      play();
+    }
+
+    const state = clock.current;
+    return () => {
+      cancelAnimationFrame(state.raf);
+      window.clearTimeout(eventTimer.current);
+    };
+    // 마운트할 때 한 번만 실행한다.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // 실제로 인터넷이 끊기면 영상도 버퍼링에 걸린 것처럼 가장 낮은 화질로 떨어진다.
+  useEffect(() => {
+    const sync = () => {
+      setOffline(!navigator.onLine);
+      flash(navigator.onLine ? 'online' : 'offline');
+    };
+    if (!navigator.onLine) sync();
+    window.addEventListener('online', sync);
+    window.addEventListener('offline', sync);
+    return () => {
+      window.removeEventListener('online', sync);
+      window.removeEventListener('offline', sync);
+    };
+  }, []);
+
+  const handleToggle = () => {
+    setUserDriven(true);
+    if (clock.current.playing) {
+      stop();
+      renderFrame();
+    } else {
+      play();
+    }
+  };
+
+  const seekTo = (next: number) => {
+    flash(next < clock.current.time ? 'rewind' : 'forward');
+    setUserDriven(true);
+    clock.current.time = next;
+    clock.current.last = 0;
+    setEnded(next >= DURATION);
+    renderFrame();
+  };
+
+  const handleSeek = (event: React.ChangeEvent<HTMLInputElement>) => {
+    seekTo(Number(event.target.value));
+  };
+
+  // 탐색 바는 끌 때 부드럽도록 0.01초 단위로 움직인다. 방향키로는 그 단위가 너무 잘아서 0.25초씩 건너뛰게 한다.
+  const handleSeekKey = (event: React.KeyboardEvent<HTMLInputElement>) => {
+    const forward = event.key === 'ArrowRight' || event.key === 'ArrowUp';
+    const backward = event.key === 'ArrowLeft' || event.key === 'ArrowDown';
+    if (!forward && !backward) return;
+    event.preventDefault();
+    seekTo(Math.min(DURATION, Math.max(0, clock.current.time + (forward ? 0.25 : -0.25))));
+  };
+
+  const handleRate = (event: React.ChangeEvent<HTMLSelectElement>) => {
+    const next = Number(event.target.value);
+    clock.current.rate = next;
+    setRate(next);
+    renderFrame();
+  };
+
+  const handleQuality = (event: React.ChangeEvent<HTMLSelectElement>) => {
+    const next = event.target.value === 'auto' ? 'auto' : Number(event.target.value);
+    const nextLevel = next === 'auto' ? autoLevelAt(clock.current.time) : next;
+    flash(nextLevel < level ? 'qualityDown' : 'qualityUp');
+    setUserDriven(true);
+    setQuality(next);
+    setLevel(nextLevel);
+  };
+
+  const handleStats = () => {
+    if (!statsOpen) flash('stats');
+    setStatsOpen((open) => !open);
+  };
+
+  const shown = LADDER[offline ? 0 : level];
+
+  const describeQuality = () => {
+    const rect = rootRef.current?.getBoundingClientRect();
+    if (!rect) return shown.label;
+    const scale = shown.block === 1 ? window.devicePixelRatio : 1 / shown.block;
+    return `${shown.label} (${Math.round(rect.width * scale)}×${Math.round(rect.height * scale)})`;
+  };
+
+  return (
+    <ScreenPanel ref={rootRef} aria-label="소개">
+      <LogoStage ref={stageRef} block={shown.block} warmup />
+
+      {offline ? <Buffering role="status">인터넷 연결을 기다리는 중입니다</Buffering> : null}
+
+      {statsOpen ? (
+        <React.Suspense fallback={null}>
+          <StatsPanel
+            id="hero-stats"
+            quality={describeQuality()}
+            onClose={() => setStatsOpen(false)}
+          />
+        </React.Suspense>
+      ) : null}
+
+      <Body>
+        <Role>Software Engineer 김규회</Role>
+        <Title
+          ref={titleRef}
+          className="stream-warmup"
+          style={userDriven ? { filter: shown.blur ? `blur(${shown.blur}px)` : 'none' } : undefined}
+        >
+          제품을 좋아하는 개발자입니다
+        </Title>
+        <Intro>
+          그래서 불편한 UI는 못 참고, 엉킨 구조도 그냥 못 넘어가고, 기능은 먼저 제안합니다. 직접
+          써보며 불편한 점과 필요한 기능을 찾고, 사용자를 만나 묻고, 지표로 확인해 우선순위를
+          정합니다.
+        </Intro>
+        <Socials>
+          {socials.map(({ href, label, Icon, caption }) => (
+            <Magnet key={label} padding={36} magnetStrength={3}>
+              <SocialLink
+                href={href}
+                target="_blank"
+                rel="noopener noreferrer"
+                onMouseEnter={() => flash(caption)}
+                onFocus={() => flash(caption)}
+              >
+                <Icon aria-hidden="true" /> {label}
+              </SocialLink>
+            </Magnet>
+          ))}
+        </Socials>
+      </Body>
+
+      {/* 자막은 눈으로 즐기는 장식이라 보조 기술에는 읽어 주지 않는다. */}
+      <CaptionRow aria-hidden="true">
+        {captionsOn ? <Caption>{CAPTIONS[eventCaption ?? scene]}</Caption> : null}
+      </CaptionRow>
+
+      <Controls>
+        <Seek
+          ref={seekRef}
+          type="range"
+          min={0}
+          max={DURATION}
+          step={0.01}
+          defaultValue={DURATION}
+          aria-label="재생 위치"
+          onChange={handleSeek}
+          onKeyDown={handleSeekKey}
+        />
+        <Buttons>
+          <IconButton
+            type="button"
+            onClick={handleToggle}
+            aria-label={playing ? '일시정지' : ended ? '다시 재생' : '재생'}
+            title={playing ? '일시정지' : ended ? '다시 재생' : '재생'}
+          >
+            {playing ? <Pause /> : ended ? <RotateCcw data-outline="" /> : <Play />}
+          </IconButton>
+          <Timecode ref={timecodeRef}>{timecode(DURATION)}</Timecode>
+
+          <Spacer />
+
+          <IconButton
+            type="button"
+            onClick={() => setCaptionsOn((on) => !on)}
+            aria-pressed={captionsOn}
+            aria-label="자막"
+            title="자막"
+          >
+            <Captions data-outline="" />
+          </IconButton>
+          <Select aria-label="재생 속도" value={rate} onChange={handleRate}>
+            {RATES.map((value) => (
+              <option key={value} value={value}>
+                {value}배속
+              </option>
+            ))}
+          </Select>
+          <Select aria-label="화질" value={quality} onChange={handleQuality}>
+            <option value="auto">자동 ({shown.label})</option>
+            {LADDER.map((rung, index) => (
+              <option key={rung.label} value={index}>
+                {rung.label}
+              </option>
+            )).reverse()}
+          </Select>
+          <IconButton
+            type="button"
+            onClick={handleStats}
+            aria-expanded={statsOpen}
+            aria-controls="hero-stats"
+            aria-label="전문 통계"
+            title="전문 통계"
+          >
+            <ChartNoAxesColumn data-outline="" />
+          </IconButton>
+        </Buttons>
+      </Controls>
+    </ScreenPanel>
+  );
+};
+
+export default StreamHero;
+
+const Body = styled.div`
+  padding: 48px 48px 12px;
+
+  @media (max-width: 768px) {
+    padding: 28px 24px 8px;
+  }
+`;
+
+const Role = styled.p`
+  margin: 0 0 14px;
+  font-size: 16px;
+  font-weight: 600;
+  color: #ffffff;
+`;
+
+const Title = styled.h1`
+  margin: 0 0 20px;
+  max-width: 11.4em;
+  font-size: clamp(32px, 5.6vw, 54px);
+  font-weight: 800;
+  line-height: 1.2;
+  text-wrap: balance;
+  letter-spacing: -0.035em;
+  word-break: keep-all;
+  color: #ffffff;
+`;
+
+const Intro = styled.p`
+  margin: 0 0 28px;
+  max-width: 31em;
+  font-size: 16px;
+  line-height: 1.8;
+  color: rgba(249, 250, 251, 0.82);
+  word-break: keep-all;
+`;
+
+const Socials = styled.div`
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+`;
+
+const SocialLink = styled.a`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 0 18px;
+  border-radius: ${({ theme }) => theme.radius.full};
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  background: rgba(11, 16, 32, 0.55);
+  font-size: 15px;
+  font-weight: 600;
+  color: #ffffff;
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.16);
+    border-color: rgba(255, 255, 255, 0.5);
+  }
+
+  svg {
+    width: 18px;
+    height: 18px;
+  }
+`;
+
+// 자막이 놓이는 띠. 자막을 꺼도 높이는 그대로 두어 화면이 출렁이지 않게 한다.
+const CaptionRow = styled.div`
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 56px;
+  padding: 0 16px;
+`;
+
+const Caption = styled.span`
+  padding: 4px 12px;
+  border-radius: ${({ theme }) => theme.radius.xs};
+  background: rgba(0, 0, 0, 0.72);
+  font-size: 15px;
+  line-height: 1.5;
+  text-align: center;
+  color: #ffffff;
+`;
+
+const Buffering = styled.p`
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  z-index: 2;
+  margin: 0;
+  padding: 6px 12px;
+  border-radius: ${({ theme }) => theme.radius.full};
+  background: rgba(0, 0, 0, 0.72);
+  font-size: 13px;
+  color: #ffffff;
+`;
+
+const Controls = styled.div`
+  padding: 0 36px 6px 48px;
+  background: linear-gradient(180deg, rgba(11, 16, 32, 0), rgba(11, 16, 32, 0.78));
+  font-size: 13px;
+  color: rgba(249, 250, 251, 0.85);
+
+  @media (max-width: 768px) {
+    padding: 0 12px 4px 24px;
+  }
+`;
+
+// 탐색 바. 브라우저의 range 입력을 그대로 써서 키보드와 보조 기술로도 조작할 수 있다.
+const Seek = styled.input`
+  --progress: 100%;
+  display: block;
+  width: 100%;
+  height: 20px;
+  margin: 0;
+  padding: 0;
+  background: transparent;
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+
+  &::-webkit-slider-runnable-track {
+    height: 4px;
+    border-radius: 2px;
+    background: linear-gradient(
+      90deg,
+      #3b82f6 var(--progress),
+      rgba(255, 255, 255, 0.28) var(--progress)
+    );
+  }
+
+  &::-moz-range-track {
+    height: 4px;
+    border-radius: 2px;
+    background: linear-gradient(
+      90deg,
+      #3b82f6 var(--progress),
+      rgba(255, 255, 255, 0.28) var(--progress)
+    );
+  }
+
+  &::-webkit-slider-thumb {
+    width: 14px;
+    height: 14px;
+    margin-top: -5px;
+    border: none;
+    border-radius: 50%;
+    background: #ffffff;
+    appearance: none;
+    -webkit-appearance: none;
+  }
+
+  &::-moz-range-thumb {
+    width: 14px;
+    height: 14px;
+    border: none;
+    border-radius: 50%;
+    background: #ffffff;
+  }
+
+  &:focus-visible {
+    outline: 2px solid #ffffff;
+    outline-offset: 2px;
+  }
+`;
+
+const Buttons = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: -12px;
+`;
+
+const IconButton = styled.button`
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 44px;
+  height: 44px;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  color: #ffffff;
+  cursor: pointer;
+  transition:
+    background 0.2s ease,
+    opacity 0.2s ease;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.14);
+  }
+
+  /* 꺼진 토글(자막)은 흐리게 보여 준다. */
+  &[aria-pressed='false'] {
+    opacity: 0.5;
+  }
+
+  svg {
+    width: 18px;
+    height: 18px;
+    fill: currentColor;
+  }
+
+  /* 선으로 된 아이콘은 채우지 않는다. */
+  svg[data-outline] {
+    width: 20px;
+    height: 20px;
+    fill: none;
+  }
+`;
+
+const Timecode = styled.span`
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+
+  /* 좁은 화면에서는 조작 버튼이 모두 들어가도록 시간 표시를 뺀다. 위치는 탐색 바로 알 수 있다. */
+  @media (max-width: 480px) {
+    display: none;
+  }
+`;
+
+const Spacer = styled.span`
+  flex: 1;
+`;
+
+const Select = styled.select`
+  flex-shrink: 0;
+  height: 44px;
+  padding: 0 8px;
+  border: none;
+  border-radius: ${({ theme }) => theme.radius.sm};
+  background: transparent;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+  transition: background 0.2s ease;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.14);
+  }
+
+  /* 펼친 목록은 브라우저가 그린다. 어두운 패널 색을 따라가 글자가 안 보이는 일을 막는다. */
+  option {
+    background: #ffffff;
+    color: #191f28;
+  }
+`;
