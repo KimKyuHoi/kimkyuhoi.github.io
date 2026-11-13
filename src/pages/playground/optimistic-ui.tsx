@@ -10,8 +10,9 @@ const OptimisticUiPage: React.FC<PageProps> = ({ location }) => (
     <Header>
       <Title>Optimistic UI Lab</Title>
       <Desc>
-        찜 하트 하나를 다섯 가지 방식으로 구현해 나란히 놓았습니다. 서버 지연을 조절하고, 연타나 “반영
-        중 반대 클릭” 시나리오를 다섯 카드에 동시에 쏴서 화면 전이와 요청 로그를 비교해 보세요.
+        찜 하트 하나를 다섯 가지 방식으로 구현해 나란히 놓았습니다. 서버 지연을 조절하고, 연타나
+        “반영 중 반대 클릭” 시나리오를 다섯 카드에 동시에 쏴서 화면 전이와 요청 로그를 비교해
+        보세요.
       </Desc>
     </Header>
 
