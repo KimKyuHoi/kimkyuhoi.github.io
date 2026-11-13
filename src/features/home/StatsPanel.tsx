@@ -129,7 +129,7 @@ const StatsPanel: React.FC<StatsPanelProps> = ({ id, quality, onClose }) => {
   }, []);
 
   return (
-    <Panel id={id} role="region" aria-label="전문 통계">
+    <Panel id={id} role="region" aria-label="전문 통계" data-not-screen="">
       <CloseButton type="button" onClick={onClose} aria-label="전문 통계 닫기">
         <X size={16} aria-hidden="true" />
       </CloseButton>

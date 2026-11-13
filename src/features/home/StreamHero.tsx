@@ -1,5 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import styled from '@emotion/styled';
+import { keyframes } from '@emotion/react';
+import { useDrag } from '@use-gesture/react';
 import {
   Captions,
   ChartNoAxesColumn,
@@ -10,11 +12,8 @@ import {
 } from 'lucide-react';
 import { Github, Linkedin } from '@/ui/BrandIcons';
 import Magnet from '@/reactbits/Magnet';
-import LogoStage, {
-  STACKED_BELOW,
-  ScreenPanel,
-  type LogoStageHandle,
-} from '@/features/home/LogoStage';
+import LogoStage, { COMPACT, ScreenPanel, type LogoStageHandle } from '@/features/home/LogoStage';
+import { media } from '@/styles/media';
 import { DURATION, HERO_BASE, SETTLE_END, WALK_END } from '@/features/home/logoMotion';
 import { CAPTIONS, type CaptionKey } from '@/features/home/captions';
 
@@ -34,6 +33,10 @@ const TOP = LADDER.length - 1;
 const STEP_SECONDS = 0.45;
 const RATES = [0.5, 1, 2];
 const EVENT_CAPTION_MS = 2400;
+// 화면을 손가락으로 끌어 되감을 때, 화면 폭만큼 끌면 영상 전체보다 조금 더 넘어가게 해 끝까지 닿기 쉽게 한다.
+const SCRUB_REACH = 1.15;
+// 화면 조작(탭·끌기)으로 치지 않는 곳: 링크와 조작부, 그리고 폰에서 화면 아래로 내려가는 글
+const NOT_SCREEN = 'a, button, input, select, [data-not-screen]';
 
 const socials = [
   { href: 'https://github.com/KimKyuHoi', label: 'GitHub', Icon: Github, caption: 'github' },
@@ -92,6 +95,9 @@ const StreamHero: React.FC = () => {
   const [offline, setOffline] = useState(false);
   // 첫 로드의 제목 선명도는 CSS 애니메이션(.stream-warmup)이 맡는다. 사용자가 영상을 조작한 뒤부터 JS가 맡는다.
   const [userDriven, setUserDriven] = useState(false);
+
+  // 화면을 눌러 재생·일시정지했을 때 화면 가운데에 잠깐 뜨는 표시
+  const [bezel, setBezel] = useState<{ kind: 'play' | 'pause'; key: number } | null>(null);
 
   const qualityRef = useRef(quality);
   qualityRef.current = quality;
@@ -241,6 +247,46 @@ const StreamHero: React.FC = () => {
     setStatsOpen((open) => !open);
   };
 
+  // 화면을 직접 만지는 조작. 누르면 재생·일시정지하고, 손가락으로 좌우로 끌면 그만큼 영상을 되감거나 넘긴다.
+  // 같은 조작은 아래 조작부(재생 버튼, 탐색 바)로도 할 수 있다.
+  const scrub = useRef({ from: 0, resume: false });
+  const bindScreen = useDrag(
+    ({ event, first, last, tap, movement: [moved] }) => {
+      // 처음 닿은 곳이 링크나 조작부라면 화면 조작이 아니다. (터치와 포인터 캡처 덕분에 target은 처음 닿은 요소로 유지된다.)
+      const target = event.target as Element | null;
+      if (target?.closest(NOT_SCREEN)) return;
+
+      if (tap) {
+        setBezel((prev) => ({
+          kind: clock.current.playing ? 'pause' : 'play',
+          key: (prev?.key ?? 0) + 1,
+        }));
+        handleToggle();
+        return;
+      }
+
+      // 끌어서 탐색하는 것은 손가락으로만 한다. 마우스로 끄는 동작은 글자 선택에 양보한다.
+      const byFinger = 'touches' in event || (event as PointerEvent).pointerType === 'touch';
+      if (!byFinger) return;
+
+      if (first) {
+        scrub.current = { from: clock.current.time, resume: clock.current.playing };
+        if (clock.current.playing) stop();
+      }
+      const width = rootRef.current?.clientWidth || 1;
+      const next = scrub.current.from + (moved / width) * DURATION * SCRUB_REACH;
+      seekTo(Math.min(DURATION, Math.max(0, next)));
+
+      if (last && scrub.current.resume && clock.current.time < DURATION) play();
+    },
+    {
+      axis: 'x',
+      filterTaps: true,
+      threshold: 10,
+      pointer: { touch: true },
+    }
+  );
+
   const shown = LADDER[offline ? 0 : level];
 
   const describeQuality = () => {
@@ -251,8 +297,14 @@ const StreamHero: React.FC = () => {
   };
 
   return (
-    <ScreenPanel ref={rootRef} aria-label="소개">
+    <ScreenPanel ref={rootRef} aria-label="소개" {...bindScreen()} style={{ touchAction: 'pan-y' }}>
       <LogoStage ref={stageRef} block={shown.block} warmup attached />
+
+      {bezel ? (
+        <Bezel key={bezel.key} aria-hidden="true">
+          {bezel.kind === 'play' ? <Play /> : <Pause />}
+        </Bezel>
+      ) : null}
 
       {offline ? <Buffering role="status">인터넷 연결을 기다리는 중입니다</Buffering> : null}
 
@@ -275,12 +327,12 @@ const StreamHero: React.FC = () => {
         >
           제품을 좋아하는 개발자입니다
         </Title>
-        <Intro>
+        <Intro data-not-screen="">
           그래서 불편한 UI는 못 참고, 엉킨 구조도 그냥 못 넘어가고, 기능은 먼저 제안합니다. 직접
           써보며 불편한 점과 필요한 기능을 찾고, 사용자를 만나 묻고, 지표로 확인해 우선순위를
           정합니다.
         </Intro>
-        <Socials>
+        <Socials data-not-screen="">
           {socials.map(({ href, label, Icon, caption }) => (
             <Magnet key={label} padding={36} magnetStrength={3} wrapperClassName="hero-social">
               <SocialLink
@@ -302,7 +354,7 @@ const StreamHero: React.FC = () => {
         {captionsOn ? <Caption>{CAPTIONS[eventCaption ?? scene]}</Caption> : null}
       </CaptionRow>
 
-      <Controls>
+      <Controls data-not-screen="">
         <Seek
           ref={seekRef}
           type="range"
@@ -369,15 +421,18 @@ const StreamHero: React.FC = () => {
 
 export default StreamHero;
 
-// 글자색은 ScreenPanel이 정한 변수를 쓴다. 넓은 화면에서는 어두운 화면 위의 흰 글자이고,
-// 좁은 화면에서는 글이 화면 아래(페이지 바탕)로 내려가므로 테마 색을 따른다.
+// 글자색은 ScreenPanel이 정한 변수를 쓴다 (LogoStage.tsx).
+// 폰에서는 이 상자가 사라지고(display: contents), 안의 요소들이 포스터 격자의 제 줄에 직접 놓인다:
+// 직함(2)·제목(3)·자막(4)은 영상 화면 위에, 조작부(5)는 화면 바로 아래에, 소개(6)·링크(7)는 그 아래 페이지 바탕에.
 const Body = styled.div`
   padding: 48px 48px 12px;
 
-  /* 좁은 화면: 유튜브 시청 화면처럼 영상과 조작부를 먼저 두고, 글은 그 아래에 둔다. */
-  @media (max-width: ${STACKED_BELOW}px) {
-    order: 3;
-    padding: 24px 0 0;
+  ${COMPACT} {
+    padding: 40px 36px 12px;
+  }
+
+  ${media.phone} {
+    display: contents;
   }
 `;
 
@@ -387,8 +442,13 @@ const Role = styled.p`
   font-weight: 600;
   color: var(--screen-text);
 
-  @media (max-width: ${STACKED_BELOW}px) {
-    margin-bottom: 10px;
+  ${media.phone} {
+    grid-area: 2 / 1;
+    position: relative;
+    z-index: 1;
+    margin: 0 0 8px;
+    padding: 0 20px;
+    font-size: 15px;
     color: var(--screen-text-soft);
   }
 `;
@@ -404,12 +464,20 @@ const Title = styled.h1`
   word-break: keep-all;
   color: var(--screen-text);
 
-  @media (max-width: ${STACKED_BELOW}px) {
+  /* 태블릿에서는 로고에 닿기 전에 두 줄로 나눈다. */
+  ${COMPACT} {
+    max-width: 8.6em;
+  }
+
+  ${media.phone} {
+    grid-area: 3 / 1;
+    position: relative;
+    z-index: 1;
     max-width: none;
-    margin-bottom: 14px;
-    font-size: clamp(32px, 8.8vw, 48px);
-    /* 글이 영상 화면 밖에 있으므로 화질에 따라 흐려지지 않는다. */
-    filter: none !important;
+    margin: 0;
+    padding: 0 20px;
+    font-size: clamp(30px, 8.8vw, 42px);
+    line-height: 1.18;
   }
 `;
 
@@ -418,12 +486,17 @@ const Intro = styled.p`
   max-width: 31em;
   font-size: 16px;
   line-height: 1.8;
-  color: var(--screen-text-soft);
+  color: var(--aside-text-soft);
   word-break: keep-all;
 
-  @media (max-width: ${STACKED_BELOW}px) {
-    max-width: 38em;
-    margin-bottom: 20px;
+  ${COMPACT} {
+    max-width: min(31em, 55%);
+  }
+
+  ${media.phone} {
+    grid-area: 6 / 1;
+    max-width: none;
+    margin: 20px 8px;
   }
 `;
 
@@ -431,6 +504,11 @@ const Socials = styled.div`
   display: flex;
   gap: 10px;
   flex-wrap: wrap;
+
+  ${media.phone} {
+    grid-area: 7 / 1;
+    margin: 0 8px;
+  }
 
   /* 폰에서는 세 링크가 한 줄을 똑같이 나눠 갖는다 (둘 + 하나로 줄바꿈되지 않게). */
   @media (max-width: 480px) {
@@ -452,18 +530,18 @@ const SocialLink = styled.a`
   min-height: 44px;
   padding: 0 18px;
   border-radius: ${({ theme }) => theme.radius.full};
-  border: 1px solid var(--screen-line);
-  background: var(--screen-chip);
+  border: 1px solid var(--aside-line);
+  background: var(--aside-chip);
   font-size: 15px;
   font-weight: 600;
-  color: var(--screen-text);
+  color: var(--aside-text);
   transition:
     background 0.2s ease,
     border-color 0.2s ease;
 
   &:hover {
-    background: var(--screen-chip-hover);
-    border-color: var(--screen-text-soft);
+    background: var(--aside-chip-hover);
+    border-color: var(--aside-text-soft);
   }
 
   svg {
@@ -474,6 +552,7 @@ const SocialLink = styled.a`
 
   @media (max-width: 480px) {
     gap: 6px;
+    min-height: 48px;
     padding: 0 8px;
     font-size: 14px;
   }
@@ -487,13 +566,13 @@ const CaptionRow = styled.div`
   min-height: 56px;
   padding: 0 16px;
 
-  /* 좁은 화면에서는 영상 화면의 아래쪽에 겹쳐 놓는다. 실제 자막이 놓이는 자리다. */
-  @media (max-width: ${STACKED_BELOW}px) {
-    order: 1;
+  /* 폰에서는 제목 바로 아래, 영상 화면의 맨 아랫줄이다. 눌러도 화면을 누른 것으로 친다. */
+  ${media.phone} {
+    grid-area: 4 / 1;
     position: relative;
     z-index: 1;
-    min-height: 52px;
-    margin-top: -52px;
+    min-height: 60px;
+    padding-top: 6px;
     pointer-events: none;
   }
 `;
@@ -506,6 +585,55 @@ const Caption = styled.span`
   line-height: 1.5;
   text-align: center;
   color: #ffffff;
+`;
+
+const bezelPop = keyframes`
+  from {
+    opacity: 0.95;
+    transform: scale(0.82);
+  }
+  to {
+    opacity: 0;
+    transform: scale(1.25);
+  }
+`;
+
+// 화면을 눌러 재생·일시정지했을 때 가운데에 잠깐 떴다 사라지는 표시
+const Bezel = styled.span`
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  width: 72px;
+  height: 72px;
+  margin: -36px 0 0 -36px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.6);
+  color: #ffffff;
+  pointer-events: none;
+  animation: ${bezelPop} 0.55s ease-out both;
+
+  svg {
+    width: 30px;
+    height: 30px;
+    fill: currentColor;
+  }
+
+  /* 폰에서는 로고가 보이는 첫 줄의 한가운데에 띄운다. */
+  ${media.phone} {
+    position: relative;
+    top: auto;
+    left: auto;
+    grid-area: 1 / 1;
+    place-self: center;
+    margin: 0;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    animation-duration: 0.01s;
+  }
 `;
 
 const Buffering = styled.p`
@@ -527,10 +655,18 @@ const Controls = styled.div`
   font-size: 13px;
   color: rgba(249, 250, 251, 0.85);
 
-  /* 좁은 화면에서는 영상 화면 바로 아래에 붙어, 화면과 함께 하나의 플레이어를 이룬다. */
-  @media (max-width: ${STACKED_BELOW}px) {
-    order: 2;
-    padding: 4px 8px 4px 20px;
+  ${COMPACT} {
+    padding: 0 24px 6px 36px;
+  }
+
+  /* 폰에서는 영상 화면 바로 아래에 붙어, 화면과 함께 하나의 플레이어를 이룬다.
+     화면과의 경계에 실금이 보이지 않게 1px 겹친다. */
+  ${media.phone} {
+    grid-area: 5 / 1;
+    position: relative;
+    z-index: 1;
+    margin-top: -1px;
+    padding: 0 8px 6px 20px;
     border-radius: 0 0 ${({ theme }) => theme.radius.xl} ${({ theme }) => theme.radius.xl};
     background: ${HERO_BASE};
   }

@@ -4,7 +4,8 @@ import type { PageProps } from 'gatsby';
 import styled from '@emotion/styled';
 import Layout from '@/components/Layout';
 import Seo from '@/components/Seo';
-import LogoStage, { STACKED_BELOW, ScreenPanel } from '@/features/home/LogoStage';
+import LogoStage, { COMPACT, ScreenPanel } from '@/features/home/LogoStage';
+import { media } from '@/styles/media';
 
 const NotFoundPage: React.FC<PageProps> = ({ location }) => {
   React.useEffect(() => {
@@ -41,12 +42,18 @@ export const Head = () => <Seo title="페이지를 찾을 수 없습니다" path
 
 export default NotFoundPage;
 
-// 글자색은 ScreenPanel이 정한 변수를 쓴다. 좁은 화면에서는 글이 영상 화면 아래로 내려가 테마 색을 따른다.
+// 글자색은 ScreenPanel이 정한 변수를 쓴다 (LogoStage.tsx).
+// 폰에서는 이 상자가 사라지고, 안의 요소들이 포스터 격자의 제 줄에 직접 놓인다:
+// 404(2)와 제목(3)은 영상 화면 위에, 설명(6)과 버튼(7)은 그 아래 페이지 바탕에.
 const Body = styled.div`
   padding: 48px;
 
-  @media (max-width: ${STACKED_BELOW}px) {
-    padding: 24px 0 0;
+  ${COMPACT} {
+    padding: 40px 36px;
+  }
+
+  ${media.phone} {
+    display: contents;
   }
 `;
 
@@ -57,8 +64,12 @@ const Code = styled.p`
   font-weight: 600;
   color: var(--screen-text);
 
-  @media (max-width: ${STACKED_BELOW}px) {
-    margin-bottom: 10px;
+  ${media.phone} {
+    grid-area: 2 / 1;
+    position: relative;
+    z-index: 1;
+    margin: 0 0 8px;
+    padding: 0 20px;
     color: var(--screen-text-soft);
   }
 `;
@@ -72,8 +83,18 @@ const Title = styled.h1`
   word-break: keep-all;
   color: var(--screen-text);
 
-  @media (max-width: ${STACKED_BELOW}px) {
-    font-size: clamp(32px, 8.8vw, 48px);
+  ${COMPACT} {
+    max-width: 8.6em;
+  }
+
+  ${media.phone} {
+    grid-area: 3 / 1;
+    position: relative;
+    z-index: 1;
+    margin: 0;
+    padding: 0 20px 28px;
+    font-size: clamp(30px, 8.8vw, 42px);
+    line-height: 1.18;
   }
 `;
 
@@ -81,10 +102,11 @@ const Description = styled.p`
   margin: 0 0 28px;
   font-size: 16px;
   line-height: 1.8;
-  color: var(--screen-text-soft);
+  color: var(--aside-text-soft);
 
-  @media (max-width: ${STACKED_BELOW}px) {
-    margin-bottom: 20px;
+  ${media.phone} {
+    grid-area: 6 / 1;
+    margin: 20px 8px;
   }
 `;
 
@@ -92,6 +114,17 @@ const Actions = styled.div`
   display: flex;
   gap: 10px;
   flex-wrap: wrap;
+
+  ${media.phone} {
+    grid-area: 7 / 1;
+    margin: 0 8px;
+
+    a {
+      flex: 1 1 0;
+      justify-content: center;
+      min-height: 48px;
+    }
+  }
 `;
 
 const Action = styled(Link)`
@@ -100,17 +133,17 @@ const Action = styled(Link)`
   min-height: 44px;
   padding: 0 18px;
   border-radius: ${({ theme }) => theme.radius.full};
-  border: 1px solid var(--screen-line);
-  background: var(--screen-chip);
+  border: 1px solid var(--aside-line);
+  background: var(--aside-chip);
   font-size: 15px;
   font-weight: 600;
-  color: var(--screen-text);
+  color: var(--aside-text);
   transition:
     background 0.2s ease,
     border-color 0.2s ease;
 
   &:hover {
-    background: var(--screen-chip-hover);
-    border-color: var(--screen-text-soft);
+    background: var(--aside-chip-hover);
+    border-color: var(--aside-text-soft);
   }
 `;

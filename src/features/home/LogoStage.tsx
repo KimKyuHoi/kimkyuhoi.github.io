@@ -9,6 +9,7 @@ import {
   poseAt,
   strokesFor,
 } from '@/features/home/logoMotion';
+import { PHONE_MAX, media } from '@/styles/media';
 
 export type LogoStageHandle = {
   /** 영상의 주어진 시각(초)에 해당하는 장면을 그린다. 재생 중에는 매 프레임 호출된다. */
@@ -24,13 +25,13 @@ type LogoStageProps = {
   warmup?: boolean;
   /** 원본 로고를 끝까지 숨긴다. 저화질 화면만 보여 줄 때 쓴다. */
   hideOriginal?: boolean;
-  /** 좁은 화면에서 화면 바로 아래에 조작부가 붙는다. 그때는 화면의 아래 모서리를 둥글리지 않는다. */
+  /** 폰에서 화면 바로 아래에 조작부가 붙는다. 그때는 화면의 아래 모서리를 둥글리지 않는다. */
   attached?: boolean;
   ref?: React.Ref<LogoStageHandle>;
 };
 
-/** 이 폭 이하에서는 영상 화면과 글을 위아래로 쌓는다 (그보다 넓으면 글 오른쪽에 로고를 둔다). */
-export const STACKED_BELOW = 1000;
+/** 폰보다는 넓지만 글과 로고를 나란히 두기에는 빠듯한 폭(태블릿). 로고를 더 잘라 글에 자리를 내준다. */
+export const COMPACT = `@media (min-width: ${PHONE_MAX + 1}px) and (max-width: 999px)`;
 
 // 로고가 화면 오른쪽 가장자리 바로 밖에서 출발하도록 둘 여유(로고 좌표 단위)
 const START_MARGIN = 8;
@@ -78,6 +79,8 @@ const LogoStage: React.FC<LogoStageProps> = ({
       path.setAttribute('d', pathData(strokes[index]));
     });
 
+    // 원본 화질에서는 캔버스를 숨겨 두므로 그릴 필요가 없다.
+    if (blockRef.current <= 1) return;
     const canvas = canvasRef.current;
     const ctx = canvas?.getContext('2d');
     if (!canvas || !ctx) return;
@@ -146,7 +149,9 @@ const LogoStage: React.FC<LogoStageProps> = ({
           />
         ))}
       </Logo>
-      {block > 1 ? <Canvas ref={canvasRef} /> : null}
+      {/* 원본 화질에서도 캔버스를 없애지 않고 숨기기만 한다. 손가락이 캔버스 위에서 화면을 끄는 도중에
+          화질이 바뀌어 캔버스가 사라지면, 그 뒤의 터치 이벤트가 전달되지 않아 끌기가 끝나지 않은 채로 남는다. */}
+      <Canvas ref={canvasRef} hidden={block <= 1} />
     </Screen>
   );
 };
@@ -155,16 +160,25 @@ export default LogoStage;
 
 /**
  * 영상 화면과 그 위·아래에 놓이는 글을 담는 틀.
- * 넓은 화면에서는 틀 전체가 어두운 영상 화면이고 글이 그 위에 놓인다.
- * 좁은 화면에서는 영상 화면만 어둡고, 글은 그 아래 페이지 바탕 위에 놓인다.
- * 안에 놓이는 글은 아래의 --screen-* 변수로 색을 정하면 두 경우 모두에 맞는다.
+ *
+ * 넓은 화면에서는 틀 전체가 어두운 영상 화면이고 모든 글이 그 위에 놓인다.
+ * 폰에서는 세로로 긴 포스터가 된다. 격자의 1~4번째 줄이 영상 화면이고(첫 줄은 로고가 보일 빈자리),
+ * 그 안에 직함·제목처럼 짧은 글만 겹쳐 놓는다. 5번째 줄부터는 화면 아래, 페이지 바탕 위다.
+ * 안에 놓이는 요소는 grid-area로 자기 줄을 고른다 (예: 2 / 1). 칸까지 적어야 한다.
+ * 줄만 적으면 격자의 자동 배치가 영상 화면과 겹치지 않게 옆 칸으로 밀어낸다.
+ *
+ * 글자색은 두 벌의 변수로 정한다.
+ * --screen-*: 언제나 영상 화면 위에 있는 글
+ * --aside-*: 넓은 화면에서는 영상 위에, 폰에서는 화면 아래 페이지 바탕에 놓이는 글
  */
 export const ScreenPanel = styled.section`
   --screen-text: #ffffff;
   --screen-text-soft: rgba(249, 250, 251, 0.82);
-  --screen-line: rgba(255, 255, 255, 0.22);
-  --screen-chip: rgba(11, 16, 32, 0.55);
-  --screen-chip-hover: rgba(255, 255, 255, 0.16);
+  --aside-text: #ffffff;
+  --aside-text-soft: rgba(249, 250, 251, 0.82);
+  --aside-line: rgba(255, 255, 255, 0.22);
+  --aside-chip: rgba(11, 16, 32, 0.55);
+  --aside-chip-hover: rgba(255, 255, 255, 0.16);
 
   position: relative;
   isolation: isolate;
@@ -176,16 +190,27 @@ export const ScreenPanel = styled.section`
   border-radius: ${({ theme }) => theme.radius.xl};
   background: ${HERO_BASE};
 
-  @media (max-width: ${STACKED_BELOW}px) {
-    --screen-text: ${({ theme }) => theme.text.primary};
-    --screen-text-soft: ${({ theme }) => theme.text.muted};
-    --screen-line: ${({ theme }) => theme.border};
-    --screen-chip: transparent;
-    --screen-chip-hover: ${({ theme }) => theme.bg.muted};
+  ${COMPACT} {
+    min-height: 460px;
+  }
+
+  ${media.phone} {
+    --aside-text: ${({ theme }) => theme.text.primary};
+    --aside-text-soft: ${({ theme }) => theme.text.muted};
+    --aside-line: ${({ theme }) => theme.border};
+    --aside-chip: transparent;
+    --aside-chip-hover: ${({ theme }) => theme.bg.muted};
 
     overflow: visible;
-    justify-content: flex-start;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    /* 첫 줄: 로고가 드러나는 자리. 화면 폭에 비례해 커지되 너무 길어지지는 않게 한다.
+       로고의 가로획이 이 줄 안에서 끝나도록 아래 Logo의 크기와 함께 맞춘 값이다. */
+    grid-template-rows: clamp(200px, 60vw, 320px);
+    grid-auto-rows: auto;
     min-height: 0;
+    /* 좌우 여백을 조금 넘겨, 영상 화면이 본문보다 넓게 보이게 한다. */
+    margin: 0 -8px;
     border-radius: 0;
     background: transparent;
   }
@@ -196,14 +221,11 @@ const Screen = styled.div`
   inset: 0;
   z-index: -1;
 
-  @media (max-width: ${STACKED_BELOW}px) {
+  ${media.phone} {
     position: relative;
     inset: auto;
-    z-index: 0;
-    order: 0;
+    grid-area: 1 / 1 / 5 / 2;
     overflow: hidden;
-    aspect-ratio: 16 / 9;
-    max-height: 380px;
     border-radius: ${({ theme }) => theme.radius.xl};
     background: ${HERO_BASE};
 
@@ -211,10 +233,24 @@ const Screen = styled.div`
       border-bottom-left-radius: 0;
       border-bottom-right-radius: 0;
     }
+
+    /* 로고의 아랫부분을 어둡게 눌러, 그 위에 겹치는 글이 또렷하게 읽히게 한다. */
+    &::after {
+      content: '';
+      position: absolute;
+      inset: 42% 0 0;
+      background: linear-gradient(
+        180deg,
+        rgba(11, 16, 32, 0) 0%,
+        rgba(11, 16, 32, 0.82) 52%,
+        ${HERO_BASE} 100%
+      );
+    }
   }
 `;
 
-// 넓은 화면에서는 글 오른쪽에 로고를 크게 두고 위아래를 잘라 낸다. 좁은 화면에서는 화면 한가운데에 둔다.
+// 넓은 화면에서는 글 오른쪽에 로고를 크게 두고 위아래를 잘라 낸다.
+// 폰에서는 화면 오른쪽 위에 크게 두고 위와 오른쪽을 잘라 낸다. 로고의 발치는 글 뒤로 들어간다.
 // 걸어 들어올 때는 로고가 자기 영역 밖에서 출발하므로 넘친 부분도 그려지게 둔다 (화면이 잘라 낸다).
 const Logo = styled.svg`
   position: absolute;
@@ -224,11 +260,16 @@ const Logo = styled.svg`
   overflow: visible;
   transform: translateY(-50%);
 
-  @media (max-width: ${STACKED_BELOW}px) {
-    right: auto;
-    left: 50%;
-    height: 78%;
-    transform: translate(-50%, -50%);
+  ${COMPACT} {
+    right: -17%;
+    height: 106%;
+  }
+
+  ${media.phone} {
+    top: -5%;
+    right: -9%;
+    height: min(92vw, 420px);
+    transform: none;
   }
 `;
 
