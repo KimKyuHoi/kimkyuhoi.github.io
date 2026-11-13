@@ -20,9 +20,10 @@ import { CAPTIONS, type CaptionKey } from '@/features/home/captions';
 
 // 전문 통계는 열 때만 내려받는다.
 const StatsPanel = React.lazy(() => import('@/features/home/StatsPanel'));
-// 화질·재생 속도 메뉴(Radix)는 첫 화면을 그린 뒤 한가할 때 미리 내려받는다.
+// 화질·재생 속도 메뉴(Radix)는 조작부에 포인터나 손가락이 닿을 때 내려받는다. 메뉴를 열지 않는 방문자는 받지 않는다.
+// (React.lazy를 쓰지 않는다. lazy는 준비된 코드도 한 번은 대체 화면을 거쳐 그리므로 버튼이 두 번 교체되어 포커스를 잃는다.)
 const loadPlayerMenu = () => import('@/features/home/PlayerMenu');
-const PlayerMenu = React.lazy(loadPlayerMenu);
+type PlayerMenuComponent = Awaited<ReturnType<typeof loadPlayerMenu>>['default'];
 type MenuName = 'rate' | 'quality';
 
 // 화질 사다리. 적응형 스트리밍(ABR)이 낮은 화질에서 시작해 올라가는 과정을 그대로 흉내 낸다.
@@ -102,8 +103,8 @@ const StreamHero: React.FC = () => {
   // 첫 로드의 제목 선명도는 CSS 애니메이션(.stream-warmup)이 맡는다. 사용자가 영상을 조작한 뒤부터 JS가 맡는다.
   const [userDriven, setUserDriven] = useState(false);
 
-  // 메뉴 코드를 다 내려받았는지, 그리고 그 전에 사용자가 이미 눌러 둔 메뉴가 있는지
-  const [menuReady, setMenuReady] = useState(false);
+  // 내려받은 메뉴 컴포넌트(아직이면 null), 그리고 그 전에 사용자가 이미 눌러 둔 메뉴
+  const [PlayerMenu, setPlayerMenu] = useState<PlayerMenuComponent | null>(null);
   const [menuWanted, setMenuWanted] = useState<MenuName | null>(null);
   // 화면을 눌러 재생·일시정지했을 때 화면 가운데에 잠깐 뜨는 표시
   const [bezel, setBezel] = useState<{ kind: 'play' | 'pause'; key: number } | null>(null);
@@ -235,28 +236,73 @@ const StreamHero: React.FC = () => {
     seekTo(Math.min(DURATION, Math.max(0, clock.current.time + (forward ? 0.25 : -0.25))));
   };
 
-  // 메뉴 코드를 미리 내려받아 둔다. 그래야 처음 누를 때도 바로 열린다.
+  // 메뉴 코드가 준비되면 메뉴 버튼이 "메뉴가 달린 버튼"으로 교체된다. 교체 시점을 잘못 잡으면 문제가 생기므로 상태를 따로 챙긴다.
+  const menu = useRef({
+    loading: false,
+    component: null as PlayerMenuComponent | null,
+    pressing: false,
+    timer: 0,
+    refocus: null as string | null,
+  });
   useEffect(() => {
-    let alive = true;
-    const preload = () => {
-      loadPlayerMenu().then(() => {
-        if (alive) setMenuReady(true);
-      });
-    };
-    const idle = window.requestIdleCallback
-      ? window.requestIdleCallback(preload, { timeout: 2500 })
-      : window.setTimeout(preload, 1200);
-    return () => {
-      alive = false;
-      if (window.cancelIdleCallback) window.cancelIdleCallback(idle);
-      else window.clearTimeout(idle);
-    };
+    const state = menu.current;
+    return () => window.clearTimeout(state.timer);
   }, []);
 
-  /** 메뉴 코드가 오기 전에 버튼이 눌렸을 때: 바로 내려받고, 도착하면 그 메뉴를 연 채로 보여 준다. */
+  // 버튼이 교체된 직후, 키보드 포커스가 메뉴 버튼에 있었다면 새 버튼으로 옮겨 준다.
+  useEffect(() => {
+    const name = menu.current.refocus;
+    if (!PlayerMenu || !name) return;
+    menu.current.refocus = null;
+    rootRef.current?.querySelector<HTMLElement>(`[data-menu="${name}"]`)?.focus();
+  }, [PlayerMenu]);
+
+  /**
+   * 준비된 메뉴를 화면에 반영한다(버튼 교체).
+   * 조작부를 누르고 있는 도중에는 미룬다. 누르고 있던 버튼이 손을 떼기 전에 사라지면 그 클릭이 없던 일이 된다.
+   */
+  const showMenus = () => {
+    const state = menu.current;
+    window.clearTimeout(state.timer);
+    if (!state.component) return;
+    if (state.pressing) {
+      state.timer = window.setTimeout(showMenus, 150);
+      return;
+    }
+    state.refocus = (document.activeElement as HTMLElement | null)?.dataset.menu ?? null;
+    const component = state.component;
+    setPlayerMenu(() => component);
+  };
+
+  /** 조작부에 포인터·손가락·포커스가 닿으면 메뉴 코드를 받아 둔다. 누르는 순간에는 대개 준비가 끝나 있다. */
+  const warmMenu = () => {
+    if (menu.current.loading) return;
+    menu.current.loading = true;
+    loadPlayerMenu().then((module) => {
+      menu.current.component = module.default;
+      showMenus();
+    });
+  };
+
+  /** 메뉴 코드가 화면에 반영되기 전에 버튼이 눌렸을 때: 준비되는 대로 그 메뉴를 연 채로 보여 준다. */
   const requestMenu = (name: MenuName) => {
     setMenuWanted(name);
-    loadPlayerMenu().then(() => setMenuReady(true));
+    // 클릭이 이미 전달됐으므로 버튼을 바로 교체해도 된다.
+    menu.current.pressing = false;
+    if (menu.current.component) showMenus();
+    else warmMenu();
+  };
+
+  const handleControlsPress = () => {
+    menu.current.pressing = true;
+    warmMenu();
+  };
+
+  // 손을 뗀 뒤 클릭이 전달될 때까지 조금 기다렸다가 "누르는 중"을 푼다.
+  const handleControlsRelease = () => {
+    window.setTimeout(() => {
+      menu.current.pressing = false;
+    }, 350);
   };
 
   const handleRate = (value: string) => {
@@ -334,7 +380,8 @@ const StreamHero: React.FC = () => {
       type="button"
       aria-label={`${label}: ${text}`}
       data-optional={name === 'rate' ? '' : undefined}
-      onClick={menuReady ? undefined : () => requestMenu(name)}
+      data-menu={name}
+      onClick={PlayerMenu ? undefined : () => requestMenu(name)}
     >
       {text}
       <ChevronDown aria-hidden="true" />
@@ -408,7 +455,14 @@ const StreamHero: React.FC = () => {
         {captionsOn ? <Caption>{CAPTIONS[eventCaption ?? scene]}</Caption> : null}
       </CaptionRow>
 
-      <Controls data-not-screen="">
+      <Controls
+        data-not-screen=""
+        onPointerEnter={warmMenu}
+        onFocus={warmMenu}
+        onPointerDown={handleControlsPress}
+        onPointerUp={handleControlsRelease}
+        onPointerCancel={handleControlsRelease}
+      >
         <Seek
           ref={seekRef}
           type="range"
@@ -442,31 +496,27 @@ const StreamHero: React.FC = () => {
           >
             <Captions data-outline="" />
           </IconButton>
-          {menuReady ? (
-            <React.Suspense fallback={rateButton}>
-              <PlayerMenu
-                trigger={rateButton}
-                label="재생 속도"
-                value={String(rate)}
-                options={RATE_OPTIONS}
-                onChange={handleRate}
-                defaultOpen={menuWanted === 'rate'}
-              />
-            </React.Suspense>
+          {PlayerMenu ? (
+            <PlayerMenu
+              trigger={rateButton}
+              label="재생 속도"
+              value={String(rate)}
+              options={RATE_OPTIONS}
+              onChange={handleRate}
+              defaultOpen={menuWanted === 'rate'}
+            />
           ) : (
             rateButton
           )}
-          {menuReady ? (
-            <React.Suspense fallback={qualityButton}>
-              <PlayerMenu
-                trigger={qualityButton}
-                label="화질"
-                value={String(quality)}
-                options={qualityOptions}
-                onChange={handleQuality}
-                defaultOpen={menuWanted === 'quality'}
-              />
-            </React.Suspense>
+          {PlayerMenu ? (
+            <PlayerMenu
+              trigger={qualityButton}
+              label="화질"
+              value={String(quality)}
+              options={qualityOptions}
+              onChange={handleQuality}
+              defaultOpen={menuWanted === 'quality'}
+            />
           ) : (
             qualityButton
           )}
