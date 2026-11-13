@@ -15,8 +15,10 @@ const baseTheme = {
     hover: '0 20px 40px rgba(0, 0, 0, 0.12)',
   },
   font: {
-    heading: "'Pretendard', 'Noto Sans KR', sans-serif",
-    body: "'Pretendard', 'Noto Sans KR', sans-serif",
+    // Pretendard 다음의 두 이름은 기기 글꼴을 Pretendard와 같은 치수로 맞춘 것이다 (src/fonts.css).
+    heading:
+      "'Pretendard', 'Pretendard Fallback Noto', 'Pretendard Fallback Apple', 'Noto Sans KR', sans-serif",
+    body: "'Pretendard', 'Pretendard Fallback Noto', 'Pretendard Fallback Apple', 'Noto Sans KR', sans-serif",
     mono: "'D2Coding', 'JetBrains Mono', 'Fira Code', monospace",
   },
 };
@@ -33,12 +35,14 @@ const lightValues = {
   },
   text: {
     primary: '#191f28',
-    muted: '#8b95a1',
-    caption: '#b0b8c1',
+    // 흰 배경과 muted 배경(#f2f4f6) 위에서 모두 4.5:1 이상이 되도록 고른 값
+    muted: '#5c6775',
+    caption: '#6b7684',
     inverse: '#ffffff',
   },
   border: '#e5e8eb',
-  accent: '#3182f6',
+  // 흰 배경 위 글자색으로도 쓰이므로 4.5:1을 넘는 파랑을 쓴다
+  accent: '#1b64da',
   accent2: '#6b7684',
   shadow: {
     soft: '0 4px 20px rgba(0, 0, 0, 0.05)',
@@ -59,7 +63,7 @@ const darkValues = {
   text: {
     primary: '#f9fafb',
     muted: '#b0b8c1',
-    caption: '#6b7684',
+    caption: '#8b95a1',
     inverse: '#ffffff',
   },
   border: '#333d4b',
@@ -149,6 +153,9 @@ export const globalStyles = css`
     color: ${theme.text.primary};
     font-family: ${theme.font.body};
     line-height: 1.8;
+    /* 한글이 단어 중간에서 끊기지 않게 하고, 공백 없는 긴 영문(URL 등)은 넘치지 않게 꺾는다. */
+    word-break: keep-all;
+    overflow-wrap: break-word;
     -webkit-font-smoothing: antialiased;
     scroll-behavior: smooth;
     transition:

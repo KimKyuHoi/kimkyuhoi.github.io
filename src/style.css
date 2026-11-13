@@ -360,85 +360,7 @@ summary {
 
 /* CSS Custom Properties Definitions */
 
-@font-face {
-  font-family: 'D2Coding';
-  src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_three@1.0/D2Coding.woff')
-    format('woff');
-  font-weight: normal;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: 'Pretendard';
-  src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/pretendard@1.0/Pretendard-Thin.woff2')
-    format('woff2');
-  font-weight: 100;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: 'Pretendard';
-  src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/pretendard@1.0/Pretendard-ExtraLight.woff2')
-    format('woff2');
-  font-weight: 200;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: 'Pretendard';
-  src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/pretendard@1.0/Pretendard-Light.woff2')
-    format('woff2');
-  font-weight: 300;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: 'Pretendard';
-  src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/pretendard@1.0/Pretendard-Regular.woff2')
-    format('woff2');
-  font-weight: 400;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: 'Pretendard';
-  src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/pretendard@1.0/Pretendard-Medium.woff2')
-    format('woff2');
-  font-weight: 500;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: 'Pretendard';
-  src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/pretendard@1.0/Pretendard-SemiBold.woff2')
-    format('woff2');
-  font-weight: 600;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: 'Pretendard';
-  src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/pretendard@1.0/Pretendard-Bold.woff2')
-    format('woff2');
-  font-weight: 700;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: 'Pretendard';
-  src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/pretendard@1.0/Pretendard-ExtraBold.woff2')
-    format('woff2');
-  font-weight: 800;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: 'Pretendard';
-  src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/pretendard@1.0/Pretendard-Black.woff2')
-    format('woff2');
-  font-weight: 900;
-  font-display: swap;
-}
+/* 웹폰트 선언(@font-face)은 src/fonts.css에 있다. */
 
 :root {
   --maxWidth-none: 'none';
@@ -468,11 +390,12 @@ summary {
   --spacing-24: 6rem;
   --spacing-32: 8rem;
   --fontFamily-sans:
-    'Pretendard', 'Noto Sans KR', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
-    'Helvetica Neue', Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol',
-    'Noto Color Emoji';
+    'Pretendard', 'Pretendard Fallback Noto', 'Pretendard Fallback Apple', 'Noto Sans KR',
+    system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial,
+    sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
   --fontFamily-serif:
-    'Pretendard', 'Noto Sans KR', 'Georgia', Cambria, 'Times New Roman', Times, serif;
+    'Pretendard', 'Pretendard Fallback Noto', 'Pretendard Fallback Apple', 'Noto Sans KR',
+    'Georgia', Cambria, 'Times New Roman', Times, serif;
   --font-body: var(--fontFamily-sans);
   --font-heading: var(--fontFamily-sans);
   --fontWeight-normal: 400;
@@ -859,4 +782,164 @@ a:focus {
     max-width: 100% !important;
     height: auto !important;
   }
+}
+
+/* Motion
+   ========================================================================== */
+
+/* RevealText: 단어를 아래에서 밀어 올린다. CSS만으로 동작해 첫 페인트부터 재생된다. */
+.rt-word {
+  display: inline-block;
+  overflow: hidden;
+  vertical-align: top;
+  padding: 0.12em 0;
+  margin: -0.12em 0;
+}
+
+.rt-word > span {
+  display: inline-block;
+}
+
+/* 페이지 전환 중에 나타난 제목은 움직이지 않는다 (RevealText.tsx). */
+.rt-still > span {
+  animation: none !important;
+}
+
+@keyframes rt-up {
+  from {
+    transform: translateY(115%);
+  }
+}
+
+/* 스트림이 저화질에서 시작해 선명해지는 것처럼, 히어로 제목이 단계적으로 또렷해진다.
+   단계별 blur 값은 StreamHero.tsx의 LADDER와 같아야 한다. */
+@keyframes stream-warmup {
+  0% {
+    filter: blur(5px);
+  }
+  33% {
+    filter: blur(2.2px);
+  }
+  66% {
+    filter: blur(0.7px);
+  }
+  100% {
+    filter: blur(0);
+  }
+}
+
+/* 그동안 원본 로고(SVG)는 숨겨 두고, 낮은 화질의 캔버스가 그 자리를 채운다. */
+@keyframes hero-logo-in {
+  from {
+    visibility: hidden;
+  }
+}
+
+@keyframes reveal-up {
+  from {
+    opacity: 0;
+    transform: translateY(32px) scale(0.98);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .rt-word > span {
+    animation: rt-up 0.8s cubic-bezier(0.22, 1, 0.36, 1) both;
+    animation-delay: calc(var(--i) * 55ms);
+  }
+
+  .stream-warmup {
+    animation: stream-warmup 1.35s steps(1, end);
+  }
+
+  .hero-logo {
+    animation: hero-logo-in 1.35s steps(1, end);
+  }
+
+  /* 스크롤 연동 등장: CSS scroll-driven animation을 지원하는 브라우저에서만 켠다.
+     지원하지 않으면 콘텐츠는 처음부터 그대로 보인다. */
+  @supports (animation-timeline: view()) {
+    .reveal-on-scroll {
+      animation: reveal-up linear both;
+      animation-timeline: view();
+      animation-range: entry 0% entry 45%;
+    }
+  }
+}
+
+/* 테마 전환: View Transitions로 클릭 지점에서 원형으로 번지게 한다 (Layout.tsx). */
+html.theme-switching::view-transition-old(root),
+html.theme-switching::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
+}
+
+html.theme-switching *,
+html.theme-switching *::before,
+html.theme-switching *::after {
+  transition: none !important;
+}
+
+/* 페이지 전환 (pageTransition.ts): 이전 화면이 빠르게 사라지고 새 화면이 살짝 올라오며 나타난다.
+   헤더는 제자리에 두고, 메뉴의 활성 표시와 글 제목은 이전 위치에서 새 위치로 이어서 움직인다. */
+@keyframes page-out {
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes page-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+}
+
+html[data-page-transition]::view-transition-old(root) {
+  animation: page-out 0.14s ease-out both;
+}
+
+html[data-page-transition]::view-transition-new(root) {
+  animation: page-in 0.32s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+html[data-page-transition] .site-header {
+  view-transition-name: site-header;
+}
+
+html[data-page-transition] .nav-pill {
+  view-transition-name: nav-pill;
+}
+
+html[data-page-transition] [data-morph-title] {
+  view-transition-name: post-title;
+}
+
+::view-transition-group(nav-pill),
+::view-transition-group(post-title) {
+  animation-duration: 0.38s;
+  animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* 검색 팔레트(<dialog>)가 열려 있는 동안 뒤의 페이지가 스크롤되지 않게 한다. */
+html {
+  scrollbar-gutter: stable;
+}
+
+html:has(dialog[open]) {
+  overflow: hidden;
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+
+/* 본문 이미지 확대(medium-zoom). 라이브러리는 겹침 순서를 정해 주지 않으므로 고정 헤더와 플레이어 바보다 위에 둔다. */
+.medium-zoom-overlay {
+  z-index: 100;
+}
+
+.medium-zoom-image--opened {
+  z-index: 101;
 }
