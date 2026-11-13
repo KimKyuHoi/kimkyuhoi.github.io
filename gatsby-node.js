@@ -112,6 +112,15 @@ exports.createSchemaCustomization = ({ actions }) => {
   `);
 };
 
+// 개발 중에는 Emotion이 styled 선언마다 파일 전체가 담긴 소스맵을 끼워 넣는다. styled가 많은 파일
+// (about.tsx는 30개)은 변환 결과가 500KB를 넘고, 그러면 Babel이 "The code generator has deoptimised
+// the styling ..." 안내를 내는데 Gatsby가 이것을 ERROR UNKNOWN으로 찍는다.
+// 출력 압축 여부를 Babel의 자동 판단에 맡기지 않고 명시해서 그 안내가 나오지 않게 한다.
+// 실제 압축은 번들러가 하므로 결과물에는 영향이 없다.
+exports.onCreateBabelConfig = ({ actions }) => {
+  actions.setBabelOptions({ options: { compact: false } });
+};
+
 exports.onCreateWebpackConfig = ({ actions, getConfig }) => {
   const config = getConfig();
   const newPlugins = config.plugins.filter(

@@ -39,7 +39,14 @@ module.exports = {
       },
     },
     `gatsby-plugin-image`,
-    `gatsby-plugin-emotion`,
+    {
+      resolve: `gatsby-plugin-emotion`,
+      options: {
+        // 스타일 소스맵은 개발할 때만 쓴다. 옵션을 주지 않으면 플러그인의 기본값(true)이
+        // "프로덕션에서는 끈다"는 내부 설정을 덮어써서, 프로덕션 빌드에서도 styled 선언마다 소스맵이 붙는다.
+        sourceMap: process.env.NODE_ENV !== `production`,
+      },
+    },
     {
       resolve: `gatsby-source-filesystem`,
       options: {
