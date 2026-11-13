@@ -15,6 +15,13 @@ exports.onRenderBody = ({ setHtmlAttributes, setHeadComponents, setPreBodyCompon
       href: 'https://cdn.jsdelivr.net',
       crossOrigin: 'anonymous',
     }),
+    // 모바일 브라우저의 주소 표시줄·상태 표시줄 색. 페이지 바탕색과 맞춘다.
+    // 다크 테마일 때는 아래 초기화 스크립트와 ThemeProvider가 값을 바꾼다.
+    React.createElement('meta', {
+      key: 'theme-color',
+      name: 'theme-color',
+      content: '#ffffff',
+    }),
   ]);
   setPreBodyComponents([
     React.createElement('script', {
@@ -29,6 +36,8 @@ exports.onRenderBody = ({ setHtmlAttributes, setHeadComponents, setPreBodyCompon
               if (!mode) mode = '"light"';
               if (mode === '"dark"') {
                 document.body.classList.add('dark');
+                var themeColor = document.querySelector('meta[name="theme-color"]');
+                if (themeColor) themeColor.setAttribute('content', '#191f28');
               }
             } catch (e) {}
           })();

@@ -114,14 +114,25 @@ const Seo: React.FC<SeoProps> = ({
   const websiteId = `${siteUrl}/#website`;
 
   // 검색 엔진과 AI 답변 엔진이 "누가 쓴 어떤 글인지"를 한 그래프로 읽을 수 있게 @id로 서로 잇는다.
+  // 직함·소속·학력·분야는 소개 페이지(/about/)와 홈 화면에 실제로 적혀 있는 내용과 같게 유지한다.
   const person = {
     '@type': 'Person',
     '@id': personId,
     name: '김규회',
     alternateName: authorName,
-    jobTitle: 'Frontend Developer',
+    jobTitle: 'Software Engineer',
     description: site.siteMetadata?.author?.summary,
     url: `${siteUrl}/about/`,
+    worksFor: { '@type': 'Organization', name: 'The Pinkfong Company' },
+    alumniOf: { '@type': 'CollegeOrUniversity', name: 'Kyungpook National University' },
+    knowsAbout: [
+      'Frontend Development',
+      'React',
+      'Next.js',
+      'Media Streaming',
+      'Shaka Player',
+      'DRM',
+    ],
     sameAs: [githubUrl, social?.linkedin, social?.velog].filter(Boolean),
   };
 
@@ -221,6 +232,18 @@ const Seo: React.FC<SeoProps> = ({
         title={`${defaultTitle} RSS`}
         href={`${siteUrl}/rss.xml`}
       />
+      {/* 글의 마크다운 원문 (gatsby-node.js가 빌드할 때 만든다). AI 답변 엔진이 HTML 대신 읽어 갈 수 있다. */}
+      {isArticle && pathname ? (
+        <link
+          key="markdown"
+          rel="alternate"
+          type="text/markdown"
+          title={`${title} (Markdown)`}
+          href={`${canonicalUrl.replace(/\/?$/, '/')}index.md`}
+        />
+      ) : null}
+      {/* iOS Safari가 본문의 숫자를 전화번호로 여겨 링크로 바꾸지 않게 한다. */}
+      <meta key="format-detection" name="format-detection" content="telephone=no" />
 
       {/* Open Graph */}
       <meta key="og:url" property="og:url" content={canonicalUrl} />

@@ -140,6 +140,10 @@ module.exports = {
         short_name: `Andy Tech`,
         start_url: `/`,
         background_color: `#ffffff`,
+        // 홈 화면에 추가했을 때 쓰이는 색. 페이지 안의 theme-color 메타는 테마에 따라 바뀌어야 하므로
+        // 플러그인이 넣지 않게 하고 gatsby-ssr.js에서 직접 넣는다.
+        theme_color: `#ffffff`,
+        theme_color_in_head: false,
         display: `minimal-ui`,
         icon: `src/images/logo.svg`,
       },

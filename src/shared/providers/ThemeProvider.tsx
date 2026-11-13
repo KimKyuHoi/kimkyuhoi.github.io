@@ -13,6 +13,10 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   useEffect(() => {
     if (!adopted.current) return;
     document.body.classList.toggle('dark', mode === 'dark');
+    // 모바일 브라우저의 주소 표시줄 색도 테마의 바탕색을 따라가게 한다 (gatsby-ssr.js의 theme-color).
+    document
+      .querySelector('meta[name="theme-color"]')
+      ?.setAttribute('content', mode === 'dark' ? '#191f28' : '#ffffff');
   }, [mode]);
 
   // 첫 렌더 뒤, 초기화 스크립트가 정한 테마(저장값, 없으면 시스템 설정)를 상태로 가져온다.
