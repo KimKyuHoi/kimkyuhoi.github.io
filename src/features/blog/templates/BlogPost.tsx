@@ -53,7 +53,7 @@ const BlogPostTemplate: React.FC<PageProps<Queries.BlogPostBySlugQuery>> = ({ da
     .map(({ node }) => node);
 
   return (
-    <Layout location={location}>
+    <Layout location={location} section="/posts/">
       <ArticleWrapper>
         <Main>
           <article itemScope itemType="http://schema.org/Article">
@@ -679,7 +679,10 @@ const Nav = styled.nav`
     color: ${({ theme }) => theme.text.primary};
     font-weight: 700;
     font-size: 16px;
-    transition: all 0.2s ease;
+    transition:
+      transform 0.2s ease,
+      box-shadow 0.2s ease,
+      border-color 0.2s ease;
     text-decoration: none;
 
     &:hover {
