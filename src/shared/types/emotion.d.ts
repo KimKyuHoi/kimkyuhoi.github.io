@@ -25,6 +25,7 @@ type BackgroundScale = {
   code: string;
   codeInline: string;
   header: string;
+  float: string;
 };
 
 type TextScale = {

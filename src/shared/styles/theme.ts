@@ -32,6 +32,8 @@ const lightValues = {
     code: '#191f28',
     codeInline: '#f2f4f6',
     header: 'rgba(255, 255, 255, 0.8)',
+    // 화면 위에 떠 있는 막대(하단 독, 플레이어 바). 뒤의 글이 비치되 글자를 방해하지 않을 만큼만 투명하다.
+    float: 'rgba(255, 255, 255, 0.88)',
   },
   text: {
     primary: '#191f28',
@@ -59,6 +61,7 @@ const darkValues = {
     code: '#101317',
     codeInline: '#333d4b',
     header: 'rgba(25, 31, 40, 0.8)',
+    float: 'rgba(38, 46, 57, 0.9)',
   },
   text: {
     primary: '#f9fafb',
@@ -87,6 +90,7 @@ export const theme: Theme = {
     code: 'var(--bg-code)',
     codeInline: 'var(--bg-code-inline)',
     header: 'var(--bg-header)',
+    float: 'var(--bg-float)',
   },
   text: {
     primary: 'var(--text-primary)',
@@ -112,6 +116,7 @@ export const globalStyles = css`
     --bg-code: ${lightValues.bg.code};
     --bg-code-inline: ${lightValues.bg.codeInline};
     --bg-header: ${lightValues.bg.header};
+    --bg-float: ${lightValues.bg.float};
     --text-primary: ${lightValues.text.primary};
     --text-muted: ${lightValues.text.muted};
     --text-caption: ${lightValues.text.caption};
@@ -131,6 +136,7 @@ export const globalStyles = css`
     --bg-code: ${darkValues.bg.code};
     --bg-code-inline: ${darkValues.bg.codeInline};
     --bg-header: ${darkValues.bg.header};
+    --bg-float: ${darkValues.bg.float};
     --text-primary: ${darkValues.text.primary};
     --text-muted: ${darkValues.text.muted};
     --text-caption: ${darkValues.text.caption};

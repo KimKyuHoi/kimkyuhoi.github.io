@@ -5,27 +5,23 @@ import type { WindowLocation } from '@reach/router';
 import { useThemeMode } from '@/hooks/useThemeMode';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Moon, Search, Sun } from 'lucide-react';
-
-const navItems = [
-  { label: '홈', to: '/' },
-  { label: '글', to: '/posts' },
-  { label: '소개', to: '/about' },
-  { label: '방명록', to: '/guestbook' },
-  { label: '플레이그라운드', to: '/playground' },
-];
+import Toast from '@/components/Toast';
+import Dock from '@/components/Dock';
+import { isActivePath, navItems } from '@/components/navigation';
+import { DOCK_GAP, DOCK_HEIGHT, media } from '@/styles/media';
 
 interface LayoutProps {
   location?: WindowLocation;
   title?: string;
+  /** 이 화면이 속한 메뉴의 주소. 주소만으로는 알 수 없는 화면(글 본문은 /posts/ 아래에 있지 않다)에서 넘긴다. */
+  section?: string;
   children: ReactNode;
 }
-
-import Toast from '@/components/Toast';
 
 // 검색 팔레트(cmdk)는 처음 열 때 내려받는다.
 const CommandPalette = React.lazy(() => import('@/components/CommandPalette'));
 
-const Layout: React.FC<LayoutProps> = ({ location, children }) => {
+const Layout: React.FC<LayoutProps> = ({ location, section, children }) => {
   const { mode, toggle } = useThemeMode();
   const [showToast, setShowToast] = React.useState(false);
   const [hovered, setHovered] = React.useState<string | null>(null);
@@ -55,8 +51,9 @@ const Layout: React.FC<LayoutProps> = ({ location, children }) => {
   }, []);
 
   const pathname = location?.pathname || '';
-  const isActive = (to: string) => pathname === to || (to !== '/' && pathname.startsWith(to));
-  const pillTarget = hovered ?? navItems.find((item) => isActive(item.to))?.to ?? null;
+  const activeTo = section ?? navItems.find((item) => isActivePath(pathname, item.to))?.to ?? null;
+  const pillTarget = hovered ?? activeTo;
+  const collapsed = useCollapseOnScroll();
 
   // 테마를 바꿀 때 클릭한 지점에서 새 테마가 원형으로 번져 나가게 한다 (View Transitions API).
   const handleToggleTheme = (event?: React.MouseEvent<HTMLButtonElement>) => {
@@ -104,7 +101,7 @@ const Layout: React.FC<LayoutProps> = ({ location, children }) => {
   return (
     <Page>
       <Shell>
-        <TopBar className="site-header">
+        <TopBar className="site-header" data-collapsed={collapsed || undefined}>
           <Brand>
             <Link to="/" aria-label="Andy Tech Blog 홈">
               <svg
@@ -152,11 +149,13 @@ const Layout: React.FC<LayoutProps> = ({ location, children }) => {
                   />
                 </g>
               </svg>
+              {/* 폰에서는 상단 메뉴가 하단 독으로 내려가므로, 빈 자리에 블로그 이름을 보여 준다. */}
+              <BrandName aria-hidden="true">Andy Tech Blog</BrandName>
             </Link>
           </Brand>
           <Nav onMouseLeave={() => setHovered(null)}>
             {navItems.map((item) => {
-              const active = isActive(item.to);
+              const active = activeTo === item.to;
               return (
                 <NavItem
                   key={item.to}
@@ -216,6 +215,7 @@ const Layout: React.FC<LayoutProps> = ({ location, children }) => {
           </FooterLinks>
         </Footer>
       </Shell>
+      <Dock pathname={pathname} activeTo={activeTo} />
       {paletteLoaded ? (
         <React.Suspense fallback={null}>
           <CommandPalette
@@ -236,17 +236,70 @@ const Layout: React.FC<LayoutProps> = ({ location, children }) => {
 
 export default Layout;
 
+// 이만큼 내려간 뒤부터 헤더를 접는다. 맨 위 근처에서는 늘 보인다.
+const COLLAPSE_AFTER = 160;
+// 스크롤 방향이 바뀌었다고 보려면 이만큼은 움직여야 한다. 손가락이 살짝 떨리는 정도로 헤더가 오르내리지 않게 한다.
+const DIRECTION_SLOP = 12;
+
+/**
+ * 아래로 읽어 내려가는 동안에는 헤더를 접고, 위로 되돌아오면 다시 편다 (폰에서만 쓰인다).
+ * 접힌 상태를 실제로 숨기는 것은 CSS가 화면 폭을 보고 정한다.
+ */
+const useCollapseOnScroll = () => {
+  const [collapsed, setCollapsed] = React.useState(false);
+
+  React.useEffect(() => {
+    let anchor = window.scrollY;
+    let raf = 0;
+
+    const update = () => {
+      raf = 0;
+      const y = window.scrollY;
+      if (y < COLLAPSE_AFTER) {
+        anchor = y;
+        setCollapsed(false);
+      } else if (y - anchor > DIRECTION_SLOP) {
+        anchor = y;
+        setCollapsed(true);
+      } else if (anchor - y > DIRECTION_SLOP) {
+        anchor = y;
+        setCollapsed(false);
+      }
+    };
+    const onScroll = () => {
+      if (!raf) raf = requestAnimationFrame(update);
+    };
+
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => {
+      cancelAnimationFrame(raf);
+      window.removeEventListener('scroll', onScroll);
+    };
+  }, []);
+
+  return collapsed;
+};
+
 const Page = styled.div`
   min-height: 100vh;
   background: ${({ theme }) => theme.bg.page};
   color: ${({ theme }) => theme.text.primary};
 `;
 
+// 좌우 여백은 노치가 있는 기기를 가로로 눕혔을 때 안전 영역만큼 넓어진다.
 const Shell = styled.div`
+  --gutter-left: max(20px, env(safe-area-inset-left, 0px));
+  --gutter-right: max(20px, env(safe-area-inset-right, 0px));
+
   max-width: 1000px;
   margin: 0 auto;
-  padding: 0 20px 80px;
+  padding: 0 var(--gutter-right) 80px var(--gutter-left);
   width: 100%;
+
+  /* 화면 아래에 떠 있는 독이 마지막 내용을 가리지 않도록 그만큼 비워 둔다. */
+  ${media.phone} {
+    padding-bottom: calc(${DOCK_HEIGHT + DOCK_GAP + 32}px + env(safe-area-inset-bottom, 0px));
+  }
 `;
 
 const TopBar = styled.header`
@@ -261,13 +314,29 @@ const TopBar = styled.header`
   position: sticky;
   top: 0;
   z-index: 50;
-  padding: 0 20px;
-  margin: 0 -20px 32px;
-  width: calc(100% + 40px);
+  padding: 0 var(--gutter-right) 0 var(--gutter-left);
+  margin: 0 calc(-1 * var(--gutter-right)) 32px calc(-1 * var(--gutter-left));
 
   @media (max-width: 768px) {
     margin-bottom: 20px;
     gap: 12px;
+  }
+
+  ${media.phone} {
+    justify-content: space-between;
+    height: 56px;
+    margin-bottom: 0;
+    padding-right: calc(var(--gutter-right) - 10px);
+    transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+
+    /* 읽어 내려가는 동안에는 화면을 넓게 쓰도록 헤더를 위로 접는다. */
+    &[data-collapsed] {
+      transform: translateY(-100%);
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      transition: none;
+    }
   }
 `;
 
@@ -278,11 +347,32 @@ const Brand = styled.div`
   a {
     display: flex;
     align-items: center;
+    gap: 6px;
     transition: transform 0.2s ease;
 
     &:hover {
       transform: scale(1.05);
     }
+  }
+
+  ${media.phone} {
+    margin-left: -6px;
+
+    a:hover {
+      transform: none;
+    }
+  }
+`;
+
+const BrandName = styled.span`
+  display: none;
+
+  ${media.phone} {
+    display: block;
+    font-size: 16px;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    color: ${({ theme }) => theme.text.primary};
   }
 `;
 
@@ -301,15 +391,9 @@ const Nav = styled.nav`
     display: none;
   }
 
-  /* 좁은 화면에서는 메뉴가 가로로 넘친다. 오른쪽 끝을 흐리게 해 옆으로 밀 수 있음을 알린다. */
-  @media (max-width: 640px) {
-    mask-image: linear-gradient(90deg, #000 calc(100% - 28px), transparent);
-    -webkit-mask-image: linear-gradient(90deg, #000 calc(100% - 28px), transparent);
-
-    &::after {
-      content: '';
-      flex: 0 0 24px;
-    }
+  /* 폰에서는 하단 독(Dock.tsx)이 메뉴를 맡는다. */
+  ${media.phone} {
+    display: none;
   }
 `;
 
@@ -349,6 +433,10 @@ const ActionRow = styled.div`
   display: flex;
   gap: 10px;
   align-items: center;
+
+  ${media.phone} {
+    gap: 0;
+  }
 `;
 
 const SearchButton = styled.button`
@@ -384,6 +472,16 @@ const SearchButton = styled.button`
       display: none;
     }
   }
+
+  ${media.phone} {
+    width: 44px;
+    height: 44px;
+
+    svg {
+      width: 20px;
+      height: 20px;
+    }
+  }
 `;
 
 const Shortcut = styled.span`
@@ -406,13 +504,25 @@ const ThemeButtonBase = styled.button`
   &:hover {
     background: ${({ theme }) => theme.bg.muted};
   }
+
+  ${media.phone} {
+    width: 44px;
+    height: 44px;
+    padding: 0;
+  }
 `;
 const ThemeButton = motion.create(ThemeButtonBase);
 
+// 한 칸짜리 그리드. minmax(0, 1fr)로 두어, 줄바꿈되지 않는 긴 내용이 칸을 화면 밖으로 밀어내지 못하게 한다.
 const Content = styled.main`
   margin-top: 28px;
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: 28px;
+
+  ${media.phone} {
+    margin-top: 16px;
+  }
 `;
 
 const Footer = styled.footer`
@@ -437,5 +547,19 @@ const FooterLinks = styled.div`
     padding: 0;
     font: inherit;
     cursor: pointer;
+  }
+
+  /* 손가락으로 누르기 쉽게 누르는 영역을 키운다. */
+  ${media.phone} {
+    gap: 4px;
+    margin-right: -10px;
+
+    a,
+    button {
+      display: flex;
+      align-items: center;
+      min-height: 44px;
+      padding: 0 10px;
+    }
   }
 `;

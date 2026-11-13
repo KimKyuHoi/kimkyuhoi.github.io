@@ -735,16 +735,11 @@ a:focus {
     padding: var(--spacing-0) var(--spacing-0) var(--spacing-0) var(--spacing-4);
     margin-left: var(--spacing-0);
   }
-  ul,
-  ol {
-    list-style-position: inside;
-  }
-
-  /* 모바일에서 코드 블록 반응형 처리 */
+  /* 문장 속 코드: 한 줄에 다 들어가지 않을 때만 끊는다 (글자마다 끊으면 짧은 코드도 줄 끝에서 두 동강 난다). */
   code,
   kbd,
   samp {
-    word-break: break-all !important; /* 더 강력한 줄바꿈 */
+    overflow-wrap: anywhere !important;
     white-space: pre-wrap !important; /* 공백 유지하면서 줄바꿈 */
   }
 
@@ -760,9 +755,21 @@ a:focus {
     padding: 10px 12px !important;
   }
 
+  /* 코드 블록: 줄을 꺾지 않고 옆으로 민다. 꺾으면 들여쓰기와 주석의 줄 맞춤이 무너져 오히려 읽기 어렵다. */
+  pre,
+  pre code {
+    white-space: pre !important;
+    word-break: normal !important;
+    overflow-wrap: normal !important;
+  }
+
   pre {
-    white-space: pre-wrap !important; /* 코드 블록 줄바꿈 */
-    word-break: break-all !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  pre code {
+    font-size: 13px !important;
   }
 
   /* 모바일에서 패딩 조정 */
@@ -919,6 +926,48 @@ html[data-page-transition] [data-morph-title] {
 ::view-transition-group(post-title) {
   animation-duration: 0.38s;
   animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* 하단 독은 페이지 전환 중에도 제자리에 둔다. */
+html[data-page-transition] .site-dock {
+  view-transition-name: site-dock;
+}
+
+/* Touch
+   ========================================================================== */
+
+/* 기기를 가로로 눕혔을 때 iOS Safari가 글자 크기를 임의로 키우지 않게 한다. */
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+/* 누를 수 있는 요소: 두 번 탭해 확대하는 동작을 기다리느라 생기는 지연을 없애고,
+   브라우저의 회색 강조 대신 아래의 눌림 표시를 쓴다. */
+a,
+button,
+select,
+summary,
+label,
+input,
+[role='button'] {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* 손가락으로 누르는 동안 살짝 흐려져 눌렸다는 것을 알린다. */
+@media (hover: none) {
+  a:active,
+  button:active,
+  summary:active {
+    opacity: 0.6;
+  }
+}
+
+/* 글자를 입력하는 동안에는 화면 키보드 위로 하단 독이 떠올라 입력란을 가리지 않게 숨긴다. */
+html:has(input:not([type='range'], [type='checkbox'], [type='radio']):focus, textarea:focus)
+  .site-dock {
+  display: none;
 }
 
 /* 검색 팔레트(<dialog>)가 열려 있는 동안 뒤의 페이지가 스크롤되지 않게 한다. */
