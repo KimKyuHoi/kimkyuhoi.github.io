@@ -4,6 +4,7 @@ import styled from '@emotion/styled';
 import SpotlightCard from '@/reactbits/SpotlightCard';
 import { useThemeMode } from '@/hooks/useThemeMode';
 import { markTitleMorph } from '@/motion/pageTransition';
+import { media } from '@/styles/media';
 
 interface PostCardProps {
   slug: string;
@@ -225,13 +226,19 @@ const Tags = styled.ul`
   li {
     margin: 0;
   }
+
+  /* 폰에서는 카드에 태그를 싣지 않는다. 좁은 화면에서는 칩이 카드마다 두세 줄씩 쌓여 목록을 훑기 어렵게 하고,
+     카드를 누르려다 칩을 잘못 누르기 쉽다. 태그는 글 페이지의 머리말에서 볼 수 있다. */
+  ${media.phone} {
+    display: none;
+  }
 `;
 
 const TagLink = styled(Link)`
   display: block;
   padding: 4px 10px;
 
-  /* 손가락으로 누르기 쉽게 높이를 키운다. */
+  /* 손가락으로 누르기 쉽게 높이를 키운다 (태블릿). */
   @media (hover: none) {
     padding: 9px 12px;
   }
