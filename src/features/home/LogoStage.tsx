@@ -1,17 +1,20 @@
 import React, { useEffect, useImperativeHandle, useRef } from 'react';
 import styled from '@emotion/styled';
 import {
+  DURATION,
   HERO_BASE,
   LOGO_BOX,
   REST_POSE,
   pathData,
+  poseAt,
   strokesFor,
-  type Pose,
 } from '@/features/home/logoMotion';
 
 export type LogoStageHandle = {
-  /** 로고를 주어진 모양으로 다시 그린다. 재생 중에는 매 프레임 호출된다. */
-  draw: (pose: Pose) => void;
+  /** 영상의 주어진 시각(초)에 해당하는 장면을 그린다. 재생 중에는 매 프레임 호출된다. */
+  drawAt: (time: number) => void;
+  /** 영상 화면의 크기(CSS 픽셀) */
+  size: () => { width: number; height: number } | null;
 };
 
 type LogoStageProps = {
@@ -21,11 +24,19 @@ type LogoStageProps = {
   warmup?: boolean;
   /** 원본 로고를 끝까지 숨긴다. 저화질 화면만 보여 줄 때 쓴다. */
   hideOriginal?: boolean;
+  /** 좁은 화면에서 화면 바로 아래에 조작부가 붙는다. 그때는 화면의 아래 모서리를 둥글리지 않는다. */
+  attached?: boolean;
   ref?: React.Ref<LogoStageHandle>;
 };
 
+/** 이 폭 이하에서는 영상 화면과 글을 위아래로 쌓는다 (그보다 넓으면 글 오른쪽에 로고를 둔다). */
+export const STACKED_BELOW = 1000;
+
+// 로고가 화면 오른쪽 가장자리 바로 밖에서 출발하도록 둘 여유(로고 좌표 단위)
+const START_MARGIN = 8;
+
 /**
- * 영상 플레이어의 화면처럼 쓰는 어두운 패널의 배경. 블로그 로고를 지정한 화질로 그린다.
+ * 영상 플레이어의 화면. 블로그 로고를 지정한 화질로 그린다.
  * 원본은 SVG이고, 그보다 낮은 화질에서는 로고를 낮은 해상도 캔버스에 그린 뒤 확대해 매크로블록처럼 보이게 한다.
  * 캔버스 해상도가 곧 화질이라, 블록이 클수록 그리는 비용은 오히려 줄어든다.
  */
@@ -33,18 +44,35 @@ const LogoStage: React.FC<LogoStageProps> = ({
   block,
   warmup = false,
   hideOriginal = false,
+  attached = false,
   ref,
 }) => {
+  const screenRef = useRef<HTMLDivElement>(null);
   const logoRef = useRef<SVGSVGElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const poseRef = useRef<Pose>(REST_POSE);
+  // 따로 재생하지 않으면 다 재생된 마지막 장면(제자리에 선 로고)을 보여 준다.
+  const timeRef = useRef(DURATION);
   const blockRef = useRef(block);
   blockRef.current = block;
 
   const paint = () => {
+    const screen = screenRef.current;
     const logo = logoRef.current;
-    if (!logo) return;
-    const strokes = strokesFor(poseRef.current);
+    if (!screen || !logo) return;
+
+    const host = screen.getBoundingClientRect();
+    const rect = logo.getBoundingClientRect();
+    if (!host.width || !rect.height) return;
+
+    // 로고 좌표 1단위가 화면에서 몇 px인지와, 로고 중심의 위치
+    const scale = rect.height / LOGO_BOX.height;
+    const centerX = rect.left - host.left + rect.width / 2;
+    const centerY = rect.top - host.top + rect.height / 2;
+
+    // 걸어 들어오는 출발점: 로고 전체가 화면 오른쪽 가장자리 바로 밖에 있는 위치
+    const startOffset = (host.width - centerX) / scale + LOGO_BOX.width / 2 + START_MARGIN;
+    const pose = timeRef.current >= DURATION ? REST_POSE : poseAt(timeRef.current, startOffset);
+    const strokes = strokesFor(pose);
 
     logo.querySelectorAll('path').forEach((path, index) => {
       path.setAttribute('d', pathData(strokes[index]));
@@ -54,8 +82,6 @@ const LogoStage: React.FC<LogoStageProps> = ({
     const ctx = canvas?.getContext('2d');
     if (!canvas || !ctx) return;
 
-    const host = canvas.getBoundingClientRect();
-    if (!host.width || !host.height) return;
     const cols = Math.max(2, Math.round(host.width / blockRef.current));
     const rows = Math.max(2, Math.round(host.height / blockRef.current));
     if (canvas.width !== cols || canvas.height !== rows) {
@@ -63,16 +89,10 @@ const LogoStage: React.FC<LogoStageProps> = ({
       canvas.height = rows;
     }
 
-    // 이후 좌표는 CSS 픽셀 기준으로 쓴다.
+    // 이후 좌표는 CSS 픽셀 기준으로 쓴다. 캔버스는 같은 자리의 SVG 로고를 그대로 따라 그린다.
     ctx.setTransform(cols / host.width, 0, 0, rows / host.height, 0, 0);
     ctx.fillStyle = HERO_BASE;
     ctx.fillRect(0, 0, host.width, host.height);
-
-    // 캔버스는 같은 자리에 놓인 SVG 로고의 위치와 크기를 그대로 따라 그린다.
-    const rect = logo.getBoundingClientRect();
-    const scale = rect.height / LOGO_BOX.height;
-    const centerX = rect.left - host.left + rect.width / 2;
-    const centerY = rect.top - host.top + rect.height / 2;
 
     ctx.lineCap = 'round';
     strokes.forEach(({ from, to, width, color }) => {
@@ -86,25 +106,29 @@ const LogoStage: React.FC<LogoStageProps> = ({
   };
 
   useImperativeHandle(ref, () => ({
-    draw: (pose) => {
-      poseRef.current = pose;
+    drawAt: (time) => {
+      timeRef.current = time;
       paint();
+    },
+    size: () => {
+      const rect = screenRef.current?.getBoundingClientRect();
+      return rect ? { width: rect.width, height: rect.height } : null;
     },
   }));
 
-  // 화질이 바뀌거나 패널 크기가 달라지면 지금 모양 그대로 다시 그린다.
+  // 화질이 바뀌거나 화면 크기가 달라지면 지금 장면 그대로 다시 그린다.
   useEffect(() => {
     paint();
-    const canvas = canvasRef.current;
-    if (!canvas) return undefined;
+    const screen = screenRef.current;
+    if (!screen) return undefined;
     const observer = new ResizeObserver(paint);
-    observer.observe(canvas);
+    observer.observe(screen);
     return () => observer.disconnect();
     // paint는 ref만 읽으므로 의존성에 넣지 않는다.
   }, [block]);
 
   return (
-    <Screen aria-hidden="true">
+    <Screen ref={screenRef} aria-hidden="true" data-attached={attached || undefined}>
       <Logo
         ref={logoRef}
         className={warmup ? 'hero-logo' : undefined}
@@ -129,8 +153,19 @@ const LogoStage: React.FC<LogoStageProps> = ({
 
 export default LogoStage;
 
-// 테마와 무관하게 어두운 화면이다. 영상 플레이어의 화면처럼 보이게 하려는 의도다.
+/**
+ * 영상 화면과 그 위·아래에 놓이는 글을 담는 틀.
+ * 넓은 화면에서는 틀 전체가 어두운 영상 화면이고 글이 그 위에 놓인다.
+ * 좁은 화면에서는 영상 화면만 어둡고, 글은 그 아래 페이지 바탕 위에 놓인다.
+ * 안에 놓이는 글은 아래의 --screen-* 변수로 색을 정하면 두 경우 모두에 맞는다.
+ */
 export const ScreenPanel = styled.section`
+  --screen-text: #ffffff;
+  --screen-text-soft: rgba(249, 250, 251, 0.82);
+  --screen-line: rgba(255, 255, 255, 0.22);
+  --screen-chip: rgba(11, 16, 32, 0.55);
+  --screen-chip-hover: rgba(255, 255, 255, 0.16);
+
   position: relative;
   isolation: isolate;
   overflow: hidden;
@@ -140,10 +175,19 @@ export const ScreenPanel = styled.section`
   min-height: 500px;
   border-radius: ${({ theme }) => theme.radius.xl};
   background: ${HERO_BASE};
-  color: #f9fafb;
 
-  @media (max-width: 768px) {
-    min-height: 480px;
+  @media (max-width: ${STACKED_BELOW}px) {
+    --screen-text: ${({ theme }) => theme.text.primary};
+    --screen-text-soft: ${({ theme }) => theme.text.muted};
+    --screen-line: ${({ theme }) => theme.border};
+    --screen-chip: transparent;
+    --screen-chip-hover: ${({ theme }) => theme.bg.muted};
+
+    overflow: visible;
+    justify-content: flex-start;
+    min-height: 0;
+    border-radius: 0;
+    background: transparent;
   }
 `;
 
@@ -152,19 +196,26 @@ const Screen = styled.div`
   inset: 0;
   z-index: -1;
 
-  /* 좁은 화면에서는 로고가 글자 뒤로 들어가므로, 글자가 놓이는 아래쪽을 어둡게 눌러 대비를 확보한다. */
-  @media (max-width: 860px) {
-    &::after {
-      content: '';
-      position: absolute;
-      inset: 0;
-      background: linear-gradient(180deg, rgba(11, 16, 32, 0.3), rgba(11, 16, 32, 0.93) 56%);
+  @media (max-width: ${STACKED_BELOW}px) {
+    position: relative;
+    inset: auto;
+    z-index: 0;
+    order: 0;
+    overflow: hidden;
+    aspect-ratio: 16 / 9;
+    max-height: 380px;
+    border-radius: ${({ theme }) => theme.radius.xl};
+    background: ${HERO_BASE};
+
+    &[data-attached] {
+      border-bottom-left-radius: 0;
+      border-bottom-right-radius: 0;
     }
   }
 `;
 
-// 넓은 화면에서는 글 오른쪽에 로고를 크게 두고 위아래를 잘라 낸다.
-// 걸어 들어올 때는 로고가 자기 영역 밖에서 출발하므로 넘친 부분도 그려지게 둔다 (패널이 잘라 낸다).
+// 넓은 화면에서는 글 오른쪽에 로고를 크게 두고 위아래를 잘라 낸다. 좁은 화면에서는 화면 한가운데에 둔다.
+// 걸어 들어올 때는 로고가 자기 영역 밖에서 출발하므로 넘친 부분도 그려지게 둔다 (화면이 잘라 낸다).
 const Logo = styled.svg`
   position: absolute;
   top: 50%;
@@ -173,10 +224,11 @@ const Logo = styled.svg`
   overflow: visible;
   transform: translateY(-50%);
 
-  @media (max-width: 860px) {
-    top: 28%;
-    right: -10%;
-    height: 76%;
+  @media (max-width: ${STACKED_BELOW}px) {
+    right: auto;
+    left: 50%;
+    height: 78%;
+    transform: translate(-50%, -50%);
   }
 `;
 

@@ -4,7 +4,7 @@ import type { PageProps } from 'gatsby';
 import styled from '@emotion/styled';
 import Layout from '@/components/Layout';
 import Seo from '@/components/Seo';
-import LogoStage, { ScreenPanel } from '@/features/home/LogoStage';
+import LogoStage, { STACKED_BELOW, ScreenPanel } from '@/features/home/LogoStage';
 
 const NotFoundPage: React.FC<PageProps> = ({ location }) => {
   React.useEffect(() => {
@@ -41,11 +41,12 @@ export const Head = () => <Seo title="페이지를 찾을 수 없습니다" path
 
 export default NotFoundPage;
 
+// 글자색은 ScreenPanel이 정한 변수를 쓴다. 좁은 화면에서는 글이 영상 화면 아래로 내려가 테마 색을 따른다.
 const Body = styled.div`
   padding: 48px;
 
-  @media (max-width: 768px) {
-    padding: 28px 24px;
+  @media (max-width: ${STACKED_BELOW}px) {
+    padding: 24px 0 0;
   }
 `;
 
@@ -54,7 +55,12 @@ const Code = styled.p`
   font-family: ${({ theme }) => theme.font.mono};
   font-size: 16px;
   font-weight: 600;
-  color: #ffffff;
+  color: var(--screen-text);
+
+  @media (max-width: ${STACKED_BELOW}px) {
+    margin-bottom: 10px;
+    color: var(--screen-text-soft);
+  }
 `;
 
 const Title = styled.h1`
@@ -64,14 +70,22 @@ const Title = styled.h1`
   line-height: 1.2;
   letter-spacing: -0.035em;
   word-break: keep-all;
-  color: #ffffff;
+  color: var(--screen-text);
+
+  @media (max-width: ${STACKED_BELOW}px) {
+    font-size: clamp(32px, 8.8vw, 48px);
+  }
 `;
 
 const Description = styled.p`
   margin: 0 0 28px;
   font-size: 16px;
   line-height: 1.8;
-  color: rgba(249, 250, 251, 0.82);
+  color: var(--screen-text-soft);
+
+  @media (max-width: ${STACKED_BELOW}px) {
+    margin-bottom: 20px;
+  }
 `;
 
 const Actions = styled.div`
@@ -86,17 +100,17 @@ const Action = styled(Link)`
   min-height: 44px;
   padding: 0 18px;
   border-radius: ${({ theme }) => theme.radius.full};
-  border: 1px solid rgba(255, 255, 255, 0.22);
-  background: rgba(11, 16, 32, 0.55);
+  border: 1px solid var(--screen-line);
+  background: var(--screen-chip);
   font-size: 15px;
   font-weight: 600;
-  color: #ffffff;
+  color: var(--screen-text);
   transition:
     background 0.2s ease,
     border-color 0.2s ease;
 
   &:hover {
-    background: rgba(255, 255, 255, 0.16);
-    border-color: rgba(255, 255, 255, 0.5);
+    background: var(--screen-chip-hover);
+    border-color: var(--screen-text-soft);
   }
 `;

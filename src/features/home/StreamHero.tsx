@@ -10,8 +10,12 @@ import {
 } from 'lucide-react';
 import { Github, Linkedin } from '@/ui/BrandIcons';
 import Magnet from '@/reactbits/Magnet';
-import LogoStage, { ScreenPanel, type LogoStageHandle } from '@/features/home/LogoStage';
-import { DURATION, SETTLE_END, WALK_END, poseAt } from '@/features/home/logoMotion';
+import LogoStage, {
+  STACKED_BELOW,
+  ScreenPanel,
+  type LogoStageHandle,
+} from '@/features/home/LogoStage';
+import { DURATION, HERO_BASE, SETTLE_END, WALK_END } from '@/features/home/logoMotion';
 import { CAPTIONS, type CaptionKey } from '@/features/home/captions';
 
 // 전문 통계는 열 때만 내려받는다.
@@ -102,7 +106,7 @@ const StreamHero: React.FC = () => {
   /** 재생 위치에 맞춰 화면 전체를 맞춘다: 로고의 모양, 탐색 바, 시간 표시, 자동 화질, 장면 자막. */
   const renderFrame = () => {
     const { time, playing: isPlaying, rate: currentRate } = clock.current;
-    stageRef.current?.draw(poseAt(time));
+    stageRef.current?.drawAt(time);
 
     const seek = seekRef.current;
     if (seek) {
@@ -240,15 +244,15 @@ const StreamHero: React.FC = () => {
   const shown = LADDER[offline ? 0 : level];
 
   const describeQuality = () => {
-    const rect = rootRef.current?.getBoundingClientRect();
-    if (!rect) return shown.label;
+    const size = stageRef.current?.size();
+    if (!size) return shown.label;
     const scale = shown.block === 1 ? window.devicePixelRatio : 1 / shown.block;
-    return `${shown.label} (${Math.round(rect.width * scale)}×${Math.round(rect.height * scale)})`;
+    return `${shown.label} (${Math.round(size.width * scale)}×${Math.round(size.height * scale)})`;
   };
 
   return (
     <ScreenPanel ref={rootRef} aria-label="소개">
-      <LogoStage ref={stageRef} block={shown.block} warmup />
+      <LogoStage ref={stageRef} block={shown.block} warmup attached />
 
       {offline ? <Buffering role="status">인터넷 연결을 기다리는 중입니다</Buffering> : null}
 
@@ -278,7 +282,7 @@ const StreamHero: React.FC = () => {
         </Intro>
         <Socials>
           {socials.map(({ href, label, Icon, caption }) => (
-            <Magnet key={label} padding={36} magnetStrength={3}>
+            <Magnet key={label} padding={36} magnetStrength={3} wrapperClassName="hero-social">
               <SocialLink
                 href={href}
                 target="_blank"
@@ -332,7 +336,7 @@ const StreamHero: React.FC = () => {
           >
             <Captions data-outline="" />
           </IconButton>
-          <Select aria-label="재생 속도" value={rate} onChange={handleRate}>
+          <Select aria-label="재생 속도" value={rate} onChange={handleRate} data-optional="">
             {RATES.map((value) => (
               <option key={value} value={value}>
                 {value}배속
@@ -365,11 +369,15 @@ const StreamHero: React.FC = () => {
 
 export default StreamHero;
 
+// 글자색은 ScreenPanel이 정한 변수를 쓴다. 넓은 화면에서는 어두운 화면 위의 흰 글자이고,
+// 좁은 화면에서는 글이 화면 아래(페이지 바탕)로 내려가므로 테마 색을 따른다.
 const Body = styled.div`
   padding: 48px 48px 12px;
 
-  @media (max-width: 768px) {
-    padding: 28px 24px 8px;
+  /* 좁은 화면: 유튜브 시청 화면처럼 영상과 조작부를 먼저 두고, 글은 그 아래에 둔다. */
+  @media (max-width: ${STACKED_BELOW}px) {
+    order: 3;
+    padding: 24px 0 0;
   }
 `;
 
@@ -377,7 +385,12 @@ const Role = styled.p`
   margin: 0 0 14px;
   font-size: 16px;
   font-weight: 600;
-  color: #ffffff;
+  color: var(--screen-text);
+
+  @media (max-width: ${STACKED_BELOW}px) {
+    margin-bottom: 10px;
+    color: var(--screen-text-soft);
+  }
 `;
 
 const Title = styled.h1`
@@ -389,7 +402,15 @@ const Title = styled.h1`
   text-wrap: balance;
   letter-spacing: -0.035em;
   word-break: keep-all;
-  color: #ffffff;
+  color: var(--screen-text);
+
+  @media (max-width: ${STACKED_BELOW}px) {
+    max-width: none;
+    margin-bottom: 14px;
+    font-size: clamp(32px, 8.8vw, 48px);
+    /* 글이 영상 화면 밖에 있으므로 화질에 따라 흐려지지 않는다. */
+    filter: none !important;
+  }
 `;
 
 const Intro = styled.p`
@@ -397,40 +418,64 @@ const Intro = styled.p`
   max-width: 31em;
   font-size: 16px;
   line-height: 1.8;
-  color: rgba(249, 250, 251, 0.82);
+  color: var(--screen-text-soft);
   word-break: keep-all;
+
+  @media (max-width: ${STACKED_BELOW}px) {
+    max-width: 38em;
+    margin-bottom: 20px;
+  }
 `;
 
 const Socials = styled.div`
   display: flex;
   gap: 10px;
   flex-wrap: wrap;
+
+  /* 폰에서는 세 링크가 한 줄을 똑같이 나눠 갖는다 (둘 + 하나로 줄바꿈되지 않게). */
+  @media (max-width: 480px) {
+    gap: 8px;
+    flex-wrap: nowrap;
+
+    .hero-social {
+      flex: 1 1 0;
+      min-width: 0;
+    }
+  }
 `;
 
 const SocialLink = styled.a`
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 8px;
   min-height: 44px;
   padding: 0 18px;
   border-radius: ${({ theme }) => theme.radius.full};
-  border: 1px solid rgba(255, 255, 255, 0.22);
-  background: rgba(11, 16, 32, 0.55);
+  border: 1px solid var(--screen-line);
+  background: var(--screen-chip);
   font-size: 15px;
   font-weight: 600;
-  color: #ffffff;
+  color: var(--screen-text);
   transition:
     background 0.2s ease,
     border-color 0.2s ease;
 
   &:hover {
-    background: rgba(255, 255, 255, 0.16);
-    border-color: rgba(255, 255, 255, 0.5);
+    background: var(--screen-chip-hover);
+    border-color: var(--screen-text-soft);
   }
 
   svg {
+    flex-shrink: 0;
     width: 18px;
     height: 18px;
+  }
+
+  @media (max-width: 480px) {
+    gap: 6px;
+    padding: 0 8px;
+    font-size: 14px;
   }
 `;
 
@@ -441,6 +486,16 @@ const CaptionRow = styled.div`
   align-items: center;
   min-height: 56px;
   padding: 0 16px;
+
+  /* 좁은 화면에서는 영상 화면의 아래쪽에 겹쳐 놓는다. 실제 자막이 놓이는 자리다. */
+  @media (max-width: ${STACKED_BELOW}px) {
+    order: 1;
+    position: relative;
+    z-index: 1;
+    min-height: 52px;
+    margin-top: -52px;
+    pointer-events: none;
+  }
 `;
 
 const Caption = styled.span`
@@ -472,8 +527,12 @@ const Controls = styled.div`
   font-size: 13px;
   color: rgba(249, 250, 251, 0.85);
 
-  @media (max-width: 768px) {
-    padding: 0 12px 4px 24px;
+  /* 좁은 화면에서는 영상 화면 바로 아래에 붙어, 화면과 함께 하나의 플레이어를 이룬다. */
+  @media (max-width: ${STACKED_BELOW}px) {
+    order: 2;
+    padding: 4px 8px 4px 20px;
+    border-radius: 0 0 ${({ theme }) => theme.radius.xl} ${({ theme }) => theme.radius.xl};
+    background: ${HERO_BASE};
   }
 `;
 
@@ -540,6 +599,11 @@ const Buttons = styled.div`
   align-items: center;
   gap: 4px;
   margin-left: -12px;
+
+  /* 폭이 360px 안팎인 폰에서도 모든 조작 버튼이 한 줄에 들어가게 간격을 줄인다. */
+  @media (max-width: 400px) {
+    gap: 0;
+  }
 `;
 
 const IconButton = styled.button`
@@ -598,6 +662,18 @@ const Select = styled.select`
   flex-shrink: 0;
   height: 44px;
   padding: 0 8px;
+
+  @media (max-width: 400px) {
+    padding: 0 2px;
+  }
+
+  /* 아주 좁은 화면에서는 재생 속도 선택을 숨겨 화질 선택과 통계 버튼이 잘리지 않게 한다. */
+  @media (max-width: 345px) {
+    &[data-optional] {
+      display: none;
+    }
+  }
+
   border: none;
   border-radius: ${({ theme }) => theme.radius.sm};
   background: transparent;

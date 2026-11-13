@@ -26,10 +26,8 @@ const RIGHT_FOOT: Point = [80, 130];
 const BAR_AT = 0.625;
 const BAR_INSET = 0.9;
 
-// 화면 오른쪽 가장자리 바로 밖에서 출발한다. 더 멀리서 출발하면 화질이 가장 낮은 첫 구간이
-// 지나갈 때까지 로고가 보이지 않아, 도트로 깨진 로고가 걸어 들어오는 장면을 놓친다.
-const START_OFFSET = 215;
-const STEPS = 3;
+// 한 걸음(양발 한 번씩)에 나아가는 거리
+const STRIDE = 72;
 const SWING_DEGREES = 10;
 const BOB = 7;
 const LANDING_DIP = 10;
@@ -39,20 +37,26 @@ export const REST_POSE: Pose = { offsetX: 0, offsetY: 0, swing: 0 };
 
 const easeOutCubic = (x: number) => 1 - (1 - x) ** 3;
 
-export const poseAt = (time: number): Pose => {
+/**
+ * @param startOffset 출발 지점이 제자리에서 오른쪽으로 얼마나 떨어져 있는지(로고 좌표 단위).
+ *   화면 오른쪽 가장자리 바로 밖이 되도록 화면 크기에서 계산해 넘긴다. 더 멀리서 출발하면
+ *   화질이 가장 낮은 첫 구간이 지나갈 때까지 로고가 보이지 않는다.
+ */
+export const poseAt = (time: number, startOffset: number): Pose => {
   if (time >= SETTLE_END) return REST_POSE;
 
   const walk = Math.min(1, Math.max(0, time / WALK_END));
   const travelled = easeOutCubic(walk);
   // 걸음은 시간에 맞추지 않고 이동한 거리에 맞춘다. 그래야 속도가 줄어들 때 발이 미끄러지지 않는다.
-  const phase = travelled * STEPS * 2 * Math.PI;
+  const steps = Math.max(2, Math.round(startOffset / STRIDE));
+  const phase = travelled * steps * 2 * Math.PI;
 
   // 다 걸어온 뒤에는 살짝 내려앉았다가 올라오며 자리를 잡는다.
   const settle = time > WALK_END ? (time - WALK_END) / (SETTLE_END - WALK_END) : 0;
   const landing = time > WALK_END ? LANDING_DIP * Math.sin(Math.PI * settle) * (1 - settle) : 0;
 
   return {
-    offsetX: START_OFFSET * (1 - travelled),
+    offsetX: startOffset * (1 - travelled),
     offsetY: -BOB * Math.abs(Math.sin(phase)) + landing,
     swing: SWING_DEGREES * Math.sin(phase),
   };
