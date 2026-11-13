@@ -1,0 +1,14 @@
+allowBuilds:
+  '@parcel/watcher': true
+  core-js: true
+  core-js-pure: true
+  es5-ext: true
+  gatsby: true
+  gatsby-cli: true
+  lmdb: true
+  msgpackr-extract: true
+  puppeteer: true
+  sharp: true
+
+# Gatsby의 .cache 코드가 gatsby-link 같은 간접 의존성을 직접 import하므로 루트로 끌어올린다.
+shamefullyHoist: true
