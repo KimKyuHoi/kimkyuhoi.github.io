@@ -2,11 +2,12 @@ import React from 'react';
 import { graphql, Link } from 'gatsby';
 import type { PageProps } from 'gatsby';
 import styled from '@emotion/styled';
-import { motion } from 'framer-motion';
 import Layout from '@/components/Layout';
 import Seo from '@/components/Seo';
-import PostCard from '@/features/blog/components/PostCard';
-import { Github, Linkedin, Link as LinkIcon } from 'lucide-react';
+import PostCard, { categoryPath, tagPath } from '@/features/blog/components/PostCard';
+import StreamHero from '@/features/home/StreamHero';
+import ProjectCard from '@/features/playground/ProjectCard';
+import { projects } from '@/features/playground/projects';
 
 const IndexPage: React.FC<PageProps<Queries.IndexPageQuery>> = ({ data, location }) => {
   const posts = data.allMarkdownRemark.nodes as unknown as Queries.MarkdownRemark[];
@@ -35,94 +36,48 @@ const IndexPage: React.FC<PageProps<Queries.IndexPageQuery>> = ({ data, location
 
   return (
     <Layout location={location}>
-      <Hero
-        initial={{ opacity: 0, y: 12 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.35 }}
-      >
-        <ProfileHeader>
-          <ProfileName>김규회</ProfileName>
-          <ProfileRole>Frontend Developer</ProfileRole>
-        </ProfileHeader>
-        <IntroText>
-          사용자의 목소리에서 개선의 실마리를 찾는 개발자입니다. 서비스의 정답은 언제나 사용자에게
-          있다고 믿으며, 작은 문제에서도 개선의 기회를 발견하고 사용자가 체감할 수 있는 가치를
-          만드는 걸 좋아해요.
-        </IntroText>
-        <Divider />
-        <SocialLinks>
-          <SocialLink href="https://github.com/KimKyuHoi" target="_blank" rel="noopener noreferrer">
-            <Github /> GitHub
-          </SocialLink>
-          <SocialLink
-            href="https://www.linkedin.com/in/%EA%B7%9C%ED%9A%8C-%EA%B9%80-2ba0a5254/"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Linkedin /> LinkedIn
-          </SocialLink>
-          <SocialLink
-            href="https://velog.io/@k_gu_wae123/posts"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <LinkIcon /> Velog
-          </SocialLink>
-        </SocialLinks>
-      </Hero>
+      <StreamHero />
 
       <Grid>
         <Main>
           <Section>
-            <SectionTitle>최신 글</SectionTitle>
+            <SectionHeader>
+              <SectionTitle>최신 글</SectionTitle>
+              {/* 좁은 화면에서는 사이드바가 숨으므로 여기에 전체 목록 링크를 둔다. */}
+              <MoreLink to="/posts/" data-narrow-only="">
+                모든 글 보기
+              </MoreLink>
+            </SectionHeader>
 
-            <List
-              initial="hidden"
-              animate="visible"
-              variants={{
-                hidden: { opacity: 0 },
-                visible: { opacity: 1, transition: { staggerChildren: 0.04 } },
-              }}
-            >
+            <List>
               {latest.map((post) => (
-                <motion.div
+                <PostCard
                   key={post.fields?.slug}
-                  variants={{
-                    hidden: { opacity: 0, y: 8 },
-                    visible: { opacity: 1, y: 0 },
-                  }}
-                >
-                  <PostCard
-                    slug={post.fields?.slug || ''}
-                    title={post.frontmatter?.title || post.fields?.slug || ''}
-                    description={post.frontmatter?.description || post.excerpt || ''}
-                    date={post.frontmatter?.date || ''}
-                    category={post.frontmatter?.category || '기타'}
-                    excerpt={post.excerpt || ''}
-                    hero={post.frontmatter?.hero || undefined}
-                    tags={(post.frontmatter?.tags as string[]) || []}
-                  />
-                </motion.div>
+                  slug={post.fields?.slug || ''}
+                  title={post.frontmatter?.title || post.fields?.slug || ''}
+                  description={post.frontmatter?.description || post.excerpt || ''}
+                  date={post.frontmatter?.date || ''}
+                  category={post.frontmatter?.category || '기타'}
+                  excerpt={post.excerpt || ''}
+                  hero={post.frontmatter?.hero || undefined}
+                  tags={(post.frontmatter?.tags as string[]) || []}
+                />
               ))}
             </List>
           </Section>
         </Main>
 
-        <Sidebar
-          initial={{ opacity: 0, y: 8 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.05 }}
-        >
+        <Sidebar>
           <Widget>
             <WidgetTitle>카테고리</WidgetTitle>
             <CategoryList>
               {categories.map((cat) => (
                 <li key={cat}>
-                  <Link to={`/posts?category=${cat}`}>{cat}</Link>
+                  <Link to={cat === '전체' ? '/posts/' : categoryPath(cat)}>{cat}</Link>
                 </li>
               ))}
             </CategoryList>
-            <SmallLink to="/posts">모든 글 보기 →</SmallLink>
+            <SmallLink to="/posts/">모든 글 보기 →</SmallLink>
           </Widget>
 
           <Widget>
@@ -141,12 +96,29 @@ const IndexPage: React.FC<PageProps<Queries.IndexPageQuery>> = ({ data, location
             <WidgetTitle>태그</WidgetTitle>
             <TagCloud>
               {tags.map((tag) => (
-                <TagBadge key={tag}>#{tag}</TagBadge>
+                <TagBadge key={tag} to={tagPath(tag)}>
+                  #{tag}
+                </TagBadge>
               ))}
             </TagCloud>
           </Widget>
         </Sidebar>
       </Grid>
+
+      <Section aria-labelledby="home-playground">
+        <SectionHeader>
+          <div>
+            <SectionTitle id="home-playground">플레이그라운드</SectionTitle>
+            <SectionDesc>글로 설명한 내용을 직접 만져 볼 수 있게 만든 실험들</SectionDesc>
+          </div>
+          <MoreLink to="/playground/">실험 모두 보기</MoreLink>
+        </SectionHeader>
+        <ProjectGrid>
+          {projects.slice(0, 2).map((project) => (
+            <ProjectCard key={project.name} project={project} />
+          ))}
+        </ProjectGrid>
+      </Section>
     </Layout>
   );
 };
@@ -188,81 +160,6 @@ export const pageQuery = graphql`
   }
 `;
 
-const HeroBase = styled.section`
-  background: ${({ theme }) => theme.bg.surface};
-  border: 1px solid ${({ theme }) => theme.border};
-  border-radius: ${({ theme }) => theme.radius.lg};
-  padding: 32px;
-  margin-bottom: 48px;
-
-  @media (max-width: 768px) {
-    padding: 24px;
-    margin-bottom: 32px;
-  }
-`;
-const Hero = motion.create(HeroBase);
-
-const ProfileHeader = styled.div`
-  margin-bottom: 20px;
-`;
-
-const ProfileName = styled.h1`
-  margin: 0 0 4px;
-  font-size: 28px;
-  font-weight: 800;
-  color: ${({ theme }) => theme.text.primary};
-`;
-
-const ProfileRole = styled.div`
-  font-size: 16px;
-  color: ${({ theme }) => theme.accent};
-  font-weight: 600;
-`;
-
-const IntroText = styled.p`
-  margin: 0;
-  font-size: 16px;
-  line-height: 1.8;
-  color: ${({ theme }) => theme.text.muted};
-`;
-
-const Divider = styled.hr`
-  border: none;
-  height: 1px;
-  background: ${({ theme }) => theme.border};
-  margin: 24px 0;
-`;
-
-const SocialLinks = styled.div`
-  display: flex;
-  gap: 10px;
-  flex-wrap: wrap;
-`;
-
-const SocialLink = styled.a`
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  background: ${({ theme }) => theme.bg.muted};
-  padding: 8px 16px;
-  border-radius: ${({ theme }) => theme.radius.full || '999px'};
-  font-size: 15px;
-  font-weight: 500;
-  color: ${({ theme }) => theme.text.primary};
-  text-decoration: none;
-  transition: all 0.2s ease;
-
-  &:hover {
-    background: ${({ theme }) => theme.border};
-    transform: translateY(-2px);
-  }
-
-  svg {
-    width: 18px;
-    height: 18px;
-  }
-`;
-
 const Grid = styled.div`
   display: grid;
   grid-template-columns: 1fr 300px;
@@ -280,8 +177,11 @@ const Main = styled.div`
   gap: 40px;
 `;
 
-const SidebarBase = styled.aside`
+// 글 목록 옆에 붙어 따라오는 사이드바. 좁은 화면에서는 보이지 않는다.
+// 좁은 화면의 홈은 소개·최신 글·플레이그라운드만으로 짧게 두고, 카테고리와 태그로 찾는 일은 글 목록 화면에 맡긴다.
+const Sidebar = styled.aside`
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: 32px;
   position: sticky;
   top: 100px;
@@ -290,7 +190,6 @@ const SidebarBase = styled.aside`
     display: none;
   }
 `;
-const Sidebar = motion.create(SidebarBase);
 
 const Section = styled.section`
   display: grid;
@@ -306,23 +205,75 @@ const SectionTitle = styled.h2`
   gap: 8px;
 `;
 
-const ListBase = styled.div`
+const SectionHeader = styled.div`
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+`;
+
+const SectionDesc = styled.p`
+  margin: 6px 0 0;
+  font-size: 15px;
+  color: ${({ theme }) => theme.text.muted};
+`;
+
+const MoreLink = styled(Link)`
+  flex-shrink: 0;
+  font-size: 14px;
+  font-weight: 700;
+  color: ${({ theme }) => theme.accent};
+
+  &:hover {
+    text-decoration: underline;
+    text-underline-offset: 4px;
+  }
+
+  &[data-narrow-only] {
+    @media (min-width: 981px) {
+      display: none;
+    }
+  }
+
+  /* 손가락으로 누르기 쉽게 누르는 영역만 키운다 (보이는 위치는 그대로). */
+  @media (hover: none) {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    margin: -10px 0;
+  }
+`;
+
+const List = styled.div`
   display: grid;
   gap: 18px;
 `;
-const List = motion.create(ListBase);
 
-const Widget = styled.div`
+const ProjectGrid = styled.div`
+  display: grid;
+  gap: 20px;
+  grid-template-columns: repeat(2, 1fr);
+
+  @media (max-width: 768px) {
+    grid-template-columns: 1fr;
+  }
+`;
+
+const Widget = styled.section`
   background: ${({ theme }) => theme.bg.surface};
   border-radius: ${({ theme }) => theme.radius.lg};
   border: 1px solid ${({ theme }) => theme.border};
   padding: 16px;
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: 12px;
 `;
 
-const WidgetTitle = styled.div`
+const WidgetTitle = styled.h2`
+  margin: 0;
+  font-size: 16px;
   font-weight: 800;
+  line-height: 1.8;
 `;
 
 const CategoryList = styled.ul`
@@ -333,11 +284,15 @@ const CategoryList = styled.ul`
   flex-wrap: wrap;
   gap: 8px;
   li {
+    /* 전역 목록 스타일의 아래 여백이 줄 간격을 벌려 놓으므로 없앤다. */
+    margin: 0;
     background: ${({ theme }) => theme.bg.muted};
     border: 1px solid ${({ theme }) => theme.border};
     border-radius: ${({ theme }) => theme.radius.sm};
     font-size: 13px;
-    transition: all 0.2s ease;
+    transition:
+      background 0.2s ease,
+      transform 0.2s ease;
 
     a {
       display: block;
@@ -346,11 +301,13 @@ const CategoryList = styled.ul`
       text-decoration: none;
     }
 
-    &:hover {
-      background: ${({ theme }) => theme.border};
-      transform: translateY(-1px);
-      a {
-        color: ${({ theme }) => theme.text.primary};
+    @media (hover: hover) {
+      &:hover {
+        background: ${({ theme }) => theme.border};
+        transform: translateY(-1px);
+        a {
+          color: ${({ theme }) => theme.text.primary};
+        }
       }
     }
   }
@@ -389,11 +346,19 @@ const TagCloud = styled.div`
   gap: 8px;
 `;
 
-const TagBadge = styled.span`
+const TagBadge = styled(Link)`
   padding: 6px 10px;
   border-radius: ${({ theme }) => theme.radius.sm};
   background: ${({ theme }) => theme.bg.muted};
   border: 1px solid ${({ theme }) => theme.border};
   color: ${({ theme }) => theme.text.muted};
   font-size: 12px;
+  transition:
+    color 0.2s ease,
+    background 0.2s ease;
+
+  &:hover {
+    background: ${({ theme }) => theme.border};
+    color: ${({ theme }) => theme.text.primary};
+  }
 `;

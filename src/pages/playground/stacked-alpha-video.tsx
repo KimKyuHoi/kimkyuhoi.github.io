@@ -336,7 +336,7 @@ export default StackedAlphaVideoPage;
 export const Head = () => (
   <Seo
     title="Stacked Alpha Video"
-    pathname="/playground/stacked-alpha-video"
+    pathname="/playground/stacked-alpha-video/"
     description="stacked-alpha-video Web Component를 활용한 투명 영상 구현 데모"
   />
 );
@@ -489,7 +489,7 @@ const StepBlock = styled.div`
   margin-bottom: 20px;
 `;
 
-const StepLabel = styled.h4`
+const StepLabel = styled.h3`
   margin: 0 0 8px;
   font-size: 14px;
   font-weight: 600;
@@ -529,7 +529,7 @@ const FaqItem = styled.div`
   }
 `;
 
-const FaqQuestion = styled.h4`
+const FaqQuestion = styled.h3`
   margin: 0 0 8px;
   font-size: 15px;
   font-weight: 600;

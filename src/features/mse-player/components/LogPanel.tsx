@@ -61,6 +61,7 @@ const Msg = styled.span<{ logType: 'ok' | 'err' | '' }>`
     logType === 'ok' ? '#4ade80' : logType === 'err' ? '#f87171' : 'inherit'};
 `;
 
+// 어두운 패널(#0f172a) 위에서 4.5:1 이상이 되는 값
 const Dim = styled.span`
-  color: #64748b;
+  color: #94a3b8;
 `;

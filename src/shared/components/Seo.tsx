@@ -13,10 +13,19 @@ type SeoProps = {
   description?: string;
   pathname?: string;
   image?: string;
+  /** 페이지 종류. 소개 페이지는 profile, 글 목록은 collection으로 구조화 데이터를 낸다. */
+  type?: 'website' | 'profile' | 'collection';
+  /** 목록 페이지에 실린 항목들 (구조화 데이터의 ItemList) */
+  list?: { name: string; path: string }[];
+  /** 검색 결과에 노출하지 않을 페이지 */
+  noindex?: boolean;
   article?: {
     publishedTime?: string;
     modifiedTime?: string;
     tags?: string[];
+    category?: string;
+    /** 본문 단어 수 */
+    words?: number;
   };
   children?: React.ReactNode;
 };
@@ -34,12 +43,30 @@ type SeoQuery = {
       social?: {
         twitter?: string;
         github?: string;
+        linkedin?: string;
+        velog?: string;
       } | null;
     };
   };
 };
 
-const Seo: React.FC<SeoProps> = ({ description, title, pathname, image, article, children }) => {
+const PAGE_TYPES = {
+  website: 'WebPage',
+  profile: 'ProfilePage',
+  collection: 'CollectionPage',
+} as const;
+
+const Seo: React.FC<SeoProps> = ({
+  description,
+  title,
+  pathname,
+  image,
+  type = 'website',
+  list,
+  noindex = false,
+  article,
+  children,
+}) => {
   const { site } = useStaticQuery<SeoQuery>(graphql`
     query {
       site {
@@ -54,6 +81,8 @@ const Seo: React.FC<SeoProps> = ({ description, title, pathname, image, article,
           social {
             twitter
             github
+            linkedin
+            velog
           }
         }
       }
@@ -79,45 +108,107 @@ const Seo: React.FC<SeoProps> = ({ description, title, pathname, image, article,
 
   const isArticle = !!article;
 
-  const jsonLd = isArticle
+  const social = site.siteMetadata?.social;
+  const githubUrl = `https://github.com/${social?.github || 'KimKyuHoi'}`;
+  const personId = `${siteUrl}/#person`;
+  const websiteId = `${siteUrl}/#website`;
+
+  // 검색 엔진과 AI 답변 엔진이 "누가 쓴 어떤 글인지"를 한 그래프로 읽을 수 있게 @id로 서로 잇는다.
+  // 직함·소속·학력·분야는 소개 페이지(/about/)와 홈 화면에 실제로 적혀 있는 내용과 같게 유지한다.
+  const person = {
+    '@type': 'Person',
+    '@id': personId,
+    name: '김규회',
+    alternateName: authorName,
+    jobTitle: 'Software Engineer',
+    description: site.siteMetadata?.author?.summary,
+    url: `${siteUrl}/about/`,
+    worksFor: { '@type': 'Organization', name: 'The Pinkfong Company' },
+    alumniOf: { '@type': 'CollegeOrUniversity', name: 'Kyungpook National University' },
+    knowsAbout: [
+      'Frontend Development',
+      'React',
+      'Next.js',
+      'Media Streaming',
+      'Shaka Player',
+      'DRM',
+    ],
+    sameAs: [githubUrl, social?.linkedin, social?.velog].filter(Boolean),
+  };
+
+  const website = {
+    '@type': 'WebSite',
+    '@id': websiteId,
+    name: defaultTitle,
+    description: site.siteMetadata?.description,
+    url: siteUrl,
+    inLanguage: 'ko-KR',
+    publisher: { '@id': personId },
+  };
+
+  const breadcrumb = {
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: '홈', item: `${siteUrl}/` },
+      ...(isArticle
+        ? [{ '@type': 'ListItem', position: 2, name: '글', item: `${siteUrl}/posts/` }]
+        : []),
+      ...(pathname && pathname !== '/'
+        ? [{ '@type': 'ListItem', position: isArticle ? 3 : 2, name: title, item: canonicalUrl }]
+        : []),
+    ],
+  };
+
+  const page = isArticle
     ? {
-        '@context': 'https://schema.org',
         '@type': 'BlogPosting',
+        '@id': `${canonicalUrl}#article`,
         headline: title,
         description: metaDescription,
         image: ogImage,
-        author: {
-          '@type': 'Person',
-          name: authorName,
-          url: `https://github.com/${site.siteMetadata?.social?.github || 'KimKyuHoi'}`,
-        },
-        publisher: {
-          '@type': 'Person',
-          name: authorName,
-        },
         url: canonicalUrl,
-        mainEntityOfPage: {
-          '@type': 'WebPage',
-          '@id': canonicalUrl,
-        },
+        mainEntityOfPage: canonicalUrl,
+        isPartOf: { '@id': websiteId },
+        author: { '@id': personId },
+        publisher: { '@id': personId },
         datePublished: article?.publishedTime,
         dateModified: article?.modifiedTime || article?.publishedTime,
+        articleSection: article?.category,
         keywords: article?.tags?.join(', '),
+        wordCount: article?.words,
         inLanguage: 'ko-KR',
       }
     : {
-        '@context': 'https://schema.org',
-        '@type': 'WebSite',
-        name: defaultTitle,
+        '@type': PAGE_TYPES[type],
+        '@id': `${canonicalUrl}#webpage`,
+        name: title,
         description: metaDescription,
-        url: siteUrl,
-        author: {
-          '@type': 'Person',
-          name: authorName,
-          url: `https://github.com/${site.siteMetadata?.social?.github || 'KimKyuHoi'}`,
-        },
+        url: canonicalUrl,
+        isPartOf: { '@id': websiteId },
+        // 소개 페이지는 이 사람에 대한 페이지임을, 그 밖의 페이지는 이 사람이 쓴 것임을 밝힌다.
+        ...(type === 'profile'
+          ? { mainEntity: { '@id': personId } }
+          : { about: { '@id': personId } }),
+        ...(list?.length
+          ? {
+              mainEntity: {
+                '@type': 'ItemList',
+                itemListElement: list.map((item, index) => ({
+                  '@type': 'ListItem',
+                  position: index + 1,
+                  name: item.name,
+                  url: `${siteUrl}${item.path}`,
+                })),
+              },
+            }
+          : {}),
         inLanguage: 'ko-KR',
       };
+
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@graph': [website, person, page, breadcrumb],
+  };
 
   return (
     <>
@@ -127,6 +218,32 @@ const Seo: React.FC<SeoProps> = ({ description, title, pathname, image, article,
       {/* 기본 메타 */}
       <meta key="description" name="description" content={metaDescription} />
       <meta key="author" name="author" content={authorName} />
+      <meta
+        key="robots"
+        name="robots"
+        content={
+          noindex ? 'noindex, follow' : 'index, follow, max-image-preview:large, max-snippet:-1'
+        }
+      />
+      <link
+        key="rss"
+        rel="alternate"
+        type="application/rss+xml"
+        title={`${defaultTitle} RSS`}
+        href={`${siteUrl}/rss.xml`}
+      />
+      {/* 글의 마크다운 원문 (gatsby-node.js가 빌드할 때 만든다). AI 답변 엔진이 HTML 대신 읽어 갈 수 있다. */}
+      {isArticle && pathname ? (
+        <link
+          key="markdown"
+          rel="alternate"
+          type="text/markdown"
+          title={`${title} (Markdown)`}
+          href={`${canonicalUrl.replace(/\/?$/, '/')}index.md`}
+        />
+      ) : null}
+      {/* iOS Safari가 본문의 숫자를 전화번호로 여겨 링크로 바꾸지 않게 한다. */}
+      <meta key="format-detection" name="format-detection" content="telephone=no" />
 
       {/* Open Graph */}
       <meta key="og:url" property="og:url" content={canonicalUrl} />
@@ -156,7 +273,13 @@ const Seo: React.FC<SeoProps> = ({ description, title, pathname, image, article,
         />
       )}
       {isArticle && <meta key="article:author" property="article:author" content={authorName} />}
-      {isArticle && <meta key="article:section" property="article:section" content="Technology" />}
+      {isArticle && (
+        <meta
+          key="article:section"
+          property="article:section"
+          content={article?.category || 'Technology'}
+        />
+      )}
       {isArticle &&
         article?.tags?.map((tag) => (
           <meta key={`article:tag:${tag}`} property="article:tag" content={tag} />

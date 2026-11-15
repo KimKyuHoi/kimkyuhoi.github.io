@@ -54,11 +54,21 @@ const Badge = styled.span<{ tone: 'ok' | 'err' | 'idle' | 'info' }>`
     return theme.bg.muted;
   }};
   color: ${({ tone, theme }) => {
-    if (tone === 'ok') return '#16a34a';
+    if (tone === 'ok') return '#15803d';
     if (tone === 'err') return '#dc2626';
     if (tone === 'info') return '#2563eb';
     return theme.text.muted;
   }};
+
+  /* 다크 모드의 어두운 바탕에서는 같은 계열의 밝은 색을 쓴다. */
+  body.dark & {
+    color: ${({ tone, theme }) => {
+      if (tone === 'ok') return '#4ade80';
+      if (tone === 'err') return '#f87171';
+      if (tone === 'info') return '#7db4ff';
+      return theme.text.muted;
+    }};
+  }
 
   strong {
     font-weight: 700;

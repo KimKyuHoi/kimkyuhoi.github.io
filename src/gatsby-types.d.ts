@@ -1875,6 +1875,7 @@ type Query_markdownRemarkArgs = {
 type Query_siteArgs = {
   buildTime: InputMaybe<DateQueryOperatorInput>;
   children: InputMaybe<NodeFilterListInput>;
+  graphqlTypegen: InputMaybe<BooleanQueryOperatorInput>;
   host: InputMaybe<StringQueryOperatorInput>;
   id: InputMaybe<StringQueryOperatorInput>;
   internal: InputMaybe<InternalFilterInput>;
@@ -1942,6 +1943,7 @@ type Query_sitePluginArgs = {
 type Site = Node & {
   readonly buildTime: Maybe<Scalars['Date']>;
   readonly children: ReadonlyArray<Node>;
+  readonly graphqlTypegen: Maybe<Scalars['Boolean']>;
   readonly host: Maybe<Scalars['String']>;
   readonly id: Scalars['ID'];
   readonly internal: Internal;
@@ -2132,6 +2134,7 @@ type SiteEdge = {
 type SiteFieldSelector = {
   readonly buildTime: InputMaybe<FieldSelectorEnum>;
   readonly children: InputMaybe<NodeFieldSelector>;
+  readonly graphqlTypegen: InputMaybe<FieldSelectorEnum>;
   readonly host: InputMaybe<FieldSelectorEnum>;
   readonly id: InputMaybe<FieldSelectorEnum>;
   readonly internal: InputMaybe<InternalFieldSelector>;
@@ -2143,6 +2146,7 @@ type SiteFieldSelector = {
 type SiteFilterInput = {
   readonly buildTime: InputMaybe<DateQueryOperatorInput>;
   readonly children: InputMaybe<NodeFilterListInput>;
+  readonly graphqlTypegen: InputMaybe<BooleanQueryOperatorInput>;
   readonly host: InputMaybe<StringQueryOperatorInput>;
   readonly id: InputMaybe<StringQueryOperatorInput>;
   readonly internal: InputMaybe<InternalFilterInput>;
@@ -2673,6 +2677,7 @@ type SiteSiteMetadataSortInput = {
 type SiteSortInput = {
   readonly buildTime: InputMaybe<SortOrderEnum>;
   readonly children: InputMaybe<NodeSortInput>;
+  readonly graphqlTypegen: InputMaybe<SortOrderEnum>;
   readonly host: InputMaybe<SortOrderEnum>;
   readonly id: InputMaybe<SortOrderEnum>;
   readonly internal: InputMaybe<InternalSortInput>;
@@ -2686,6 +2691,7 @@ type Social = {
   readonly github: Maybe<Scalars['String']>;
   readonly linkedin: Maybe<Scalars['String']>;
   readonly twitter: Maybe<Scalars['String']>;
+  readonly velog: Maybe<Scalars['String']>;
 };
 
 type SocialFieldSelector = {
@@ -2693,6 +2699,7 @@ type SocialFieldSelector = {
   readonly github: InputMaybe<FieldSelectorEnum>;
   readonly linkedin: InputMaybe<FieldSelectorEnum>;
   readonly twitter: InputMaybe<FieldSelectorEnum>;
+  readonly velog: InputMaybe<FieldSelectorEnum>;
 };
 
 type SocialFilterInput = {
@@ -2700,6 +2707,7 @@ type SocialFilterInput = {
   readonly github: InputMaybe<StringQueryOperatorInput>;
   readonly linkedin: InputMaybe<StringQueryOperatorInput>;
   readonly twitter: InputMaybe<StringQueryOperatorInput>;
+  readonly velog: InputMaybe<StringQueryOperatorInput>;
 };
 
 type SocialSortInput = {
@@ -2707,6 +2715,7 @@ type SocialSortInput = {
   readonly github: InputMaybe<SortOrderEnum>;
   readonly linkedin: InputMaybe<SortOrderEnum>;
   readonly twitter: InputMaybe<SortOrderEnum>;
+  readonly velog: InputMaybe<SortOrderEnum>;
 };
 
 type SortOrderEnum =
@@ -2742,12 +2751,17 @@ type BlogPostBySlugQueryVariables = Exact<{
 }>;
 
 
-type BlogPostBySlugQuery = { readonly site: { readonly siteMetadata: { readonly title: string | null } | null } | null, readonly markdownRemark: { readonly id: string, readonly excerpt: string | null, readonly html: string | null, readonly tableOfContents: string | null, readonly fields: { readonly slug: string | null } | null, readonly frontmatter: { readonly title: string | null, readonly date: string | null, readonly description: string | null, readonly category: string | null, readonly tags: ReadonlyArray<string | null> | null, readonly hero: string | null, readonly rawDate: string | null } | null } | null, readonly previous: { readonly fields: { readonly slug: string | null } | null, readonly frontmatter: { readonly title: string | null } | null } | null, readonly next: { readonly fields: { readonly slug: string | null } | null, readonly frontmatter: { readonly title: string | null } | null } | null };
+type BlogPostBySlugQuery = { readonly site: { readonly siteMetadata: { readonly title: string | null } | null } | null, readonly markdownRemark: { readonly id: string, readonly excerpt: string | null, readonly html: string | null, readonly tableOfContents: string | null, readonly wordCount: { readonly words: number | null } | null, readonly fields: { readonly slug: string | null } | null, readonly frontmatter: { readonly title: string | null, readonly date: string | null, readonly description: string | null, readonly category: string | null, readonly tags: ReadonlyArray<string | null> | null, readonly hero: string | null, readonly chapter: number | null, readonly rawDate: string | null } | null } | null, readonly others: { readonly nodes: ReadonlyArray<{ readonly fields: { readonly slug: string | null } | null, readonly frontmatter: { readonly title: string | null, readonly date: string | null, readonly description: string | null, readonly category: string | null, readonly tags: ReadonlyArray<string | null> | null, readonly chapter: number | null } | null }> }, readonly previous: { readonly fields: { readonly slug: string | null } | null, readonly frontmatter: { readonly title: string | null } | null } | null, readonly next: { readonly fields: { readonly slug: string | null } | null, readonly frontmatter: { readonly title: string | null } | null } | null };
 
 type CoffeeQueryQueryVariables = Exact<{ [key: string]: never; }>;
 
 
 type CoffeeQueryQuery = { readonly site: { readonly siteMetadata: { readonly buyMeCoffeeId: string | null } | null } | null };
+
+type CommandPaletteQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+type CommandPaletteQuery = { readonly allMarkdownRemark: { readonly nodes: ReadonlyArray<{ readonly fields: { readonly slug: string | null } | null, readonly frontmatter: { readonly title: string | null, readonly description: string | null, readonly category: string | null, readonly tags: ReadonlyArray<string | null> | null } | null }> } };
 
 type GatsbyImageSharpFixedFragment = { readonly base64: string | null, readonly width: number, readonly height: number, readonly src: string, readonly srcSet: string };
 

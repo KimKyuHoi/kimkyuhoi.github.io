@@ -53,7 +53,7 @@ const Wrapper = styled.div`
 const Button = styled.a`
   padding: 10px 14px;
   border-radius: ${({ theme }) => theme.radius.md};
-  background: ${({ theme }) => theme.accent};
+  background: ${({ theme }) => theme.accentSolid};
   color: white;
   font-weight: 700;
 `;

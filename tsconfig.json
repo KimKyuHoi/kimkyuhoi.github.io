@@ -11,19 +11,20 @@
     "resolveJsonModule": true,
     "noEmit": true,
     "types": ["gatsby", "node"],
-    "baseUrl": ".",
     "paths": {
-      "@/components/*": ["src/shared/components/*"],
-      "@/ui/*": ["src/shared/ui/*"],
-      "@/styles/*": ["src/shared/styles/*"],
-      "@/utils/*": ["src/shared/utils/*"],
-      "@/types/*": ["src/shared/types/*"],
-      "@/features/*": ["src/features/*"],
-      "@/atoms/*": ["src/shared/atoms/*"],
-      "@/hooks/*": ["src/shared/hooks/*"],
-      "@/providers/*": ["src/shared/providers/*"]
+      "@/components/*": ["./src/shared/components/*"],
+      "@/ui/*": ["./src/shared/ui/*"],
+      "@/styles/*": ["./src/shared/styles/*"],
+      "@/utils/*": ["./src/shared/utils/*"],
+      "@/types/*": ["./src/shared/types/*"],
+      "@/features/*": ["./src/features/*"],
+      "@/atoms/*": ["./src/shared/atoms/*"],
+      "@/hooks/*": ["./src/shared/hooks/*"],
+      "@/providers/*": ["./src/shared/providers/*"],
+      "@/motion/*": ["./src/shared/motion/*"],
+      "@/reactbits/*": ["./src/shared/reactbits/*"]
     }
   },
-  "include": ["src/**/*.ts", "src/**/*.tsx", "gatsby-*.js"],
+  "include": ["./src/**/*.ts", "src/**/*.tsx", "gatsby-*.js"],
   "exclude": ["node_modules"]
 }

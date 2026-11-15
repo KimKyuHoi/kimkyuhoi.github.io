@@ -27,8 +27,8 @@ Gatsby를 기반으로 제작되었으며, 개발 경험과 학습한 내용을 
 
 ### Prerequisites
 
-- Node.js (v18 이상 권장)
-- npm
+- Node.js 26 이상
+- pnpm 12 (`corepack enable` 또는 `mise install`로 package.json에 고정된 버전을 씁니다)
 
 ### Installation
 
@@ -40,14 +40,14 @@ git clone https://github.com/KimKyuHoi/blog.git
 cd blog
 
 # 의존성 설치
-npm install
+pnpm install
 ```
 
 ### Run Locally
 
 ```bash
 # 개발 서버 실행
-npm run develop
+pnpm run develop
 ```
 
 브라우저에서 `http://localhost:8000`으로 접속하여 확인하세요.
@@ -56,10 +56,10 @@ npm run develop
 
 ```bash
 # 프로덕션 빌드
-npm run build
+pnpm run build
 
 # GitHub Pages 배포
-npm run deploy
+pnpm run deploy
 ```
 
 ## 👤 Author

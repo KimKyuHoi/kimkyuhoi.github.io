@@ -31,6 +31,7 @@ export function HeartCard({ title, subtitle, server, useToggle }: Props) {
       <HeartButton
         type="button"
         data-lab-heart
+        aria-label={`${title} 찜하기`}
         aria-pressed={shown}
         aria-busy={pending}
         onClick={toggle}
@@ -80,7 +81,7 @@ const CardHead = styled.div`
   margin-bottom: 12px;
 `;
 
-const CardTitle = styled.h3`
+const CardTitle = styled.h2`
   margin: 0;
   font-size: 15px;
 `;
@@ -169,6 +170,7 @@ const LogLine = styled.div<{ $kind: LogEntry['kind'] }>`
   }
 `;
 
+// 어두운 로그 바탕 위에서 4.5:1을 넘는 회색
 const Muted = styled.span`
-  color: #6b7684;
+  color: #8b95a1;
 `;
